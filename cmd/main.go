@@ -1,0 +1,47 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/olabanji12-ojo/CarWashApp/database"
+	"github.com/olabanji12-ojo/CarWashApp/routes"
+)
+
+
+
+func main() {
+
+	fmt.Println("Hello World")
+
+	database.ConnectDB()
+	database.InitCollections()
+
+    router := mux.NewRouter()
+
+	// auth routes
+	routes.AuthRoutes(router)
+
+	// user routes
+	routes.UserRoutes(router)
+
+	// car routes
+    routes.CarRoutes(router)
+
+	// carwash routes
+	routes.CarwashRoutes(router)
+
+	// service routes
+    routes.ServiceRoutes(router)
+
+	// 4. Start HTTP server
+	fmt.Println("🌐 Listening on http://localhost:8080")
+	http.ListenAndServe(":8080", router)
+	
+		
+}
+
+
+// NOTE, TO CLEAN UP THE ROUTES BECAUSE OF IT'S REDUNDANCY 
+
