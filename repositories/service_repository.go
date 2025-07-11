@@ -11,13 +11,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ✅ CreateService inserts a new service
+//  CreateService inserts a new service
 func CreateService(ctx context.Context, service *models.Service) error {
 	_, err := database.ServiceCollection.InsertOne(ctx, service)
 	return err
 }
 
-// ✅ GetServiceByID fetches a single service by ID
+//  GetServiceByID fetches a single service by ID
 func GetServiceByID(ctx context.Context, serviceID primitive.ObjectID) (*models.Service, error) {
 	var service models.Service
 	err := database.ServiceCollection.FindOne(ctx, bson.M{"_id": serviceID}).Decode(&service)
@@ -27,7 +27,7 @@ func GetServiceByID(ctx context.Context, serviceID primitive.ObjectID) (*models.
 	return &service, nil
 }
 
-// ✅ GetServicesByCarwashID fetches all active services for a carwash
+//  GetServicesByCarwashID fetches all active services for a carwash
 func GetServicesByCarwashID(ctx context.Context, carwashID primitive.ObjectID) ([]models.Service, error) {
 	cursor, err := database.ServiceCollection.Find(ctx, bson.M{
 		"carwash_id": carwashID,
@@ -48,7 +48,7 @@ func GetServicesByCarwashID(ctx context.Context, carwashID primitive.ObjectID) (
 	return services, nil
 }
 
-// ✅ UpdateService updates a service document
+//  UpdateService updates a service document
 func UpdateService(ctx context.Context, serviceID primitive.ObjectID, updates bson.M) error {
 	updates["updated_at"] = time.Now()
 
@@ -61,7 +61,7 @@ func UpdateService(ctx context.Context, serviceID primitive.ObjectID, updates bs
 	
 }
 
-// ✅ DeleteService marks the service as inactive (soft delete)
+//  DeleteService marks the service as inactive (soft delete)
 func DeleteService(ctx context.Context, serviceID primitive.ObjectID) error {
 	_, err := database.ServiceCollection.UpdateOne(
 		ctx,

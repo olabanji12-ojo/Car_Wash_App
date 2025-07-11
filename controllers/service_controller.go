@@ -8,12 +8,16 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+	"github.com/olabanji12-ojo/CarWashApp/middleware"
+
 )
 
-// ✅ Create a new service
+//  Create a new service
 func CreateServiceHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
-	role := r.Context().Value("role").(string)
+	
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	role := authCtx.Role
 
 	if role != "business" {
 		utils.Error(w, http.StatusForbidden, "Only car wash businesses can create services")
@@ -35,10 +39,12 @@ func CreateServiceHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusCreated, createdService)
 }
 
-// ✅ Get all services for current business user
+//  Get all services for current business user
 func GetMyServicesHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
-	role := r.Context().Value("role").(string)
+
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	role := authCtx.Role
 
 	if role != "business" {
 		utils.Error(w, http.StatusForbidden, "Only businesses can access their services")
@@ -54,7 +60,7 @@ func GetMyServicesHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusOK, servicesList)
 }
 
-// ✅ Get one service by ID (public access)
+//  Get one service by ID (public access)
 func GetServiceByIDHandler(w http.ResponseWriter, r *http.Request) {
 	serviceID := mux.Vars(r)["id"]
 
@@ -67,11 +73,12 @@ func GetServiceByIDHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusOK, service)
 }
 
-// ✅ Update service (business only)
+//  Update service (business only)
 func UpdateServiceHandler(w http.ResponseWriter, r *http.Request) {
 	serviceID := mux.Vars(r)["id"]
-	userID := r.Context().Value("user_id").(string)
-	role := r.Context().Value("role").(string)
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	role := authCtx.Role
 
 	if role != "business" {
 		utils.Error(w, http.StatusForbidden, "Only businesses can update services")
@@ -93,11 +100,12 @@ func UpdateServiceHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// ✅ Soft delete service
+//  Soft delete service
 func DeleteServiceHandler(w http.ResponseWriter, r *http.Request) {
 	serviceID := mux.Vars(r)["id"]
-	userID := r.Context().Value("user_id").(string)
-	role := r.Context().Value("role").(string)
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	role := authCtx.Role
 
 	if role != "business" {
 		utils.Error(w, http.StatusForbidden, "Only businesses can delete services")

@@ -14,6 +14,7 @@ type JSONResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+
 // JSON writes a success response
 func JSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -31,6 +32,7 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 
 // Error writes an error response
 func Error(w http.ResponseWriter, status int, message string) {
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 

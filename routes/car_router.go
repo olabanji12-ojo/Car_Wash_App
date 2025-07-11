@@ -17,4 +17,10 @@ func CarRoutes(router *mux.Router) {
 	car.HandleFunc("/{carID}", controllers.UpdateCarHandler).Methods("PUT")
 	car.HandleFunc("/{carID}", controllers.DeleteCarHandler).Methods("DELETE")
 	car.HandleFunc("/{carID}/default", controllers.SetDefaultCarHandler).Methods("PATCH")
+
+
 }
+
+
+
+

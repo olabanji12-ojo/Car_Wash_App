@@ -44,7 +44,7 @@ func init() {
 	}
 }
 
-// ✅ GenerateToken creates a JWT for a given user with a 24-hour expiration
+//  GenerateToken creates a JWT for a given user with a 24-hour expiration
 func GenerateToken(userID, email, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -64,7 +64,7 @@ func GenerateToken(userID, email, role string) (string, error) {
 	return signedToken, nil
 }
 
-// ✅ ValidateToken parses and validates a JWT and returns token + claims
+//  ValidateToken parses and validates a JWT and returns token + claims
 func ValidateToken(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Ensure it's signed with the right method
@@ -89,7 +89,7 @@ func ValidateToken(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
 	return token, claims, nil
 }
 
-// ✅ ExtractClaims extracts claims only (shortcut for controllers if needed)
+//  ExtractClaims extracts claims only (shortcut for controllers if needed)
 func ExtractClaims(tokenString string) (map[string]interface{}, error) {
 	_, claims, err := ValidateToken(tokenString)
 	if err != nil {

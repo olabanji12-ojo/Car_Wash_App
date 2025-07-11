@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ✅ CreateCar
+//  CreateCar
 func CreateCar(userID string, input models.Car) (*models.Car, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -45,10 +45,12 @@ func CreateCar(userID string, input models.Car) (*models.Car, error) {
 		return nil, err
 	}
 
+	
 	return &newCar, nil
+	
 }
 
-// ✅ GetCarsByUserID
+//  GetCarsByUserID
 func GetCarsByUserID(userID string) ([]models.Car, error) {
 	ownerID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -58,7 +60,7 @@ func GetCarsByUserID(userID string) ([]models.Car, error) {
 	return repositories.GetCarsByUserID(ownerID)
 }
 
-// ✅ UpdateCar
+//  UpdateCar
 func UpdateCar(userID, carID string, updates map[string]interface{}) error {
 	_, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -78,7 +80,7 @@ func UpdateCar(userID, carID string, updates map[string]interface{}) error {
 	return repositories.UpdateCar(carObjID, bson.M(updates))
 }
 
-// ✅ DeleteCar
+//  DeleteCar
 func DeleteCar(userID, carID string) error {
 	carObjID, err := primitive.ObjectIDFromHex(carID)
 	if err != nil {
@@ -89,7 +91,7 @@ func DeleteCar(userID, carID string) error {
 	return repositories.DeleteCar(carObjID)
 }
 
-// ✅ SetDefaultCar
+//  SetDefaultCar
 func SetDefaultCar(userID, carID string) error {
 	ownerID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -104,7 +106,7 @@ func SetDefaultCar(userID, carID string) error {
 	return repositories.SetDefaultCar(ownerID, carObjID)
 }
 
-// ✅ GetCarByID (optional helper)
+//  GetCarByID (optional helper)
 func GetCarByID(carID string) (*models.Car, error) {
 	objID, err := primitive.ObjectIDFromHex(carID)
 	if err != nil {
@@ -112,5 +114,6 @@ func GetCarByID(carID string) (*models.Car, error) {
 	}
 	return repositories.GetCarByID(objID)
 }
+
 
 

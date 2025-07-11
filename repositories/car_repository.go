@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ✅ CreateCar inserts a new car document into the DB
+//  CreateCar inserts a new car document into the DB
 func CreateCar(car *models.Car) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -24,7 +24,7 @@ func CreateCar(car *models.Car) error {
 	return nil
 }
 
-// ✅ UnsetDefaultCarsForUser sets is_default = false for all of a user's cars
+//  UnsetDefaultCarsForUser sets is_default = false for all of a user's cars
 func UnsetDefaultCarsForUser(userID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -40,7 +40,7 @@ func UnsetDefaultCarsForUser(userID primitive.ObjectID) error {
 	return nil
 }
 
-// ✅ GetCarsByUserID retrieves all cars for a specific user
+//  GetCarsByUserID retrieves all cars for a specific user
 func GetCarsByUserID(userID primitive.ObjectID) ([]models.Car, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -66,7 +66,7 @@ func GetCarsByUserID(userID primitive.ObjectID) ([]models.Car, error) {
 	return cars, nil
 }
 
-// ✅ UpdateCar modifies a car's data
+//  UpdateCar modifies a car's data
 func UpdateCar(carID primitive.ObjectID, updates bson.M) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -82,7 +82,7 @@ func UpdateCar(carID primitive.ObjectID, updates bson.M) error {
 	return nil
 }
 
-// ✅ DeleteCar removes a car by ID
+//  DeleteCar removes a car by ID
 func DeleteCar(carID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -95,7 +95,7 @@ func DeleteCar(carID primitive.ObjectID) error {
 	return nil
 }
 
-// ✅ SetDefaultCar sets one car as default and unsets others
+//  SetDefaultCar sets one car as default and unsets others
 func SetDefaultCar(userID, carID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -118,7 +118,7 @@ func SetDefaultCar(userID, carID primitive.ObjectID) error {
 	return nil
 }
 
-// ✅ GetCarByID fetches a car by its ID
+//  GetCarByID fetches a car by its ID
 func GetCarByID(carID primitive.ObjectID) (*models.Car, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

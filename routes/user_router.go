@@ -7,7 +7,8 @@ import (
 
 	"github.com/olabanji12-ojo/CarWashApp/controllers"
 
-	"github.com/olabanji12-ojo/CarWashApp/middleware"
+	// "github.com/olabanji12-ojo/CarWashApp/middleware"
+
 )
 
 
@@ -15,10 +16,11 @@ import (
 
 func UserRoutes(router *mux.Router) {
 	
-	// 🧑‍💻 User Routes
+	//  User Routes
+
 	userRouter := router.PathPrefix("/api/user").Subrouter()
 
-	userRouter.Use(middleware.AuthMiddleware)
+	// userRouter.Use(middleware.AuthMiddleware)
 
 	userRouter.HandleFunc("/{id}", controllers.GetUserProfile).Methods("GET")
 	userRouter.HandleFunc("/{id}", controllers.UpdateUserProfile).Methods("PUT")
@@ -27,9 +29,10 @@ func UserRoutes(router *mux.Router) {
 	userRouter.HandleFunc("/{id}/loyalty", controllers.GetLoyaltyPoints).Methods("GET")
 	userRouter.HandleFunc("/{id}/public", controllers.GetPublicUser).Methods("GET")
 
-	// 👷 Business Route for Workers
+	//  Business Route for Workers
 	businessRouter := router.PathPrefix("/api/business").Subrouter()
 	businessRouter.HandleFunc("/{id}/workers", controllers.GetWorkersForBusiness).Methods("GET")
-
+    
 	
 }
+

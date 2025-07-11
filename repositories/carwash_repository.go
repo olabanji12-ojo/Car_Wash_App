@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// ✅ 1. Create a new carwash
+//  1. Create a new carwash
 func CreateCarwash(carwash models.Carwash) (*mongo.InsertOneResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -25,7 +25,7 @@ func CreateCarwash(carwash models.Carwash) (*mongo.InsertOneResult, error) {
 }
 
 
-// ✅ 2. Get a carwash by ID
+//  2. Get a carwash by ID
 func GetCarwashByID(id string) (*models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -44,7 +44,7 @@ func GetCarwashByID(id string) (*models.Carwash, error) {
 	return &carwash, nil
 }
 
-// ✅ 3. Get all active carwashes (for customers to browse)
+//  3. Get all active carwashes (for customers to browse)
 func GetActiveCarwashes() ([]models.Carwash, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -65,7 +65,7 @@ func GetActiveCarwashes() ([]models.Carwash, error) {
 	return carwashes, nil
 }
 
-// ✅ 4. Update a carwash
+//  4. Update a carwash
 func UpdateCarwash(id string, update bson.M) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -83,12 +83,12 @@ func UpdateCarwash(id string, update bson.M) error {
 	return err
 }
 
-// ✅ 5. Toggle carwash online status
+//  5. Toggle carwash online status
 func SetCarwashStatus(id string, isActive bool) error {
 	return UpdateCarwash(id, bson.M{"is_active": isActive})
 }
 
-// ✅ 6. Get all carwashes by business owner ID
+//  6. Get all carwashes by business owner ID
 func GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(ownerID)
 	if err != nil {
@@ -114,7 +114,7 @@ func GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
 	return results, nil
 }
 
-// ✅ 7. Filter carwashes (optional advanced search)
+//  7. Filter carwashes (optional advanced search)
 func GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -135,7 +135,7 @@ func GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
 	return carwashes, nil
 }
 
-// ✅ 8. Update queue count
+//  8. Update queue count
 func UpdateQueueCount(id string, count int) error {
 	return UpdateCarwash(id, bson.M{"queue_count": count})
 }

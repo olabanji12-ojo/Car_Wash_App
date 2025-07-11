@@ -1,18 +1,27 @@
 package controllers
 
 import (
+
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+
+	
 )
 
-// ✅ 1. CreateCarHandler - POST /api/cars/
+//  1. CreateCarHandler - POST /api/cars/
 func CreateCarHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("user_id")
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	fmt.Println("user_id: ", userID)
+
+	// ownerID, err := primitive.ObjectIDFromHex(userID)
 
 	var input models.Car
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -29,9 +38,11 @@ func CreateCarHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusCreated, newCar)
 }
 
-// ✅ 2. GetMyCarsHandler - GET /api/cars/my
+//  2. GetMyCarsHandler - GET /api/cars/my
 func GetMyCarsHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("user_id")
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	
 
 	cars, err := services.GetCarsByUserID(userID)
 	if err != nil {
@@ -42,9 +53,10 @@ func GetMyCarsHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusOK, cars)
 }
 
-// ✅ 3. UpdateCarHandler - PUT /api/cars/{carID}
+//  3. UpdateCarHandler - PUT /api/cars/{carID}
 func UpdateCarHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("user_id")
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
 	carID := mux.Vars(r)["carID"]
 
 	var updates map[string]interface{}
@@ -62,9 +74,11 @@ func UpdateCarHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusOK, map[string]string{"message": "Car updated successfully"})
 }
 
-// ✅ 4. DeleteCarHandler - DELETE /api/cars/{carID}
+//  4. DeleteCarHandler - DELETE /api/cars/{carID}
 func DeleteCarHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("user_id") // Optional: use this to confirm ownership
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+
 	carID := mux.Vars(r)["carID"]
 
 	err := services.DeleteCar(userID, carID)
@@ -76,9 +90,11 @@ func DeleteCarHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusOK, map[string]string{"message": "Car deleted successfully"})
 }
 
-// ✅ 5. SetDefaultCarHandler - PATCH /api/cars/{carID}/default
+//  5. SetDefaultCarHandler - PATCH /api/cars/{carID}/default
 func SetDefaultCarHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("user_id")
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+
 	carID := mux.Vars(r)["carID"]
 
 	err := services.SetDefaultCar(userID, carID)

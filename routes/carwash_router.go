@@ -23,3 +23,6 @@ func CarwashRoutes(router *mux.Router) {
 	carwash.HandleFunc("/owner/{owner_id}", controllers.GetCarwashesByOwnerIDHandler).Methods("GET")
 	
 }
+
+
+

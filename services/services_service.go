@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ✅ CreateService
+//  CreateService
 func CreateService(userID string, input models.Service) (*models.Service, error) {
 
 	
@@ -47,7 +47,7 @@ func CreateService(userID string, input models.Service) (*models.Service, error)
 	return &newService, nil
 }
 
-// ✅ GetServiceByID
+//  GetServiceByID
 func GetServiceByID(serviceID string) (*models.Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -60,7 +60,7 @@ func GetServiceByID(serviceID string) (*models.Service, error) {
 	return repositories.GetServiceByID(ctx, objID)
 }
 
-// ✅ GetServicesByCarwashID
+//  GetServicesByCarwashID
 func GetServicesByCarwashID(carwashID string) ([]models.Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -73,7 +73,7 @@ func GetServicesByCarwashID(carwashID string) ([]models.Service, error) {
 	return repositories.GetServicesByCarwashID(ctx, objID)
 }
 
-// ✅ UpdateService
+//  UpdateService
 func UpdateService(userID string,  serviceID string, updates map[string]interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -89,7 +89,7 @@ func UpdateService(userID string,  serviceID string, updates map[string]interfac
 	return repositories.UpdateService(ctx, objID, bson.M(updates))
 }
 
-// ✅ DeleteService (soft delete)
+//  DeleteService (soft delete)
 func DeleteService(userID string, serviceID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

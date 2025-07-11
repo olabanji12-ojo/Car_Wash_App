@@ -61,7 +61,7 @@ func FindUserByID(userID primitive.ObjectID) (*models.User, error) {
 }
 
 
-// ✅ New: Update user profile fields
+//  New: Update user profile fields
 func UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

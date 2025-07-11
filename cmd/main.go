@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/olabanji12-ojo/CarWashApp/database"
+	// "github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/routes"
 )
 
@@ -35,9 +36,13 @@ func main() {
 	// service routes
     routes.ServiceRoutes(router)
 
+	// booking routes
+	routes.BookingRoutes(router)
+
 	// 4. Start HTTP server
 	fmt.Println("🌐 Listening on http://localhost:8080")
 	http.ListenAndServe(":8080", router)
+	
 	
 		
 }
