@@ -22,17 +22,23 @@ func UserRoutes(router *mux.Router) {
 
 	// userRouter.Use(middleware.AuthMiddleware)
 
-	userRouter.HandleFunc("/{id}", controllers.GetUserProfile).Methods("GET")
-	userRouter.HandleFunc("/{id}", controllers.UpdateUserProfile).Methods("PUT")
-	userRouter.HandleFunc("/{id}", controllers.DeleteUser).Methods("DELETE")
-	userRouter.HandleFunc("/{id}/role", controllers.GetUserRole).Methods("GET")
-	userRouter.HandleFunc("/{id}/loyalty", controllers.GetLoyaltyPoints).Methods("GET")
-	userRouter.HandleFunc("/{id}/public", controllers.GetPublicUser).Methods("GET")
+	userRouter.HandleFunc("/{id}", controllers.GetUserProfile).Methods("GET") // tested
+
+	userRouter.HandleFunc("/{id}", controllers.UpdateUserProfile).Methods("PUT") // tested
+
+	userRouter.HandleFunc("/{id}", controllers.DeleteUser).Methods("DELETE") // tested
+
+	userRouter.HandleFunc("/{id}/role", controllers.GetUserRole).Methods("GET")  // tested
+
+	userRouter.HandleFunc("/{id}/loyalty", controllers.GetLoyaltyPoints).Methods("GET") // tested
+
+	userRouter.HandleFunc("/{id}/public", controllers.GetPublicUser).Methods("GET") // tested
 
 	//  Business Route for Workers
 	businessRouter := router.PathPrefix("/api/business").Subrouter()
-	businessRouter.HandleFunc("/{id}/workers", controllers.GetWorkersForBusiness).Methods("GET")
+	businessRouter.HandleFunc("/{id}/workers", controllers.GetWorkersForBusiness).Methods("GET") // pending
     
 	
 }
+
 

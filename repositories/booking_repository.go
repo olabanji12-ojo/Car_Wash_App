@@ -1,7 +1,7 @@
 package repositories
 
 import (
-
+    
 	"context"
 	"errors"
 	"time"
@@ -11,6 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/sirupsen/logrus"
+    
 )
 
 //  1. CreateBooking
@@ -91,6 +93,22 @@ func UpdateBookingStatus(id primitive.ObjectID, newStatus string) error {
 	return err
 }
 
+func UpdateBooking(bookingID primitive.ObjectID, updates bson.M) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": bookingID}
+	update := bson.M{"$set": updates}
+
+	_, err := database.BookingCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		logrus.Error("Failed to update car: ", err)
+		return err
+	}
+	return nil
+}
+
+
 //  6. GetLatestBookingTime
 // func GetLatestBookingTime(carwashID primitive.ObjectID) (*time.Time, error) {
 // 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -150,10 +168,6 @@ func GetBookingsByDate(carwashID primitive.ObjectID, date time.Time) ([]models.B
 	}
 	return bookings, nil
 }
-
-
-
-
 
 
 

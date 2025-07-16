@@ -31,7 +31,12 @@ func CreateCarwash(ownerID string, input models.Carwash) (*models.Carwash, error
 }
 
 func GetCarwashByID(id string) (*models.Carwash, error) {
-	return repositories.GetCarwashByID(id)
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, errors.New("invalid carwash ID format")
+	}
+
+	return repositories.GetCarwashByID(objID)
 }
 
 func GetAllActiveCarwashes() ([]models.Carwash, error) {
@@ -44,17 +49,25 @@ func UpdateCarwash(id string, updateData map[string]interface{}) error {
 }
 
 func SetCarwashStatus(id string, isActive bool) error {
+
 	return repositories.SetCarwashStatus(id, isActive)
+
 }
 
 func GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
+
 	return repositories.GetCarwashesByOwnerID(ownerID)
+
 }
 
 func SearchCarwashes(filter bson.M) ([]models.Carwash, error) {
+
 	return repositories.GetCarwashesByFilter(filter)
+
 }
 
 func UpdateQueueCount(carwashID string, count int) error {
+
 	return repositories.UpdateQueueCount(carwashID, count)
+	
 }

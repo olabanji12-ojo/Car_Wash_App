@@ -17,15 +17,15 @@ var (
 	ServiceCollection  *mongo.Collection
 )
 
-func InitCollections() {
-	UserCollection = DB.Collection("users")
-	CarCollection = DB.Collection("cars")
-	CarwashCollection = DB.Collection("carwashes")
-	BookingCollection = DB.Collection("bookings")
+func InitCollections() { 
+	UserCollection = DB.Collection("users") // touched
+	CarCollection = DB.Collection("cars") // touched
+	CarwashCollection = DB.Collection("carwashes") // touched
+	BookingCollection = DB.Collection("bookings") // touched
 	OrderCollection = DB.Collection("orders")
 	ReviewCollection = DB.Collection("reviews")
 	PaymentCollection = DB.Collection("payments")
-	ServiceCollection = DB.Collection("services")
+	ServiceCollection = DB.Collection("services") // touched
 }
 
 

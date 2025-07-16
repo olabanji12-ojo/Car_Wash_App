@@ -62,7 +62,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 🔒 Validate login input
+	//  Validate login input
 	err := validation.ValidateStruct(&credentials,
 		validation.Field(&credentials.Email, validation.Required, is.Email),
 		validation.Field(&credentials.Password, validation.Required, validation.Length(6, 100)),
@@ -86,6 +86,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusOK, response)
 }
+
+
 
 
 

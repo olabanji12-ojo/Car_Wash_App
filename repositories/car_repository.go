@@ -21,6 +21,7 @@ func CreateCar(car *models.Car) error {
 		logrus.Error("Failed to insert car: ", err)
 		return err
 	}
+	
 	return nil
 }
 

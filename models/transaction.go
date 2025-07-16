@@ -7,6 +7,8 @@ import (
 )
 
 type Payment struct {
+	
+
 	ID              primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	UserID          primitive.ObjectID `bson:"user_id" json:"user_id"`
 	CarwashID       primitive.ObjectID `bson:"carwash_id" json:"carwash_id"`
@@ -18,6 +20,8 @@ type Payment struct {
 	PaidAt          time.Time          `bson:"paid_at" json:"paid_at"` // When payment was actually made
 	CreatedAt       time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
+
+
 }
 
 

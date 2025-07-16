@@ -12,32 +12,33 @@ func BookingRoutes(router *mux.Router) {
 
 	//  JWT Middleware for all protected booking routes
 	booking.Use(middleware.AuthMiddleware)
-
+    
 	// POST /api/bookings
-	booking.HandleFunc("", controllers.CreateBookingHandler).Methods("POST")
+	booking.HandleFunc("", controllers.CreateBookingHandler).Methods("POST") // tested 
 
 	// GET /api/bookings/{id}
-	booking.HandleFunc("/{id}", controllers.GetBookingByIDHandler).Methods("GET")
+	booking.HandleFunc("/{id}", controllers.GetBookingByIDHandler).Methods("GET") // tested 
 
 	// GET /api/bookings/user/me
-	booking.HandleFunc("/user/me", controllers.GetMyBookingsHandler).Methods("GET")
+	booking.HandleFunc("/user/me", controllers.GetMyBookingsHandler).Methods("GET") // tested 
 
 	// GET /api/bookings/carwash/{carwash_id}
-	booking.HandleFunc("/carwash/{carwash_id}", controllers.GetBookingsByCarwashHandler).Methods("GET")
+	booking.HandleFunc("/carwash/{carwash_id}", controllers.GetBookingsByCarwashHandler).Methods("GET") // tested 
 
+    // PUT/api/bookings/{id}
+    booking.HandleFunc("/booking/{bookingID}", controllers.UpdateBookingHandler).Methods("PUT")
+   
 	// PUT /api/bookings/{id}/status
-	booking.HandleFunc("/{id}/status", controllers.UpdateBookingStatusHandler).Methods("PUT")
+	booking.HandleFunc("/{id}/status", controllers.UpdateBookingStatusHandler).Methods("PUT") // tested 
 
 	// DELETE /api/bookings/{id}
-	booking.HandleFunc("/{id}", controllers.CancelBookingHandler).Methods("DELETE")
+	booking.HandleFunc("/{id}", controllers.CancelBookingHandler).Methods("DELETE") // tested 
 
 	// Optional: GET /api/bookings/carwash/{carwash_id}/date?date=2025-07-08
-	booking.HandleFunc("/carwash/{carwash_id}/date", controllers.GetBookingsByDateHandler).Methods("GET")
+	booking.HandleFunc("/carwash/{carwash_id}/date", controllers.GetBookingsByDateHandler).Methods("GET") // tested
+
 	
 }
-
-
-
 
 
 

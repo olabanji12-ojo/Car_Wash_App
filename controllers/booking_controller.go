@@ -1,18 +1,17 @@
 package controllers
 
 import (
-    
 	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/olabanji12-ojo/CarWashApp/middleware"
+	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
-	"github.com/olabanji12-ojo/CarWashApp/models"
-	"github.com/olabanji12-ojo/CarWashApp/middleware"
+	"github.com/sirupsen/logrus"
 
 	"time"
-    
 )
 
 // 1. CreateBookingHandler
@@ -114,12 +113,27 @@ func CancelBookingHandler(w http.ResponseWriter, r *http.Request) {
 // 7. GetBookingsByDateHandler (Optional)
 func GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
 	carwashID := mux.Vars(r)["carwash_id"]
-	dateStr := r.URL.Query().Get("date") // e.g. ?date=2025-07-08
+	dateStr := r.URL.Query().Get("date") // ?date=2025-07-08 or ?date=2025-07-08T14:00:00Z
+	logrus.Info("Recieved date query param:", dateStr)
 
-	date, err := time.Parse("2006-01-02", dateStr)
+	var date time.Time
+	var err error
+
+	if dateStr == "" {
+	utils.Error(w, http.StatusBadRequest, "Missing date parameter (?date=YYYY-MM-DD)")
+	return
+}
+
+
+	// Try full datetime first 
+	date, err = time.Parse(time.RFC3339, dateStr)
 	if err != nil {
-		utils.Error(w, http.StatusBadRequest, "Invalid date format (use YYYY-MM-DD)")
-		return
+		// If that fails, try just YYYY-MM-DD
+		date, err = time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			utils.Error(w, http.StatusBadRequest, "Invalid date format (use YYYY-MM-DD or RFC3339)")
+			return
+		}
 	}
 
 	bookings, err := services.GetBookingsByDate(carwashID, date)
@@ -129,5 +143,26 @@ func GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSON(w, http.StatusOK, bookings)
-	
+}
+
+
+func UpdateBookingHandler(w http.ResponseWriter, r *http.Request) {
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID  := authCtx.UserID
+	bookingID := mux.Vars(r)["bookingID"]
+	logrus.Info("Vars:", bookingID)
+
+	var updates map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid update data")
+		return
+	}
+
+	err := services.UpdateBooking(userID, bookingID, updates)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, map[string]string{"message": "Car updated successfully"})
 }

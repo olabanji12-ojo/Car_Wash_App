@@ -7,7 +7,9 @@ import (
 
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
 )
 
 
@@ -149,5 +151,26 @@ func GetBookingsByDate(carwashID string, date time.Time) ([]models.Booking, erro
 
 	return repositories.GetBookingsByDate(objID, date)
 }
+
+
+func UpdateBooking(userID, bookingID string, updates map[string]interface{}) error {
+	// _, err := primitive.ObjectIDFromHex(userID)
+	// if err != nil {
+	// 	return errors.New("invalid user ID")
+	// }
+
+	bookingObjID, err := primitive.ObjectIDFromHex(bookingID)
+	if err != nil {
+		return errors.New("invalid booking ID")
+	}
+
+	// Optional: check ownership here if needed
+
+	// Add updatedAt
+	updates["updated_at"] = time.Now()
+
+	return repositories.UpdateBooking(bookingObjID, bson.M(updates))
+}
+
 
 

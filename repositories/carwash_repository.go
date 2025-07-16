@@ -10,6 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/sirupsen/logrus"
+	"fmt"
+
 )
 
 //  1. Create a new carwash
@@ -26,17 +29,14 @@ func CreateCarwash(carwash models.Carwash) (*mongo.InsertOneResult, error) {
 
 
 //  2. Get a carwash by ID
-func GetCarwashByID(id string) (*models.Carwash, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, errors.New("invalid carwash ID format")
-	}
-
+func GetCarwashByID(objID primitive.ObjectID) (*models.Carwash, error) {
+	
+	
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var carwash models.Carwash
-	err = database.CarwashCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&carwash)
+	err := database.CarwashCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&carwash)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +58,14 @@ func GetActiveCarwashes() ([]models.Carwash, error) {
 	var carwashes []models.Carwash
 	for cursor.Next(ctx) {
 		var cw models.Carwash
-		if err := cursor.Decode(&cw); err == nil {
-			carwashes = append(carwashes, cw)
+		if err := cursor.Decode(&cw); err != nil {
+			logrus.Info("Error decoding carwash:", err)
 		}
+		carwashes = append(carwashes, cw)
 	}
+	fmt.Println("Carwashes found:", len(carwashes))
 	return carwashes, nil
+	
 }
 
 //  4. Update a carwash
