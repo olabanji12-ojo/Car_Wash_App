@@ -4,6 +4,9 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
+	
 )
 
 type Order struct {
@@ -30,5 +33,17 @@ type Order struct {
 	
 }
 
+
+func (o Order) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.BookingID, validation.Required),
+		validation.Field(&o.UserID, validation.Required),
+		validation.Field(&o.CarID, validation.Required),
+		validation.Field(&o.CarwashID, validation.Required),
+		validation.Field(&o.ServiceIDs, validation.Required),
+		validation.Field(&o.Status, validation.Required, validation.In("active", "completed")),
+		validation.Field(&o.PaymentStatus, validation.Required, validation.In("paid", "unpaid")),
+	)
+}
 
 

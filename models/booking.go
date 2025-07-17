@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 
@@ -31,4 +32,14 @@ type Booking struct {
 }
 
 
+func (b Booking) Validate() error {
+	return validation.ValidateStruct(&b,
+		validation.Field(&b.UserID, validation.Required),
+		validation.Field(&b.CarID, validation.Required),
+		validation.Field(&b.CarwashID, validation.Required),
+		validation.Field(&b.ServiceIDs, validation.Required),
+		validation.Field(&b.BookingTime, validation.Required),
+		validation.Field(&b.BookingType, validation.Required, validation.In("walk_in", "home_service")),
+	)
+}
 

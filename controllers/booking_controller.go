@@ -26,6 +26,12 @@ func CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := input.Validate(); err != nil {
+	utils.Error(w, http.StatusBadRequest, err.Error())
+	return
+   }
+
+
 	newBooking, err := services.CreateBooking(userID, input)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())

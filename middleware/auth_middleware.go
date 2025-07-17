@@ -7,6 +7,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+	"github.com/rs/cors"
+	"github.com/unrolled/secure"
+
+	"os"
+	
+	
 )
 
 //  This struct will store the data we'll inject into context
@@ -49,11 +55,44 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			Role:   role,
 		}
 
-		ctx := context.WithValue(r.Context(), "auth", authCtx)
+		type contextKey string
+        const authKey contextKey = "auth"
+
+		ctx := context.WithValue(r.Context(), authKey, authCtx)
 
 		// ⏭ 5. Call next handler, passing in updated request with user context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func Cors() *cors.Cors {
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+	})
+	return c
+}
+
+
+func Secure() *secure.Secure {
+	options := secure.Options{
+		BrowserXssFilter:     true,
+		ContentTypeNosniff:   true,
+		FrameDeny:            false,
+		SSLForceHost:         false,
+		STSIncludeSubdomains: true,
+		STSPreload:           true,
+	}
+
+	if os.Getenv("ENVIRONMENT") != "production" {
+		options.IsDevelopment = true
+	}
+
+	secureMiddleware := secure.New(options)
+    
+	return secureMiddleware
 }
 
 

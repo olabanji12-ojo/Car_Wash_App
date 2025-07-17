@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 )
 
 type Car struct {
@@ -17,5 +19,13 @@ type Car struct {
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
+
+// adding the validation package
+func (c Car) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Model, validation.Required),
+		validation.Field(&c.Plate, validation.Required),
+	)
+}
 
 

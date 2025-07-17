@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 )
 
 
@@ -21,4 +23,12 @@ type Service struct {
 }
 
 
+func (s Service) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.CarwashID, validation.Required),
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Price, validation.Required),
+		validation.Field(&s.Duration, validation.Required),
+	)
+}
 

@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 )
 
 type Review struct {
@@ -24,5 +26,12 @@ type Review struct {
 }
 
 
-
+func (r Review) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.UserID, validation.Required),
+		validation.Field(&r.CarwashID, validation.Required),
+		validation.Field(&r.Rating, validation.Required, validation.Min(1), validation.Max(5)),
+		validation.Field(&r.Comment, validation.Length(0, 500)),
+	)
+}
 

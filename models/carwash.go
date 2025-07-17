@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 )
 
@@ -36,6 +37,18 @@ type Carwash struct {
 	UpdatedAt     time.Time            `bson:"updated_at" json:"updated_at"`                     // Last update
 	
 
+}
+
+
+func (c Carwash) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Name, validation.Required, validation.Length(3, 100)),
+		validation.Field(&c.Address, validation.Required, validation.Length(5, 200)),
+		validation.Field(&c.Location.Type, validation.Required, validation.In("Point")),
+		validation.Field(&c.Location.Coordinates, validation.Required, validation.Length(2, 2)),
+		validation.Field(&c.Services), // Optional: deeper validation for each ObjectID
+		validation.Field(&c.OpenHours), // Optional: add map value check
+	)
 }
 
 

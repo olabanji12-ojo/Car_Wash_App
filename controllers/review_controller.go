@@ -22,6 +22,11 @@ func LeaveReviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := input.Validate(); err != nil {
+	utils.Error(w, http.StatusBadRequest, err.Error())
+	return
+	}
+
 	review, err := services.CreateReview(userID, input)
 	if err != nil {
 		utils.Error(w, http.StatusBadRequest, err.Error())

@@ -22,6 +22,7 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bookingID := mux.Vars(r)["booking_id"]
+	
 	order, err := services.CreateOrderFromBooking(bookingID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())

@@ -25,6 +25,11 @@ func CreatePaymentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := input.Validate(); err != nil {
+	utils.Error(w, http.StatusBadRequest, err.Error())
+	return
+   }
+
 	created, err := services.CreatePayment(userID, input)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())

@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 )
 
 type Payment struct {
@@ -24,4 +26,15 @@ type Payment struct {
 
 }
 
+
+func (p Payment) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.UserID, validation.Required),
+		validation.Field(&p.CarwashID, validation.Required),
+		validation.Field(&p.OrderID, validation.Required),
+		validation.Field(&p.Amount, validation.Required),
+		validation.Field(&p.Method, validation.Required, validation.In("cash", "card", "wallet", "transfer")),
+		validation.Field(&p.Status, validation.Required, validation.In("paid", "failed", "pending", "refunded")),
+	)
+}
 

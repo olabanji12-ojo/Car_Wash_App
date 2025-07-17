@@ -30,6 +30,11 @@ func CreateServiceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := input.Validate(); err != nil {
+	utils.Error(w, http.StatusBadRequest, err.Error())
+	return
+	}
+
 	createdService, err := services.CreateService(userID, input)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
