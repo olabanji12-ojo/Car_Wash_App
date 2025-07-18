@@ -16,6 +16,13 @@ type GeoLocation struct {
 	Coordinates []float64 `bson:"coordinates" json:"coordinates"` // [lng, lat]
 }
 
+// Time Range Opening for the Car wash
+
+type TimeRange struct {
+	Start string `bson:"start" json:"start"` // "08:00"
+	End   string `bson:"end" json:"end"`     // "18:00"
+}
+
 
 type Carwash struct {
 
@@ -28,9 +35,9 @@ type Carwash struct {
 	PhotoGallery  []string             `bson:"photo_gallery,omitempty" json:"photo_gallery,omitempty"` // Images
 	Services      []primitive.ObjectID `bson:"services" json:"services"`                         // List of service IDs
 	IsActive      bool                 `bson:"is_active" json:"is_active"`                       // Can accept bookings?
-	// Rating        float64              `bson:"rating" json:"rating"`                             // Avg from reviews
+	Rating        float64              `bson:"rating" json:"rating"`                             // Avg from reviews
 	QueueCount    int                  `bson:"queue_count" json:"queue_count"`                   // Cars waiting
-	OpenHours     map[string]string    `bson:"open_hours" json:"open_hours"`                     // E.g., { "mon": "8am–6pm" }
+	OpenHours     map[string]TimeRange  `bson:"open_hours" json:"open_hours"`                     // E.g., { "mon": "8am–6pm" }
 	HomeService   bool                 `bson:"home_service" json:"home_service"`                 // Mobile service?
 	DeliveryRadiusKM int               `bson:"delivery_radius_km,omitempty" json:"delivery_radius_km,omitempty"` // e.g., 10 means 10km max
 	CreatedAt     time.Time            `bson:"created_at" json:"created_at"`                     // Joined on

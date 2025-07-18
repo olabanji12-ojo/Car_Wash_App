@@ -146,25 +146,6 @@ func GetLoyaltyPoints(userID string) (int, error) {
 }
 
 
-//  GetWorkersByBusinessID(businessID string)
-
-
-func GetWorkersByBusinessID(businessID string) ([]*models.User, error) {
-	// 1. Convert the business ID to MongoDB ObjectID
-	objID, err := primitive.ObjectIDFromHex(businessID)
-	if err != nil {
-		return nil, errors.New("invalid business ID format")
-	}
-
-	// 2. Call repository to fetch workers
-	workers, err := repositories.FindWorkersByBusinessID(objID)
-	if err != nil {
-		return nil, err
-	}
-
-	return workers, nil
-}
-
 
 // 
 

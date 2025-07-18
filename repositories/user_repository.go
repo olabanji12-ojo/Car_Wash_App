@@ -76,34 +76,6 @@ func UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
 }
 
 
-// FindWorkerByBusinessID
-
-
-func FindWorkersByBusinessID(businessID primitive.ObjectID) ([]*models.User, error) {
-	filter := bson.M{
-		"role": "worker",
-		"worker_data.business_id": businessID,
-	}
-
-	cursor, err := database.UserCollection.Find(context.TODO(), filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.TODO())
-
-	var workers []*models.User
-	for cursor.Next(context.TODO()) {
-		var user models.User
-		if err := cursor.Decode(&user); err != nil {
-			return nil, err
-		}
-		workers = append(workers, &user)
-	}
-
-	return workers, nil
-}
-
-
 
 
 

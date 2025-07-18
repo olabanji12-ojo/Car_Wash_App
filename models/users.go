@@ -9,6 +9,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
+
 type User struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Name         string             `bson:"name" json:"name"`
@@ -28,10 +29,12 @@ type User struct {
 	UpdatedAt    time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
+
 // Role-specific data for car owners
 type OwnerProfile struct {
 	LoyaltyPoints int `bson:"loyalty_points,omitempty" json:"loyalty_points,omitempty"`
 }
+
 
 // Role-specific data for workers
 type WorkerProfile struct {
@@ -40,13 +43,11 @@ type WorkerProfile struct {
 }
 
 
-
 type UserUpdateInput struct {
 	Name         string `json:"name,omitempty"`
 	Phone        string `json:"phone,omitempty"`
 	ProfilePhoto string `json:"profile_photo,omitempty"`
 }
-
 
 type PublicUserProfile struct {
 	ID           primitive.ObjectID `json:"id"`
@@ -56,7 +57,25 @@ type PublicUserProfile struct {
 	JobRole      string             `json:"job_role,omitempty"`
 }
 
+// CreateWorkerInput Struct
 
+// type CreateWorkerInput struct {
+// 	Name     string `json:"name"`
+// 	Email    string `json:"email"`
+// 	Password string `json:"password"`
+// 	Phone    string `json:"phone,omitempty"`
+// 	JobRole  string `json:"job_role"`
+// }
+
+
+// func (input CreateWorkerInput) Validate() error {
+// 	return validation.ValidateStruct(&input,
+// 		validation.Field(&input.Name, validation.Required, validation.Length(2, 50)),
+// 		validation.Field(&input.Email, validation.Required, is.Email),
+// 		validation.Field(&input.Password, validation.Required, validation.Length(6, 100)),
+// 		validation.Field(&input.JobRole, validation.Required),
+// 	)
+// }
 
 
 func (u User) Validate() error {
@@ -67,8 +86,6 @@ func (u User) Validate() error {
 		validation.Field(&u.Role, validation.Required, validation.In("car_owner", "worker", "business")),
 	)
 }
-
-
 
 
 

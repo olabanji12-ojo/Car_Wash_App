@@ -112,18 +112,18 @@ func GetLoyaltyPoints(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func GetWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	businessID := params["id"]
+// func GetWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
+// 	params := mux.Vars(r)
+// 	businessID := params["id"]
 
-	workers, err := services.GetWorkersByBusinessID(businessID)
-	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+// 	workers, err := services.GetWorkersByBusinessID(businessID)
+// 	if err != nil {
+// 		utils.Error(w, http.StatusInternalServerError, err.Error())
+// 		return
+// 	}
 
-	utils.JSON(w, http.StatusOK, workers)
-}
+// 	utils.JSON(w, http.StatusOK, workers)
+// }
 
 
 func GetPublicUser(w http.ResponseWriter, r *http.Request) {

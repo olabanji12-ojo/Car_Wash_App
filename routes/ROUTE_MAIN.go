@@ -14,6 +14,8 @@ func InitRoutes(router *mux.Router) {
 	PaymentRoutes(router)
 	ReviewRoutes(router)
 	OrderRoutes(router)
+	WorkerRoutes(router)
 }
+
 
 

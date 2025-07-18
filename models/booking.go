@@ -3,6 +3,7 @@ package models
 
 import (
 	"time"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -33,7 +34,7 @@ type Booking struct {
 
 
 func (b Booking) Validate() error {
-	return validation.ValidateStruct(&b,
+	err := validation.ValidateStruct(&b,
 		validation.Field(&b.UserID, validation.Required),
 		validation.Field(&b.CarID, validation.Required),
 		validation.Field(&b.CarwashID, validation.Required),
@@ -41,5 +42,18 @@ func (b Booking) Validate() error {
 		validation.Field(&b.BookingTime, validation.Required),
 		validation.Field(&b.BookingType, validation.Required, validation.In("walk_in", "home_service")),
 	)
+
+	if err != nil {
+		return err
+	}
+
+	// Conditional check for home service
+	if b.BookingType == "home_service" && b.UserLocation == nil {
+		return errors.New("user location is required for home service bookings")
+	}
+
+	return nil
 }
+
+
 
