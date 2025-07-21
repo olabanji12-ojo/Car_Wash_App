@@ -21,25 +21,35 @@ type User struct {
 	Verified     bool               `bson:"verified" json:"verified"`
 	ProfilePhoto string             `bson:"profile_photo,omitempty" json:"profile_photo,omitempty"`
 	
-
+    
 	OwnerData    *OwnerProfile      `bson:"owner_data,omitempty" json:"owner_data,omitempty"`
 	WorkerData   *WorkerProfile     `bson:"worker_data,omitempty" json:"worker_data,omitempty"`
 
 	CreatedAt    time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt    time.Time          `bson:"updated_at" json:"updated_at"`
+
 }
 
 
 // Role-specific data for car owners
 type OwnerProfile struct {
+
 	LoyaltyPoints int `bson:"loyalty_points,omitempty" json:"loyalty_points,omitempty"`
 }
 
 
 // Role-specific data for workers
 type WorkerProfile struct {
-	BusinessID string `bson:"business_id,omitempty" json:"business_id,omitempty"`
-	JobRole    string `bson:"job_role,omitempty" json:"job_role,omitempty"`
+    BusinessID   string               `bson:"business_id,omitempty" json:"business_id,omitempty"`
+    JobRole      string               `bson:"job_role,omitempty" json:"job_role,omitempty"`
+    
+    // Single status field that covers everything
+    WorkerStatus       string               `bson:"status,omitempty" json:"status,omitempty"` // "online", "offline", "busy", "on_break"
+    LastSeen     time.Time            `bson:"last_seen,omitempty" json:"last_seen,omitempty"`
+    
+    // Order tracking
+    ActiveOrders []primitive.ObjectID `bson:"active_orders,omitempty" json:"active_orders,omitempty"`
+    Location     *GeoLocation         `bson:"location,omitempty" json:"location,omitempty"` // instances where worker is not at the carwash
 }
 
 

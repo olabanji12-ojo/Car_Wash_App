@@ -3,9 +3,12 @@ package models
 import (
 
 	"time"
-
+    
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
+	// validation "github.com/go-ozzo/ozzo-validation/v4"
+	// "errors"
+	// "fmt"
+	
 
 )
 
@@ -24,7 +27,19 @@ type TimeRange struct {
 }
 
 
+// type OpenHours struct {
+// 	Mon TimeRange `bson:"mon" json:"mon"`
+// 	Tue TimeRange `bson:"tue" json:"tue"`
+// 	Wed TimeRange `bson:"wed" json:"wed"`
+// 	Thu TimeRange `bson:"thu" json:"thu"`
+// 	Fri TimeRange `bson:"fri" json:"fri"`
+// 	Sat TimeRange `bson:"sat" json:"sat"`
+// 	Sun TimeRange `bson:"sun" json:"sun"`
+// }
+
+
 type Carwash struct {
+
 
 	ID            primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
 	OwnerID       primitive.ObjectID   `bson:"owner_id" json:"owner_id"`                         // Linked to users._id
@@ -33,7 +48,7 @@ type Carwash struct {
 	Address       string               `bson:"address" json:"address"`                           // Full address
 	Location      GeoLocation          `bson:"location" json:"location"`                         // Geo search
 	PhotoGallery  []string             `bson:"photo_gallery,omitempty" json:"photo_gallery,omitempty"` // Images
-	Services      []primitive.ObjectID `bson:"services" json:"services"`                         // List of service IDs
+	Services      []string             `bson:"services" json:"services"`                         // List of service IDs
 	IsActive      bool                 `bson:"is_active" json:"is_active"`                       // Can accept bookings?
 	Rating        float64              `bson:"rating" json:"rating"`                             // Avg from reviews
 	QueueCount    int                  `bson:"queue_count" json:"queue_count"`                   // Cars waiting
@@ -43,21 +58,32 @@ type Carwash struct {
 	CreatedAt     time.Time            `bson:"created_at" json:"created_at"`                     // Joined on
 	UpdatedAt     time.Time            `bson:"updated_at" json:"updated_at"`                     // Last update
 	
-
 }
 
 
-func (c Carwash) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Name, validation.Required, validation.Length(3, 100)),
-		validation.Field(&c.Address, validation.Required, validation.Length(5, 200)),
-		validation.Field(&c.Location.Type, validation.Required, validation.In("Point")),
-		validation.Field(&c.Location.Coordinates, validation.Required, validation.Length(2, 2)),
-		validation.Field(&c.Services), // Optional: deeper validation for each ObjectID
-		validation.Field(&c.OpenHours), // Optional: add map value check
-	)
-}
 
+// func (c Carwash) Validate() error {
+// 	return validation.ValidateStruct(&c,
+// 		validation.Field(&c.Name, validation.Required, validation.Length(3, 100)),
+// 		validation.Field(&c.Address, validation.Required, validation.Length(5, 200)),
+// 		validation.Field(&c.Location.Type, validation.Required, validation.In("Point")),
+// 		validation.Field(&c.Location.Coordinates, validation.Required, validation.Length(2, 2)),
+// 		// validation.Field(&c.OpenHours, validation.By(validateOpenHours)),
+// 	)
+// }
+
+// func validateOpenHours(value interface{}) error {
+// 	hours, ok := value.(map[string]TimeRange)
+// 	if !ok {
+// 		return errors.New("invalid open_hours format")
+// 	}
+// 	for day, t := range hours {
+// 		if t.Start == "" || t.End == "" {
+// 			return fmt.Errorf("missing start or end time for %s", day)
+// 		}
+// 	}
+// 	return nil
+// }
 
 
 

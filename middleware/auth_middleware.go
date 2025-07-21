@@ -55,10 +55,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			Role:   role,
 		}
 
-		type contextKey string
-        const authKey contextKey = "auth"
+		// type contextKey string
+        // const authKey contextKey = "auth"
 
-		ctx := context.WithValue(r.Context(), authKey, authCtx)
+		ctx := context.WithValue(r.Context(), "auth", authCtx)
 
 		// ⏭ 5. Call next handler, passing in updated request with user context
 		next.ServeHTTP(w, r.WithContext(ctx))

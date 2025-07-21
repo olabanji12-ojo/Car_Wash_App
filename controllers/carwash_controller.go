@@ -39,10 +39,10 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := input.Validate(); err != nil {
-	utils.Error(w, http.StatusBadRequest, err.Error())
-	return
-   }
+// 	if err := input.Validate(); err != nil {
+// 	utils.Error(w, http.StatusBadRequest, err.Error())
+// 	return
+//    }
 
 	carwash, err := services.CreateCarwash(ownerID, input)
 	if err != nil {

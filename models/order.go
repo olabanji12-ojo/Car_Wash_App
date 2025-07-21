@@ -25,11 +25,12 @@ type Order struct {
 	PaymentStatus string               `bson:"payment_status" json:"payment_status"` // paid / unpaid
 
 	//  Home service fields (optional copy from booking)
-	BookingType  string       `bson:"booking_type,omitempty" json:"booking_type,omitempty"`
+	BookingType  string       `bson:"booking_type,omitempty" json:"booking_type,omitempty"` 
 	UserLocation *GeoLocation `bson:"user_location,omitempty" json:"user_location,omitempty"`
-
+    
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+    
 	
 }
 

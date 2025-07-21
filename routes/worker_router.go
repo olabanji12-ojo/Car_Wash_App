@@ -8,6 +8,15 @@ import (
 func WorkerRoutes(router *mux.Router) {
 	subRouter := router.PathPrefix("/api/workers").Subrouter()
 
+	// Existing routes
 	subRouter.HandleFunc("/business/{id}", controllers.GetWorkersForBusiness).Methods("GET")
 	subRouter.HandleFunc("/status/{id}", controllers.UpdateWorkerStatus).Methods("PATCH")
+
+	// New routes for worker assignment functionality
+	subRouter.HandleFunc("/available/{id}", controllers.GetAvailableWorkersForBusiness).Methods("GET")
+	subRouter.HandleFunc("/work-status/{id}", controllers.UpdateWorkerWorkStatus).Methods("PATCH")
+	subRouter.HandleFunc("/assign", controllers.AssignWorkerToOrder).Methods("POST")
+	subRouter.HandleFunc("/remove", controllers.RemoveWorkerFromOrder).Methods("POST")
+
+	
 }

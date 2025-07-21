@@ -32,6 +32,4 @@ func AuthRoutes(router *mux.Router)  {
 	auth.HandleFunc("/login", controllers.LoginHandler).Methods("POST")
 
 
-
-
 }

@@ -19,6 +19,7 @@ import (
 // REGISTER HANDLER 
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("RegisterHandler hit")
 	var input models.User
 
 	// Decode JSON request body

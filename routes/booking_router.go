@@ -15,13 +15,13 @@ func BookingRoutes(router *mux.Router) {
     
 	// POST /api/bookings
 	booking.HandleFunc("", controllers.CreateBookingHandler).Methods("POST") // tested 
-
+    
 	// GET /api/bookings/{id}
 	booking.HandleFunc("/{id}", controllers.GetBookingByIDHandler).Methods("GET") // tested 
-
+    
 	// GET /api/bookings/user/me
 	booking.HandleFunc("/user/me", controllers.GetMyBookingsHandler).Methods("GET") // tested 
-
+    
 	// GET /api/bookings/carwash/{carwash_id}
 	booking.HandleFunc("/carwash/{carwash_id}", controllers.GetBookingsByCarwashHandler).Methods("GET") // tested 
 

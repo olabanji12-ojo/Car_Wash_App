@@ -1,6 +1,7 @@
 package services
 
 import (
+
 	"context"
 	"errors"
 	"time"
@@ -25,12 +26,12 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 	if err != nil {
 		return nil, errors.New("invalid user ID format")
 	}
-
+    
 	// Step 2: Validate BookingTime is not empty
 	if input.BookingTime.IsZero() {
 		return nil, errors.New("booking time is required")
 	}
-
+    
 	//  Step 3: FETCH the Carwash and VALIDATE against its OpenHours
 	carwash, err := repositories.GetCarwashByID(input.CarwashID)
 	if err != nil {

@@ -58,6 +58,7 @@ func RegisterUser(input models.User) (*models.User, error) {
 		newUser.OwnerData = input.OwnerData
 	}
 
+	logrus.Info("Reached RegistrationUser Service")
 	// 4. Insert into DB
 	_, err = database.UserCollection.InsertOne(ctx, newUser)
 	if err != nil {

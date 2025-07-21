@@ -20,9 +20,9 @@ type Booking struct {
 	CarwashID    primitive.ObjectID   `bson:"carwash_id" json:"carwash_id"`
 	ServiceIDs   []primitive.ObjectID `bson:"service_ids" json:"service_ids"`
 	BookingTime  time.Time            `bson:"booking_time" json:"booking_time"`
-	BookingType  string               `bson:"booking_type" json:"booking_type"` // walk_in / home_service
+	BookingType  string               `bson:"booking_type" json:"booking_type"` // slot_booking / home_service
 	UserLocation *GeoLocation         `bson:"user_location,omitempty" json:"user_location,omitempty"` // Only for home service
-	AddressNote  string               `bson:"address_note,omitempty" json:"address_note,omitempty"`   // Optional directions
+	AddressNote  string               `bson:"address_note,omitempty" json:"address_note,omitempty"`   // Optional directions 
 	Status       string               `bson:"status" json:"status"`               // pending, approved, etc
 	Notes        string               `bson:"notes,omitempty" json:"notes,omitempty"`
 	QueueNumber  int                  `bson:"queue_number" json:"queue_number"`
@@ -40,19 +40,18 @@ func (b Booking) Validate() error {
 		validation.Field(&b.CarwashID, validation.Required),
 		validation.Field(&b.ServiceIDs, validation.Required),
 		validation.Field(&b.BookingTime, validation.Required),
-		validation.Field(&b.BookingType, validation.Required, validation.In("walk_in", "home_service")),
+		validation.Field(&b.BookingType, validation.Required, validation.In("slot_booking", "home_service")),
 	)
 
-	if err != nil {
-		return err
-	}
-
 	// Conditional check for home service
+	// add them to constants and consider using enums if you have the time
+	// how to handle user errors and server errors
+	
 	if b.BookingType == "home_service" && b.UserLocation == nil {
 		return errors.New("user location is required for home service bookings")
 	}
 
-	return nil
+		return err
 }
 
 

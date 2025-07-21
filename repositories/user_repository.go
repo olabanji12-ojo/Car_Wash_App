@@ -31,17 +31,20 @@ func CreateUser(user models.User) error {
 }
 
 
+
 // FindUserByEmail searches for a user by their email
 func FindUserByEmail(email string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var user models.User
+	logrus.Info("Inserting User into mongo")
 	err := database.UserCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		logrus.Warn("User not found with email: ", email)
 		return nil, err
 	}
+	logrus.Info("Inserted user Successfully")
 	return &user, nil
 }
 

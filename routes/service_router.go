@@ -15,16 +15,16 @@ func ServiceRoutes(router *mux.Router) {
 
 	// POST /api/services        -> Create a service (business only)
 	serviceRouter.HandleFunc("", controllers.CreateServiceHandler).Methods("POST") // tested
-
+    
 	// GET /api/services/my      -> Get all services for current business
 	serviceRouter.HandleFunc("/my", controllers.GetMyServicesHandler).Methods("GET") // tested
-
+    
 	// GET /api/services/{id}    -> Get one service by ID (publicly accessible)
 	router.HandleFunc("/api/services/{id}", controllers.GetServiceByIDHandler).Methods("GET") // tested
-
+    
 	// PUT /api/services/{id}    -> Update a service (business only)
 	serviceRouter.HandleFunc("/{id}", controllers.UpdateServiceHandler).Methods("PUT") // tested
-
+    
 	// DELETE /api/services/{id} -> Soft delete service (business only)
 	serviceRouter.HandleFunc("/{id}", controllers.DeleteServiceHandler).Methods("DELETE") // tested
 
