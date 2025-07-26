@@ -12,18 +12,23 @@ import (
 
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
-	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
+	"github.com/olabanji12-ojo/CarWashApp/utils"
 )
 
-
-
+// proposed flow
+// CAR OWNER
+// Navigates to url, clicks on sign up and fills basic form
+// proceeds to dashboard and can use the app, or maybe complete basic post onboarding like updating profile picture and perhaps funding wallet because we will add payment to it
+// CARWASH
+// Navigates to url, clicks on sign up and fills basic form
+// proceeds to post onboarding where he is presented another form to update business information
+// then a virtual account is created for the business
 func RegisterUser(input models.User) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// 1. Check if user with email already exists
-// 1. Check if user with this email already exists
 	existing, _ := repositories.FindUserByEmail(input.Email)
 	if existing != nil {
 		return nil, errors.New("user with this email already exists")
@@ -53,10 +58,10 @@ func RegisterUser(input models.User) (*models.User, error) {
 
 	// Optional: Add role-specific sub-structs
 	switch input.Role {
-		case utils.WORKER:
-			newUser.WorkerData = input.WorkerData
-		case utils.CAR_OWNER:
-			newUser.OwnerData = input.OwnerData
+	case utils.WORKER:
+		newUser.WorkerData = input.WorkerData
+	case utils.CAR_OWNER:
+		newUser.OwnerData = input.OwnerData
 	}
 
 	logrus.Info("Reached RegistrationUser Service")
@@ -70,8 +75,6 @@ func RegisterUser(input models.User) (*models.User, error) {
 	return &newUser, nil
 }
 
-
-
 func LoginUser(email, password string) (string, *models.User, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -81,9 +84,9 @@ func LoginUser(email, password string) (string, *models.User, error) {
 	if err != nil {
 		return "", nil, errors.New("user not found")
 	}
-	
+
 	// 2. Check password
-	if err := utils.CheckPasswordHash(password, user.Password);  err != nil {
+	if err := utils.CheckPasswordHash(password, user.Password); err != nil {
 		return "", nil, errors.New("invalid password")
 	}
 
@@ -96,6 +99,3 @@ func LoginUser(email, password string) (string, *models.User, error) {
 
 	return token, user, nil
 }
-
- 
-
