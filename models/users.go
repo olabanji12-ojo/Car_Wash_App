@@ -52,7 +52,7 @@ type WorkerProfile struct {
 type UserUpdate struct {
 	ID            primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
 	Name          string              `bson:"name,omitempty" json:"name,omitempty"`
-	BusinessID    *primitive.ObjectID `bson:"business_id,omitempty" json:"business_id,omitempty"`
+	CarWashID     *primitive.ObjectID `bson:"car_wash_id,omitempty" json:"car_wash_id,omitempty"`
 	Email         string              `bson:"email,omitempty" json:"email,omitempty"`
 	Password      string              `bson:"password,omitempty" json:"password,omitempty"`
 	Phone         string              `bson:"phone,omitempty" json:"phone,omitempty"`
