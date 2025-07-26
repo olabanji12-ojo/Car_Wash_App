@@ -1,7 +1,7 @@
 package services
 
 import (
-
+	
 	"context"
 	"errors"
 	"time"
@@ -126,6 +126,13 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 	if err := repositories.CreateBooking(&newBooking); err != nil {
 		return nil, err
 	}
+
+	// Step 7: Trigger notification (like Django signal)
+	// This runs asynchronously so it doesn't block the booking creation
+	go func() {
+		// Import notification service when we add it
+		// NotificationSvc.SendBookingConfirmation(&newBooking)
+	}()
 
 	return &newBooking, nil
 

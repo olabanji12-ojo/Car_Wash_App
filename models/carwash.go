@@ -27,17 +27,6 @@ type TimeRange struct {
 }
 
 
-// type OpenHours struct {
-// 	Mon TimeRange `bson:"mon" json:"mon"`
-// 	Tue TimeRange `bson:"tue" json:"tue"`
-// 	Wed TimeRange `bson:"wed" json:"wed"`
-// 	Thu TimeRange `bson:"thu" json:"thu"`
-// 	Fri TimeRange `bson:"fri" json:"fri"`
-// 	Sat TimeRange `bson:"sat" json:"sat"`
-// 	Sun TimeRange `bson:"sun" json:"sun"`
-// }
-
-
 type Carwash struct {
 
 
@@ -57,9 +46,12 @@ type Carwash struct {
 	DeliveryRadiusKM int               `bson:"delivery_radius_km,omitempty" json:"delivery_radius_km,omitempty"` // e.g., 10 means 10km max
 	CreatedAt     time.Time            `bson:"created_at" json:"created_at"`                     // Joined on
 	UpdatedAt     time.Time            `bson:"updated_at" json:"updated_at"`                     // Last update
+   
+	HasLocation   bool                 `bson:"has_location" json:"has_location"`   // true if location is set
+
+	ServiceRangeMinutes int `bson:"service_range_minutes,omitempty" json:"service_range_minutes,omitempty"`
 	
 }
-
 
 
 // func (c Carwash) Validate() error {
@@ -84,6 +76,4 @@ type Carwash struct {
 // 	}
 // 	return nil
 // }
-
-
 

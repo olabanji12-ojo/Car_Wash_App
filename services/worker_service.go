@@ -24,6 +24,7 @@ func CreateWorkerService(requester models.User, input models.User) error {
 	input.WorkerData = &models.WorkerProfile{
 		BusinessID: requester.ID.Hex(),
 		JobRole:    input.WorkerData.JobRole,
+		
 	}
 
 	return repositories.CreateUser(input)

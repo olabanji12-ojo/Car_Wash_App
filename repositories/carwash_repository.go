@@ -142,3 +142,84 @@ func GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
 func UpdateQueueCount(id string, count int) error {
 	return UpdateCarwash(id, bson.M{"queue_count": count})
 }
+
+
+// Add to repositories/carwash_repository.go
+
+// 🔎 Find carwashes with intelligent fallback
+func FindCarwashesWithFallback(userLat, userLng float64) ([]*models.Carwash, string, error) {
+    // Step 1: Try 10km radius
+    carwashes, err := findCarwashesInRadius(userLat, userLng, 10.0)
+    if err != nil {
+        return nil, "", err
+    }
+    if len(carwashes) > 0 {
+        return carwashes, "nearby", nil
+    }
+
+    // Step 2: Try 100km radius
+    carwashes, err = findCarwashesInRadius(userLat, userLng, 100.0)
+    if err != nil {
+        return nil, "", err
+    }
+    if len(carwashes) > 0 {
+        return carwashes, "extended", nil
+    }
+
+    // Step 3: Show all with location
+    carwashes, err = findAllCarwashesWithLocation()
+    if err != nil {
+        return nil, "", err
+    }
+    return carwashes, "all", nil
+}
+
+// Helper function using your existing pattern
+func findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwash, error) {
+    filter := bson.M{
+        "location": bson.M{
+            "$near": bson.M{
+                "$geometry": bson.M{
+                    "type":        "Point",
+                    "coordinates": []float64{userLng, userLat},
+                },
+                "$maxDistance": radiusKm * 1000,
+            },
+        },
+        "is_active": true,
+        "has_location": true,
+    }
+    
+    carwashes, err := GetCarwashesByFilter(filter)
+    if err != nil {
+        return nil, err
+    }
+    
+    // Convert []models.Carwash to []*models.Carwash
+    var result []*models.Carwash
+    for i := range carwashes {
+        result = append(result, &carwashes[i])
+    }
+    return result, nil
+}
+
+// Helper function to get all carwashes that have location set
+func findAllCarwashesWithLocation() ([]*models.Carwash, error) {
+    filter := bson.M{
+        "is_active": true,
+        "has_location": true,
+    }
+    
+    carwashes, err := GetCarwashesByFilter(filter)
+    if err != nil {
+        return nil, err
+    }
+    
+    // Convert []models.Carwash to []*models.Carwash
+    var result []*models.Carwash
+    for i := range carwashes {
+        result = append(result, &carwashes[i])
+    }
+    return result, nil
+}
+

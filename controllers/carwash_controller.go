@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/olabanji12-ojo/CarWashApp/models"
@@ -130,4 +131,75 @@ func GetCarwashesByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
 	utils.JSON(w, http.StatusOK, carwashes)
 }
 
+
+// GET /api/carwashes/nearby?lat={lat}&lng={lng} — Find nearby carwashes with fallback
+func GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse latitude and longitude from query parameters
+	latStr := r.URL.Query().Get("lat")
+	lngStr := r.URL.Query().Get("lng")
+
+	if latStr == "" || lngStr == "" {
+		utils.Error(w, http.StatusBadRequest, "Missing required parameters: lat and lng")
+		return
+	}
+
+	lat, err := strconv.ParseFloat(latStr, 64)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid latitude format")
+		return
+	}
+
+	lng, err := strconv.ParseFloat(lngStr, 64)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid longitude format")
+		return
+	}
+
+	// Validate latitude and longitude ranges
+	if lat < -90 || lat > 90 {
+		utils.Error(w, http.StatusBadRequest, "Latitude must be between -90 and 90")
+		return
+	}
+	if lng < -180 || lng > 180 {
+		utils.Error(w, http.StatusBadRequest, "Longitude must be between -180 and 180")
+		return
+	}
+
+	// Call service to get nearby carwashes
+	result, err := services.GetNearbyCarwashesForUser(lat, lng)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, result)
+}
+
+// PUT /api/carwashes/{id}/location — Update carwash location and service range
+func UpdateCarwashLocationHandler(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	var locationReq models.LocationUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&locationReq); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid JSON input")
+		return
+	}
+
+	// Validate the location request
+	if err := locationReq.Validate(); err != nil {
+		utils.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Update carwash location
+	if err := services.UpdateCarwashLocation(id, locationReq); err != nil {
+		utils.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, map[string]string{
+		"message": "Location updated successfully",
+		"carwash_id": id,
+	})
+}
 

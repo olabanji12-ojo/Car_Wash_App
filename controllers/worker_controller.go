@@ -1,16 +1,47 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"encoding/json"
-
 	"github.com/gorilla/mux"
+	"github.com/olabanji12-ojo/CarWashApp/middleware"
+	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
-	// "github.com/olabanji12-ojo/CarWashApp/models"
-	// "github.com/olabanji12-ojo/CarWashApp/models"
 )
+
+// CreateWorkersForBusiness creates a new worker for a business
+func CreateWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
+	// Get authenticated business user
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	requesterUserID := authCtx.UserID
+
+	// Get requester (business owner) details
+	requester, err := services.GetUserByID(requesterUserID)
+	if err != nil {
+		utils.Error(w, http.StatusUnauthorized, "Invalid user")
+		return
+	}
+
+	// Parse worker data from request body
+	var workerInput models.User
+	if err := json.NewDecoder(r.Body).Decode(&workerInput); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid JSON input")
+		return
+	}
+
+	// Create worker using service
+	err = services.CreateWorkerService(*requester, workerInput)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.JSON(w, http.StatusCreated, map[string]string{
+		"message": "Worker created successfully",
+	})
+}
 
 func GetWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)

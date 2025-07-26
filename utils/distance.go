@@ -1,7 +1,9 @@
 package utils
 
 import (
+
 	"math"
+
 )
 
 // CalculateDistance returns distance in kilometers between two geo coordinates
@@ -24,8 +26,23 @@ func CalculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
 
 	distance := R * c
 	return distance
+}
 
 
+// EstimateTravelTimeMinutes estimates travel time in minutes based on distance
+// Uses average city driving speed of 30 km/h
+func EstimateTravelTimeMinutes(distanceKm float64) int {
+	const avgSpeedKmh = 30.0 // Average city driving speed
+	travelTimeHours := distanceKm / avgSpeedKmh
+	travelTimeMinutes := int(math.Ceil(travelTimeHours * 60))
+	return travelTimeMinutes
+}
+
+// IsWithinServiceRange checks if user location is within carwash service range
+func IsWithinServiceRange(userLat, userLng, carwashLat, carwashLng float64, serviceRangeMinutes int) bool {
+	distanceKm := CalculateDistance(userLat, userLng, carwashLat, carwashLng)
+	estimatedTravelTime := EstimateTravelTimeMinutes(distanceKm)
+	return estimatedTravelTime <= serviceRangeMinutes
 }
 
 

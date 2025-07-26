@@ -15,6 +15,7 @@ func InitRoutes(router *mux.Router) {
 	ReviewRoutes(router)
 	OrderRoutes(router)
 	WorkerRoutes(router)
+	NotificationRoutes(router) // Notification system
 }
 
 

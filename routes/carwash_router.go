@@ -17,11 +17,13 @@ func CarwashRoutes(router *mux.Router) {
 	// Public routes
 	carwash.HandleFunc("", controllers.GetAllActiveCarwashesHandler).Methods("GET") // tested
 	carwash.HandleFunc("/{id}", controllers.GetCarwashByIDHandler).Methods("GET")  //  tested
-
+	carwash.HandleFunc("/nearby", controllers.GetNearbyCarwashesHandler).Methods("GET") // location-based search
+    
 	// Owner-specific routes (authenticated)
 	carwash.HandleFunc("", controllers.CreateCarwashHandler).Methods("POST") // tested
 	carwash.HandleFunc("/{id}", controllers.UpdateCarwashHandler).Methods("PUT") // tested
 	carwash.HandleFunc("/{id}/status", controllers.SetCarwashStatusHandler).Methods("PATCH") // tested
+	carwash.HandleFunc("/{id}/location", controllers.UpdateCarwashLocationHandler).Methods("PUT") // location update
 	carwash.HandleFunc("/owner/{owner_id}", controllers.GetCarwashesByOwnerIDHandler).Methods("GET") // tested 
 	
     

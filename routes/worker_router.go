@@ -3,12 +3,18 @@ package routes
 import (
 	"github.com/gorilla/mux"
 	"github.com/olabanji12-ojo/CarWashApp/controllers"
+	"github.com/olabanji12-ojo/CarWashApp/middleware"
 )
+
 
 func WorkerRoutes(router *mux.Router) {
 	subRouter := router.PathPrefix("/api/workers").Subrouter()
 
+	subRouter.Use(middleware.AuthMiddleware)
+
 	// Existing routes
+	subRouter.HandleFunc("/create", controllers.CreateWorkersForBusiness).Methods("POST")
+
 	subRouter.HandleFunc("/business/{id}", controllers.GetWorkersForBusiness).Methods("GET")
 	subRouter.HandleFunc("/status/{id}", controllers.UpdateWorkerStatus).Methods("PATCH")
 
@@ -20,3 +26,4 @@ func WorkerRoutes(router *mux.Router) {
 
 	
 }
+

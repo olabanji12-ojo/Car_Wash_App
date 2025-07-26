@@ -49,7 +49,7 @@ type WorkerProfile struct {
     
     // Order tracking
     ActiveOrders []primitive.ObjectID `bson:"active_orders,omitempty" json:"active_orders,omitempty"`
-    Location     *GeoLocation         `bson:"location,omitempty" json:"location,omitempty"` // instances where worker is not at the carwash
+    // Location     *GeoLocation         `bson:"location,omitempty" json:"location,omitempty"` // instances where worker is not at the carwash
 }
 
 
