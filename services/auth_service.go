@@ -52,10 +52,11 @@ func RegisterUser(input models.User) (*models.User, error) {
 	}
 
 	// Optional: Add role-specific sub-structs
-	if input.Role == "worker" {
-		newUser.WorkerData = input.WorkerData
-	} else if input.Role == "car_owner" {
-		newUser.OwnerData = input.OwnerData
+	switch input.Role {
+		case utils.WORKER:
+			newUser.WorkerData = input.WorkerData
+		case utils.CAR_OWNER:
+			newUser.OwnerData = input.OwnerData
 	}
 
 	logrus.Info("Reached RegistrationUser Service")

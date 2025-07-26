@@ -1,0 +1,3535 @@
+{
+	"info": {
+		"_postman_id": "688f5dae-6092-4531-a3e5-22c7d25e6e46",
+		"name": "Car WASH",
+		"description": "This collection contains all the backend API endpoints for the **Carwash Management Platform**.\n\nIt includes features for:\n\n- 🔐 **Authentication** – User registration & login using JWT\n    \n- 👤 **User Management** – Profiles, roles, and permissions\n    \n- 🚗 **Car Management** – Add/update user cars\n    \n- 🧼 **Carwash Management** – Register and view carwash listings\n    \n- 🧴 **Services** – Define services offered by a carwash\n    \n- 🕒 **Bookings** – Book car wash appointments with slot or walk-in logic\n    \n- 📦 **Orders** – Track and process car wash jobs after booking approval\n    \n- 💳 **Payments** – Handle transactions and receipts\n    \n- 🌟 **Reviews** – Allow users to rate and review services",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8525785",
+		"_collection_link": "https://warped-sunset-324901.postman.co/workspace/BJ~62cd00ec-a9a0-428a-a8fe-287baa5c8c74/collection/34876231-688f5dae-6092-4531-a3e5-22c7d25e6e46?action=share&source=collection_link&creator=8525785"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register_route",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\" : \"deborah Ojo\",\r\n    \"email\" : \"deborah@gmail.com\",\r\n    \"password\" : \"deborah\",\r\n    \"phone\" : \"08115302390\",\r\n    \"role\" : \"car_owner\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/register",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Register_route",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\" : \"deborah Ojo\",\r\n    \"email\" : \"deborah@gmail.com\",\r\n    \"password\" : \"deborah\",\r\n    \"phone\" : \"08115302390\",\r\n    \"role\" : \"car_owner\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/register",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"register"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:41:00 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "355"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68845c5c79b7d85bc087b77a\",\n        \"name\": \"deborah Ojo\",\n        \"email\": \"deborah@gmail.com\",\n        \"password\": \"$2a$10$RtfxLQrbZsXpthve12rUaOnL1Y3ri1kG45xFsWHIznyW0SQhcK/ti\",\n        \"phone\": \"08115302390\",\n        \"role\": \"car_owner\",\n        \"status\": \"active\",\n        \"verified\": false,\n        \"created_at\": \"2025-07-26T05:41:00.7218547+01:00\",\n        \"updated_at\": \"2025-07-26T05:41:00.7218547+01:00\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login_route",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"email\" : \"deborah@gmail.com\",\r\n    \"password\": \"deborah\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"email\" : \"deborah@gmail.com\",\r\n    \"password\": \"deborah\"\r\n\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 19 Jul 2025 20:36:11 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "584"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzMDQzNzcxLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.71b4Mmp8ua7N5oQfo_8AoDCGvio5QaxdaTKxEwP-gZw\",\n        \"user\": {\n            \"id\": \"6877232b510ed746352e2206\",\n            \"name\": \"deborah Ojo(updated)\",\n            \"email\": \"deborah@gmail.com\",\n            \"password\": \"$2a$10$VSbdlnXMEFkfBhQqup1CXudalhZPe8yOKC5ebX9w1b8x6COMzIE0W\",\n            \"phone\": \"08115302390\",\n            \"role\": \"car_owner\",\n            \"status\": \"deleted\",\n            \"verified\": false,\n            \"created_at\": \"2025-07-16T03:57:31.849Z\",\n            \"updated_at\": \"2025-07-16T04:10:34.428Z\"\n        }\n    }\n}"
+						},
+						{
+							"name": "400 invalid auth",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"email\" : \"deborah@gmail.com\",\r\n    \"password\": \"deboraffggh\"\r\n\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 19 Jul 2025 20:40:18 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "47"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": false,\n    \"message\": \"invalid password\"\n}"
+						},
+						{
+							"name": "Login_route",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"email\" : \"deborah@gmail.com\",\r\n    \"password\": \"deborah\"\r\n\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:41:27 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "574"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzNTkxMjg3LCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4ODQ1YzVjNzliN2Q4NWJjMDg3Yjc3YSJ9.6o8V68cBoE6gWrcX06NyyTWM-obyeZ3tPxCgBZ9YHDY\",\n        \"user\": {\n            \"id\": \"68845c5c79b7d85bc087b77a\",\n            \"name\": \"deborah Ojo\",\n            \"email\": \"deborah@gmail.com\",\n            \"password\": \"$2a$10$RtfxLQrbZsXpthve12rUaOnL1Y3ri1kG45xFsWHIznyW0SQhcK/ti\",\n            \"phone\": \"08115302390\",\n            \"role\": \"car_owner\",\n            \"status\": \"active\",\n            \"verified\": false,\n            \"created_at\": \"2025-07-26T04:41:00.721Z\",\n            \"updated_at\": \"2025-07-26T04:41:00.721Z\"\n        }\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Handles user authentication and authorization:\n\n- Register new users (business or car owners)\n    \n- Login existing users\n    \n- Returns a **JWT token** for authenticated access\n    \n\n🔐 _Required for all protected routes:_\n\n```\nAuthorization: Bearer <your-token>\n\n ```"
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get_user_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/user/6877232b510ed746352e2206",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"6877232b510ed746352e2206"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_user_id",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/user/68845c5c79b7d85bc087b77a",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"user",
+										"68845c5c79b7d85bc087b77a"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:42:46 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "277"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68845c5c79b7d85bc087b77a\",\n        \"name\": \"deborah Ojo\",\n        \"email\": \"deborah@gmail.com\",\n        \"password\": \"\",\n        \"phone\": \"08115302390\",\n        \"role\": \"car_owner\",\n        \"status\": \"active\",\n        \"verified\": false,\n        \"created_at\": \"2025-07-26T04:41:00.721Z\",\n        \"updated_at\": \"2025-07-26T04:41:00.721Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Put_user_id",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\" : \"deborah Ojo(updated)\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/user/6877232b510ed746352e2206",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"6877232b510ed746352e2206"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Put_user_id",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\" : \"deborah Ojo(updated)\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/user/68845c5c79b7d85bc087b77a",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"user",
+										"68845c5c79b7d85bc087b77a"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:43:36 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "285"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68845c5c79b7d85bc087b77a\",\n        \"name\": \"deborah Ojo(updated)\",\n        \"email\": \"deborah@gmail.com\",\n        \"password\": \"\",\n        \"phone\": \"08115302390\",\n        \"role\": \"car_owner\",\n        \"status\": \"active\",\n        \"verified\": false,\n        \"created_at\": \"2025-07-26T04:41:00.721Z\",\n        \"updated_at\": \"2025-07-26T04:43:36.86Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete_user_id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/user/6877232b510ed746352e2206",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"6877232b510ed746352e2206"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Delete_user_id",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/user/68845c5c79b7d85bc087b77a",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"user",
+										"68845c5c79b7d85bc087b77a"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:44:13 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "64"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"User deleted successfully\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_user_id_role",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/user/6877232b510ed746352e2206/role",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"6877232b510ed746352e2206",
+								"role"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_user_id_role",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/user/68845c5c79b7d85bc087b77a/role",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"user",
+										"68845c5c79b7d85bc087b77a",
+										"role"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:44:35 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "45"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"role\": \"car_owner\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_public_user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/user/6877232b510ed746352e2206/public",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"6877232b510ed746352e2206",
+								"public"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_public_user",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/user/68845c5c79b7d85bc087b77a/public",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"user",
+										"68845c5c79b7d85bc087b77a",
+										"public"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:44:55 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "107"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68845c5c79b7d85bc087b77a\",\n        \"name\": \"deborah Ojo(updated)\",\n        \"role\": \"car_owner\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Operations related to user profile management:\n\n- View personal profile\n    \n- Update name, phone, or password\n    \n- Deactivate or delete account\n    \n- Check user role (e.g., `car_owner`, `business`)\n    \n\n🧠 _Useful for profile personalization or managing access permissions._"
+		},
+		{
+			"name": "Car",
+			"item": [
+				{
+					"name": "Post_Car",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Red\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/cars/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"cars",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Post_Car",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzNTkxMjg3LCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4ODQ1YzVjNzliN2Q4NWJjMDg3Yjc3YSJ9.6o8V68cBoE6gWrcX06NyyTWM-obyeZ3tPxCgBZ9YHDY",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Red\"\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/cars/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"cars",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:46:31 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "265"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68845da779b7d85bc087b77b\",\n        \"owner_id\": \"68845c5c79b7d85bc087b77a\",\n        \"model\": \"Toyota Camry\",\n        \"plate\": \"1234\",\n        \"color\": \"Red\",\n        \"is_default\": false,\n        \"created_at\": \"2025-07-26T05:46:31.7674901+01:00\",\n        \"updated_at\": \"2025-07-26T05:46:31.7674901+01:00\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_all_Cars",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Red\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/cars/my",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"cars",
+								"my"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_all_Cars",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzNTkxMjg3LCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4ODQ1YzVjNzliN2Q4NWJjMDg3Yjc3YSJ9.6o8V68cBoE6gWrcX06NyyTWM-obyeZ3tPxCgBZ9YHDY",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Red\"\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/cars/my",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"cars",
+										"my"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:47:24 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "249"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": \"68845da779b7d85bc087b77b\",\n            \"owner_id\": \"68845c5c79b7d85bc087b77a\",\n            \"model\": \"Toyota Camry\",\n            \"plate\": \"1234\",\n            \"color\": \"Red\",\n            \"is_default\": false,\n            \"created_at\": \"2025-07-26T04:46:31.767Z\",\n            \"updated_at\": \"2025-07-26T04:46:31.767Z\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Put_Car_id",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Black\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/cars/687727e2510ed746352e2207",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"cars",
+								"687727e2510ed746352e2207"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Put_Car_id",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzNTkxMjg3LCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4ODQ1YzVjNzliN2Q4NWJjMDg3Yjc3YSJ9.6o8V68cBoE6gWrcX06NyyTWM-obyeZ3tPxCgBZ9YHDY",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Black\"\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/cars/68845c5c79b7d85bc087b77a",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"cars",
+										"68845c5c79b7d85bc087b77a"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:48:37 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "63"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Car updated successfully\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete_car_id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Black\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/cars/687727e2510ed746352e2207",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"cars",
+								"687727e2510ed746352e2207"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Delete_car_id",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzNTkxMjg3LCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4ODQ1YzVjNzliN2Q4NWJjMDg3Yjc3YSJ9.6o8V68cBoE6gWrcX06NyyTWM-obyeZ3tPxCgBZ9YHDY",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"model\" : \"Toyota Camry\",\r\n    \"plate\" : \"1234\",\r\n    \"color\" : \"Black\"\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/cars/68845c5c79b7d85bc087b77a",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"cars",
+										"68845c5c79b7d85bc087b77a"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:50:14 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "63"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Car deleted successfully\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Patch_default_car",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUyNzI0NzkyLCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4NzcyMzJiNTEwZWQ3NDYzNTJlMjIwNiJ9.YGv95nSAmrukaZY6DiW5dSN2ouqB7d0ZAZgvQc_w8IE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n   \"is_default\" : \"true\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/cars/687727e2510ed746352e2207/default",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"cars",
+								"687727e2510ed746352e2207",
+								"default"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Patch_default_car",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRlYm9yYWhAZ21haWwuY29tIiwiZXhwIjoxNzUzNTkxMjg3LCJyb2xlIjoiY2FyX293bmVyIiwidXNlcl9pZCI6IjY4ODQ1YzVjNzliN2Q4NWJjMDg3Yjc3YSJ9.6o8V68cBoE6gWrcX06NyyTWM-obyeZ3tPxCgBZ9YHDY",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n   \"is_default\" : \"true\"\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/cars/68845c5c79b7d85bc087b77a/default",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"cars",
+										"68845c5c79b7d85bc087b77a",
+										"default"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:51:37 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "67"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Default car set successfully\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "StartFragment\n\nUser car management:\n\n- Add new cars\n    \n- View cars owned by the user\n    \n- Update or delete car records\n    \n- Set a default car for bookings\n    \n\n📌 _Only car owners interact with this section._\n\nEndFragment"
+		},
+		{
+			"name": "Carwashes",
+			"item": [
+				{
+					"name": "Post_carwashes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"name\" : \"Ola's CarWash\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\",\r\n    \"location\" : {\r\n        \"type\" : \"Point\",\r\n        \"coordinates\" : [3000, 2500]\r\n    }\r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/carwashes",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"carwashes"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Post_carwashes",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "\r\n// {\r\n    \r\n//     \"email\" : \"plaolu@gmail.com\",\r\n//     \"password\": \"abiola\"\r\n\r\n// }\r\n\r\n{\r\n    \r\n    \"name\" : \"Ola's Second CarWash\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\",\r\n    \"location\" : {\r\n        \"type\" : \"Point\",\r\n        \"coordinates\": [3.3792, 6.5244]\r\n\r\n    }\r\n    \r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/carwashes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"carwashes"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 04:59:36 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "469"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"688460b879b7d85bc087b77d\",\n        \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n        \"name\": \"Ola's Second CarWash\",\n        \"description\": \"Beside Iroko Estate\",\n        \"address\": \"isheri/igando area\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                3.3792,\n                6.5244\n            ]\n        },\n        \"services\": null,\n        \"is_active\": true,\n        \"rating\": 0,\n        \"queue_count\": 0,\n        \"open_hours\": null,\n        \"home_service\": false,\n        \"created_at\": \"2025-07-26T05:59:36.8523783+01:00\",\n        \"updated_at\": \"2025-07-26T05:59:36.8523783+01:00\",\n        \"has_location\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_all_active_carwashes",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": [
+						{
+							"name": "Get_all_active_carwashes",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"name\" : \"Ola's CarWash\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\",\r\n    \"location\" : {\r\n        \"type\" : \"Point\",\r\n        \"coordinates\" : [3000, 2500]\r\n    }\r\n    \r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/carwashes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"carwashes"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 05:02:41 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1303"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": \"687111f50bcedbb0a531d5aa\",\n            \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Toyota Camry\",\n            \"description\": \"We are well able\",\n            \"address\": \"123 Clean Street, Lagos\",\n            \"location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"services\": null,\n            \"is_active\": true,\n            \"rating\": 0,\n            \"queue_count\": 0,\n            \"open_hours\": null,\n            \"home_service\": false,\n            \"created_at\": \"2025-07-11T13:30:29.581Z\",\n            \"updated_at\": \"2025-07-11T13:30:29.581Z\",\n            \"has_location\": false\n        },\n        {\n            \"id\": \"687114e50bcedbb0a531d5ab\",\n            \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Bj's CarWash\",\n            \"description\": \"In God we trust(Updated)\",\n            \"address\": \"456 Clean Street, Lagos\",\n            \"location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"services\": null,\n            \"is_active\": true,\n            \"rating\": 0,\n            \"queue_count\": 0,\n            \"open_hours\": null,\n            \"home_service\": false,\n            \"created_at\": \"2025-07-11T13:43:01.693Z\",\n            \"updated_at\": \"2025-07-11T13:46:11.305Z\",\n            \"has_location\": false\n        },\n        {\n            \"id\": \"688460b879b7d85bc087b77d\",\n            \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Ola's Second CarWash\",\n            \"description\": \"Beside Iroko Estate\",\n            \"address\": \"isheri/igando area\",\n            \"location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"services\": null,\n            \"is_active\": true,\n            \"rating\": 0,\n            \"queue_count\": 0,\n            \"open_hours\": null,\n            \"home_service\": false,\n            \"created_at\": \"2025-07-26T04:59:36.852Z\",\n            \"updated_at\": \"2025-07-26T04:59:36.852Z\",\n            \"has_location\": false\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_carwash_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"name\" : \"Ola's CarWash\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\",\r\n    \"location\" : {\r\n        \"type\" : \"Point\",\r\n        \"coordinates\" : [3000, 2500]\r\n    }\r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/carwashes/68772be9510ed746352e2208",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"carwashes",
+								"68772be9510ed746352e2208"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_carwash_id",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"name\" : \"Ola's CarWash\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\",\r\n    \"location\" : {\r\n        \"type\" : \"Point\",\r\n        \"coordinates\" : [3000, 2500]\r\n    }\r\n    \r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/carwashes/687111f50bcedbb0a531d5aa",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"carwashes",
+										"687111f50bcedbb0a531d5aa"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 05:04:27 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "445"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"687111f50bcedbb0a531d5aa\",\n        \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n        \"name\": \"Toyota Camry\",\n        \"description\": \"We are well able\",\n        \"address\": \"123 Clean Street, Lagos\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                3.3792,\n                6.5244\n            ]\n        },\n        \"services\": null,\n        \"is_active\": true,\n        \"rating\": 0,\n        \"queue_count\": 0,\n        \"open_hours\": null,\n        \"home_service\": false,\n        \"created_at\": \"2025-07-11T13:30:29.581Z\",\n        \"updated_at\": \"2025-07-11T13:30:29.581Z\",\n        \"has_location\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Put_carwash_id",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"name\" : \"Ola's CarWash(updated)\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\"\r\n    \r\n    \r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/carwashes/68772be9510ed746352e2208",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"carwashes",
+								"68772be9510ed746352e2208"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Put_carwash_id",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"name\" : \"Ola's CarWash(updated)\",\r\n    \"description\" : \"Beside Iroko Estate\",\r\n    \"address\" : \"isheri/igando area\"\r\n    \r\n    \r\n}\r\n"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/carwashes/687111f50bcedbb0a531d5aa",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"carwashes",
+										"687111f50bcedbb0a531d5aa"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 05:07:15 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "59"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Updated successfully\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Patch_carwash_status_id",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"status\" : \"true\"\r\n      \r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/carwashes/68772be9510ed746352e2208/status",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"carwashes",
+								"68772be9510ed746352e2208",
+								"status"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Patch_carwash_status_id",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"status\" : \"true\"\r\n      \r\n}\r\n"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/carwashes/687111f50bcedbb0a531d5aa/status",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"carwashes",
+										"687111f50bcedbb0a531d5aa",
+										"status"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 05:08:49 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "53"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Status updated\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_carwash_by_owner_id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/carwashes/owner/68750dca89d9ca673a742b71",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"carwashes",
+								"owner",
+								"68750dca89d9ca673a742b71"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_carwash_by_owner_id",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8080/api/carwashes/owner/6871111e0bcedbb0a531d5a9",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"carwashes",
+										"owner",
+										"6871111e0bcedbb0a531d5a9"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 05:20:16 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1312"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": \"687111f50bcedbb0a531d5aa\",\n            \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Ola's CarWash(updated)\",\n            \"description\": \"Beside Iroko Estate\",\n            \"address\": \"isheri/igando area\",\n            \"location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"services\": null,\n            \"is_active\": false,\n            \"rating\": 0,\n            \"queue_count\": 0,\n            \"open_hours\": null,\n            \"home_service\": false,\n            \"created_at\": \"2025-07-11T13:30:29.581Z\",\n            \"updated_at\": \"2025-07-26T05:07:15.846Z\",\n            \"has_location\": false\n        },\n        {\n            \"id\": \"687114e50bcedbb0a531d5ab\",\n            \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Bj's CarWash\",\n            \"description\": \"In God we trust(Updated)\",\n            \"address\": \"456 Clean Street, Lagos\",\n            \"location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"services\": null,\n            \"is_active\": true,\n            \"rating\": 0,\n            \"queue_count\": 0,\n            \"open_hours\": null,\n            \"home_service\": false,\n            \"created_at\": \"2025-07-11T13:43:01.693Z\",\n            \"updated_at\": \"2025-07-11T13:46:11.305Z\",\n            \"has_location\": false\n        },\n        {\n            \"id\": \"688460b879b7d85bc087b77d\",\n            \"owner_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Ola's Second CarWash\",\n            \"description\": \"Beside Iroko Estate\",\n            \"address\": \"isheri/igando area\",\n            \"location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"services\": null,\n            \"is_active\": true,\n            \"rating\": 0,\n            \"queue_count\": 0,\n            \"open_hours\": null,\n            \"home_service\": false,\n            \"created_at\": \"2025-07-26T04:59:36.852Z\",\n            \"updated_at\": \"2025-07-26T04:59:36.852Z\",\n            \"has_location\": false\n        }\n    ]\n}"
+						}
+					]
+				}
+			],
+			"description": "StartFragment\n\nCarwash business profiles:\n\n- Business users can create or manage their carwash listing\n    \n- Public users can view all or specific carwash info\n    \n\n💼 _Business identity lives here._\n\nEndFragment"
+		},
+		{
+			"name": "Services",
+			"item": [
+				{
+					"name": "Post_services",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash\",\r\n    \"description\" : \"tyre wash\",\r\n    \"price\" : 3000,\r\n    \"duration\" : 30\r\n    \r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/services",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"services"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Post_services",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \r\n    \r\n    \"name\" : \"third special wash\",\r\n    \"description\" : \"tyre wash\",\r\n    \"price\" : 3000,\r\n    \"duration\" : 30\r\n    \r\n    \r\n\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/services",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"services"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 06:00:22 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "308"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68846ef679b7d85bc087b77e\",\n        \"carwash_id\": \"6871111e0bcedbb0a531d5a9\",\n        \"name\": \"third special wash\",\n        \"description\": \"tyre wash\",\n        \"price\": 3000,\n        \"duration\": 30,\n        \"is_addon\": false,\n        \"active\": true,\n        \"created_at\": \"2025-07-26T07:00:22.5302399+01:00\",\n        \"updated_at\": \"2025-07-26T07:00:22.5302399+01:00\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_my_services",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash\",\r\n    \"description\" : \"tyre wash\",\r\n    \"price\" : 3000,\r\n    \"duration\" : 30\r\n    \r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/services/my",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"services",
+								"my"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_my_services",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash\",\r\n    \"description\" : \"tyre wash\",\r\n    \"price\" : 3000,\r\n    \"duration\" : 30\r\n    \r\n    \r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/services/my",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"services",
+										"my"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 06:03:01 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "597"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": \"68711ddb565ace9dde4fe13c\",\n            \"carwash_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"Full Body Wash\",\n            \"description\": \"Complete exterior wash including tire shine and waxing\",\n            \"price\": 3500,\n            \"duration\": 45,\n            \"is_addon\": false,\n            \"active\": true,\n            \"created_at\": \"2025-07-11T14:21:15.662Z\",\n            \"updated_at\": \"2025-07-11T14:21:15.662Z\"\n        },\n        {\n            \"id\": \"68846ef679b7d85bc087b77e\",\n            \"carwash_id\": \"6871111e0bcedbb0a531d5a9\",\n            \"name\": \"third special wash\",\n            \"description\": \"tyre wash\",\n            \"price\": 3000,\n            \"duration\": 30,\n            \"is_addon\": false,\n            \"active\": true,\n            \"created_at\": \"2025-07-26T06:00:22.53Z\",\n            \"updated_at\": \"2025-07-26T06:00:22.53Z\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_service_by_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash\",\r\n    \"description\" : \"tyre wash\",\r\n    \"price\" : 3000,\r\n    \"duration\" : 30\r\n    \r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/services/687739be58e0581aab6ef6ee",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"services",
+								"687739be58e0581aab6ef6ee"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_service_by_id",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash\",\r\n    \"description\" : \"tyre wash\",\r\n    \"price\" : 3000,\r\n    \"duration\" : 30\r\n    \r\n    \r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/services/68846ef679b7d85bc087b77e",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"services",
+										"68846ef679b7d85bc087b77e"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 06:05:19 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "288"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"68846ef679b7d85bc087b77e\",\n        \"carwash_id\": \"6871111e0bcedbb0a531d5a9\",\n        \"name\": \"third special wash\",\n        \"description\": \"tyre wash\",\n        \"price\": 3000,\n        \"duration\": 30,\n        \"is_addon\": false,\n        \"active\": true,\n        \"created_at\": \"2025-07-26T06:00:22.53Z\",\n        \"updated_at\": \"2025-07-26T06:00:22.53Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Put_service_by_id",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash(updated)\",\r\n    \"description\" : \"tyre wash(updated)\"\r\n    \r\n       \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/services/687739be58e0581aab6ef6ee",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"services",
+								"687739be58e0581aab6ef6ee"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Put_service_by_id",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"name\" : \"secondary special wash(updated)\",\r\n    \"description\" : \"tyre wash(updated 2)\"\r\n    \r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/services/68846ef679b7d85bc087b77e",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"services",
+										"68846ef679b7d85bc087b77e"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 06:08:12 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "67"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Service updated successfully\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "DeleteServiceByID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1MjcyNjU4OCwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.2gIwF7LnodIoKFXxtYJyvgHUb0vtScaiONvHKtOb-GE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash(updated)\",\r\n    \"description\" : \"tyre wash(updated)\"\r\n    \r\n       \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/services/687739be58e0581aab6ef6ee",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"services",
+								"687739be58e0581aab6ef6ee"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "DeleteServiceByID",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1OTIxMjAsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.Sm8BuTT2AKqFt6tFfEUPTrzkt9jplz33yv4TjtRyChs",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \r\n    \"name\" : \"secondary special wash(updated)\",\r\n    \"description\" : \"tyre wash(updated)\"\r\n    \r\n       \r\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/services/68846ef679b7d85bc087b77e",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"services",
+										"68846ef679b7d85bc087b77e"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 06:12:51 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "54"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Service deleted\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Manages the list of services offered by a carwash:\n\n- Add, update, or delete services (e.g., \"Full Wash\", \"Interior Cleaning\")\n    \n- View available services\n    \n- Only accessible to users with `role: business`\n    \n\n💡 _Used during booking to select services._"
+		},
+		{
+			"name": "booking",
+			"item": [
+				{
+					"name": "Post_bookings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MjczOTQ1MCwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.DPKbRgVPs1ohG_i316DeICUB33gAIjuiRKocQyDYMCA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n\r\n    \r\n    \r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Post_bookings",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"car_id\": \"687106e764ccfeedd526cacd\",\r\n  \"carwash_id\": \"688460b879b7d85bc087b77d\",\r\n\r\n  \"service_ids\": [\r\n    \"68711ddb565ace9dde4fe13c\",\r\n    \"68846ef679b7d85bc087b77e\"\r\n  ],\r\n\r\n \"booking_time\": \"2025-07-27T10:00:00Z\",\r\n\r\n  \"booking_type\": \"slot_booking\",\r\n  \"user_location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [3.3792, 6.5244]\r\n  },\r\n\r\n  \"address_note\": \"Near Chevron roundabout\",\r\n  \"notes\": \"Please clean the car interior as well\"\r\n\r\n}\r\n\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 06:43:23 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "595"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"6884790b703f837c6b52bced\",\n        \"user_id\": \"68709c793f49ab2f345c9466\",\n        \"car_id\": \"687106e764ccfeedd526cacd\",\n        \"carwash_id\": \"688460b879b7d85bc087b77d\",\n        \"service_ids\": [\n            \"68711ddb565ace9dde4fe13c\",\n            \"68846ef679b7d85bc087b77e\"\n        ],\n        \"booking_time\": \"2025-07-27T10:00:00Z\",\n        \"booking_type\": \"slot_booking\",\n        \"user_location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                3.3792,\n                6.5244\n            ]\n        },\n        \"address_note\": \"Near Chevron roundabout\",\n        \"status\": \"pending\",\n        \"notes\": \"Please clean the car interior as well\",\n        \"queue_number\": 1,\n        \"created_at\": \"2025-07-26T07:43:23.9299735+01:00\",\n        \"updated_at\": \"2025-07-26T07:43:23.9299735+01:00\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_booking_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n\r\n    \r\n    \r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings/6884790b703f837c6b52bced",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings",
+								"6884790b703f837c6b52bced"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_booking_id",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n\r\n    \r\n    \r\n    \r\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings/6884790b703f837c6b52bced",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"6884790b703f837c6b52bced"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 07:22:01 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "577"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"id\": \"6884790b703f837c6b52bced\",\n        \"user_id\": \"68709c793f49ab2f345c9466\",\n        \"car_id\": \"687106e764ccfeedd526cacd\",\n        \"carwash_id\": \"688460b879b7d85bc087b77d\",\n        \"service_ids\": [\n            \"68711ddb565ace9dde4fe13c\",\n            \"68846ef679b7d85bc087b77e\"\n        ],\n        \"booking_time\": \"2025-07-27T10:00:00Z\",\n        \"booking_type\": \"slot_booking\",\n        \"user_location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                3.3792,\n                6.5244\n            ]\n        },\n        \"address_note\": \"Near Chevron roundabout\",\n        \"status\": \"pending\",\n        \"notes\": \"Please clean the car interior as well\",\n        \"queue_number\": 1,\n        \"created_at\": \"2025-07-26T06:43:23.929Z\",\n        \"updated_at\": \"2025-07-26T06:43:23.929Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_my_bookings",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings/user/me",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings",
+								"user",
+								"me"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_my_bookings",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n    \r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings/user/me",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"user",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 07:24:42 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1656"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": \"687159ba21e42ca84ca140cf\",\n            \"user_id\": \"68709c793f49ab2f345c9466\",\n            \"car_id\": \"687106e764ccfeedd526cacd\",\n            \"carwash_id\": \"687114e50bcedbb0a531d5ab\",\n            \"service_ids\": [\n                \"68711ddb565ace9dde4fe13c\"\n            ],\n            \"booking_time\": \"2025-07-12T14:00:00Z\",\n            \"booking_type\": \"slot_booking\",\n            \"user_location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    6.5244,\n                    3.3792\n                ]\n            },\n            \"address_note\": \"3rd floor, left-hand side, apartment 301\",\n            \"status\": \"pending\",\n            \"notes\": \"Please wash both exterior and interior\",\n            \"queue_number\": 1,\n            \"created_at\": \"2025-07-11T18:36:42.276Z\",\n            \"updated_at\": \"2025-07-11T18:36:42.276Z\"\n        },\n        {\n            \"id\": \"68715a9b21e42ca84ca140d0\",\n            \"user_id\": \"68709c793f49ab2f345c9466\",\n            \"car_id\": \"687106e764ccfeedd526cacd\",\n            \"carwash_id\": \"687114e50bcedbb0a531d5ab\",\n            \"service_ids\": [\n                \"68711ddb565ace9dde4fe13c\"\n            ],\n            \"booking_time\": \"2025-07-12T16:00:00Z\",\n            \"booking_type\": \"slot_booking\",\n            \"user_location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    6.5244,\n                    3.3792\n                ]\n            },\n            \"address_note\": \"3rd floor, left-hand side, apartment 301\",\n            \"status\": \"pending\",\n            \"notes\": \"please clean the tires well\",\n            \"queue_number\": 2,\n            \"created_at\": \"2025-07-11T18:40:27.918Z\",\n            \"updated_at\": \"2025-07-11T18:40:27.918Z\"\n        },\n        {\n            \"id\": \"6884790b703f837c6b52bced\",\n            \"user_id\": \"68709c793f49ab2f345c9466\",\n            \"car_id\": \"687106e764ccfeedd526cacd\",\n            \"carwash_id\": \"688460b879b7d85bc087b77d\",\n            \"service_ids\": [\n                \"68711ddb565ace9dde4fe13c\",\n                \"68846ef679b7d85bc087b77e\"\n            ],\n            \"booking_time\": \"2025-07-27T10:00:00Z\",\n            \"booking_type\": \"slot_booking\",\n            \"user_location\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    3.3792,\n                    6.5244\n                ]\n            },\n            \"address_note\": \"Near Chevron roundabout\",\n            \"status\": \"pending\",\n            \"notes\": \"Please clean the car interior as well\",\n            \"queue_number\": 1,\n            \"created_at\": \"2025-07-26T06:43:23.929Z\",\n            \"updated_at\": \"2025-07-26T06:43:23.929Z\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_bookings_by_carwash_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MjczOTQ1MCwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.DPKbRgVPs1ohG_i316DeICUB33gAIjuiRKocQyDYMCA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n\r\n    \r\n    \r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings/carwash/68750dca89d9ca673a742b71",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings",
+								"carwash",
+								"68750dca89d9ca673a742b71"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_bookings_by_carwash_id",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \r\n    \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    \"booking_type\" : \"slot booking\"\r\n\r\n\r\n    \r\n    \r\n    \r\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings/carwash/687159ba21e42ca84ca140cf",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"carwash",
+										"687159ba21e42ca84ca140cf"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 07:26:48 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "29"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Update_bookings_status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    // \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    // \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    // \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    // \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    // \"booking_type\" : \"slot booking\"\r\n    \r\n    \"status\" : \"true\"    \r\n      \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings/6884790b703f837c6b52bced/status",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings",
+								"6884790b703f837c6b52bced",
+								"status"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Update_bookings_status",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    // \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    // \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    // \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    // \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    // \"booking_type\" : \"slot booking\"\r\n    \r\n    \"status\" : \"true\"    \r\n      \r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings/6884790b703f837c6b52bced/status",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"6884790b703f837c6b52bced",
+										"status"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 08:03:43 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "61"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Booking status updated\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Cancel_booking_handler",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    // \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    // \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    // \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    // \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    // \"booking_type\" : \"slot booking\"\r\n    \r\n    \"status\" : \"true\"    \r\n      \r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings/6884790b703f837c6b52bced",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings",
+								"6884790b703f837c6b52bced"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Cancel_booking_handler",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    // \"car_id\" : \"6875129189d9ca673a742b73\",\r\n    // \"carwash_id\" : \"68750dca89d9ca673a742b71\",\r\n    // \"service_ids\" : [\"687537c4707519db92e8eb96\", \"687739be58e0581aab6ef6ee\"],\r\n    // \"booking_time\" : \"2025-07-15T14:30:00Z\",\r\n    // \"booking_type\" : \"slot booking\"\r\n    \r\n    \"status\" : \"true\"    \r\n      \r\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings/6884790b703f837c6b52bced",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"6884790b703f837c6b52bced"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 08:06:22 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "56"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Booking cancelled\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get_booking_by_date_handler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"status\" : \"false\"\r\n    \r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/bookings/carwash/6884790b703f837c6b52bced/date?date=2025-07-15",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"bookings",
+								"carwash",
+								"6884790b703f837c6b52bced",
+								"date"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-07-15"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get_booking_by_date_handler",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MzU5NzI4MSwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcwOWM3OTNmNDlhYjJmMzQ1Yzk0NjYifQ.CSWl-1G16I4LpOzOPWSV-d2uov2337GFhe4wXQrErQw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \r\n    \"status\" : \"false\"\r\n    \r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/bookings/carwash/6884790b703f837c6b52bced/date?date=2025-07-15",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"carwash",
+										"6884790b703f837c6b52bced",
+										"date"
+									],
+									"query": [
+										{
+											"key": "date",
+											"value": "2025-07-15"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 26 Jul 2025 08:09:34 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "29"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": null\n}"
+						}
+					]
+				}
+			],
+			"description": "Let users reserve a wash slot:\n\n- Book a service at a specific time or request \"home service\"\n    \n- View your past/future bookings\n    \n- Businesses can approve, reject, or manage incoming bookings\n    \n\n🧭 _Acts as the gateway to creating orders._"
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "Post_order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3NzIzMSwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.DLdujSpLdg0GVWuEMv9jDCmwd6_K6K-qHGJya9BjkUE",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    // \"email\" : \"ademidun@gmail.com\",\r\n    // \"password\" : \"funmilayo\"\r\n\r\n    \r\n    \r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/orders/booking/6877602758e0581aab6ef6ef",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"booking",
+								"6877602758e0581aab6ef6ef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_order_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MjczOTQ1MCwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.DPKbRgVPs1ohG_i316DeICUB33gAIjuiRKocQyDYMCA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"status\" : \"false\"\r\n    \r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/orders/order/6877f12df6474839e69348fe",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"order",
+								"6877f12df6474839e69348fe"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_my_order_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1MjczOTQ1MCwicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.DPKbRgVPs1ohG_i316DeICUB33gAIjuiRKocQyDYMCA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"status\" : \"false\"\r\n    \r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/orders/my",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"my"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_business_order_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3Nzg5NSwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.c8n_62g-rSPtjS7sIfqWSnMXT4pswrnzvXixKcESu4w",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"email\" : \"ademidun@gmail.com\",\r\n    \"password\" : \"funmilayo\"\r\n    \r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/orders/business",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"business"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch_order_status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3Nzg5NSwicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.c8n_62g-rSPtjS7sIfqWSnMXT4pswrnzvXixKcESu4w",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n   \"status\" : \"true\"\r\n    \r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/orders/6877f12df6474839e69348fe/status",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"6877f12df6474839e69348fe",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Let users reserve a wash slot:\n\n- Book a service at a specific time or request \"home service\"\n    \n- View your past/future bookings\n    \n- Businesses can approve, reject, or manage incoming bookings\n    \n\n🧭 _Acts as the gateway to creating orders._"
+		},
+		{
+			"name": "Reviews",
+			"item": [
+				{
+					"name": "Post_reviews",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3ODI3Nywicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.lajQb8kyDQqzfDYLCCCSJHz0l4E5MBxfspzIXRr1NbI",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"order_id\" : \"6877f12df6474839e69348fe\",\r\n    \"carwash_id\": \"68750dca89d9ca673a742b71\",\r\n    \"rating\" : 4,\r\n    \"comment\" :  \"It was a nice wash\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/reviews",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"reviews"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_reviews_by_user_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3ODI3Nywicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.lajQb8kyDQqzfDYLCCCSJHz0l4E5MBxfspzIXRr1NbI",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"order_id\" : \"6877f12df6474839e69348fe\",\r\n    \"carwash_id\": \"68750dca89d9ca673a742b71\",\r\n    \"rating\" : 4,\r\n    \"comment\" :  \"It was a nice wash\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/reviews/user",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_review_by_order_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3ODI3Nywicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.lajQb8kyDQqzfDYLCCCSJHz0l4E5MBxfspzIXRr1NbI",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"order_id\" : \"6877f12df6474839e69348fe\",\r\n    \"carwash_id\": \"68750dca89d9ca673a742b71\",\r\n    \"rating\" : 4,\r\n    \"comment\" :  \"It was a nice wash\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/reviews/order/6877f12df6474839e69348fe",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"order",
+								"6877f12df6474839e69348fe"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_review_by_business_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3ODI3Nywicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.lajQb8kyDQqzfDYLCCCSJHz0l4E5MBxfspzIXRr1NbI",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"order_id\" : \"6877f12df6474839e69348fe\",\r\n    \"carwash_id\": \"68750dca89d9ca673a742b71\",\r\n    \"rating\" : 4,\r\n    \"comment\" :  \"It was a nice wash\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/reviews/business/68750dca89d9ca673a742b71",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"business",
+								"68750dca89d9ca673a742b71"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_carwash_average_rating",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3ODI3Nywicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.lajQb8kyDQqzfDYLCCCSJHz0l4E5MBxfspzIXRr1NbI",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"order_id\" : \"6877f12df6474839e69348fe\",\r\n    \"carwash_id\": \"68750dca89d9ca673a742b71\",\r\n    \"rating\" : 4,\r\n    \"comment\" :  \"It was a nice wash\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/reviews/carwash/68750dca89d9ca673a742b71/average",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"carwash",
+								"68750dca89d9ca673a742b71",
+								"average"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Post-service feedback system:\n\n- Users can leave a review and rating\n    \n- Reviews are tied to completed orders\n    \n- Helps with business trust and visibility\n    \n\n📝 _Used to calculate average ratings and build user trust._"
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Post_payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtbWFudWVsb2pvMjkxQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3ODI3Nywicm9sZSI6ImNhcl9vd25lciIsInVzZXJfaWQiOiI2ODcyMjM2MTVjOWRjMmNmYjhlODEwYjEifQ.lajQb8kyDQqzfDYLCCCSJHz0l4E5MBxfspzIXRr1NbI",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n    \"order_id\" : \"6877f12df6474839e69348fe\",\r\n    \"carwash_id\": \"68750dca89d9ca673a742b71\",\r\n    \"amount\" : 5000\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/payments",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get_payment_by_user",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get_payment_by_carwash_id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkZW1pZHVuQGdtYWlsLmNvbSIsImV4cCI6MTc1Mjc3OTIzNywicm9sZSI6ImJ1c2luZXNzIiwidXNlcl9pZCI6IjY4NzUwZGNhODlkOWNhNjczYTc0MmI3MSJ9.REkTYVzoOU8PxjWCYSdZ0Oi8_NAQE2ifaok75RvH8q8",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"ademidun@gmail.com\",\r\n    \"password\": \"funmilayo\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/payments/carwash/68750dca89d9ca673a742b71",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"carwash",
+								"68750dca89d9ca673a742b71"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "StartFragment\n\nHandles payment processing and transactions:\n\n- Submit payment info for a completed order\n    \n- View transaction records by order or user\n    \n\n💰 _Useful for tracking financials and revenue._\n\nEndFragment"
+		},
+		{
+			"name": "worker",
+			"item": [
+				{
+					"name": "CreateWorkerFromBusiness",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1MzIzNjUsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.VeImoJjmxEcm5VDCbljb-nU-wiNyErcgziC2EA88v8Y",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"worker_data\": {\r\n    \"jobRole\": \"Washer\"\r\n  }\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/workers/create",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"workers",
+								"create"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "New Request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBsYW9sdUBnbWFpbC5jb20iLCJleHAiOjE3NTM1MzIzNjUsInJvbGUiOiJidXNpbmVzcyIsInVzZXJfaWQiOiI2ODcxMTExZTBiY2VkYmIwYTUzMWQ1YTkifQ.VeImoJjmxEcm5VDCbljb-nU-wiNyErcgziC2EA88v8Y",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"worker_data\": {\r\n    \"jobRole\": \"Washer\"\r\n  }\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/workers/create",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"workers",
+										"create"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 25 Jul 2025 14:14:54 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "66"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"message\": \"Worker created successfully\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Testing_updated_booking",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://localhost:8080",
+			"type": "default"
+		},
+		{
+			"key": "baseURL",
+			"value": "http://localhost:8080",
+			"type": "default"
+		}
+	]
+}
