@@ -9,12 +9,15 @@ import (
 	// "go.mongodb.org/mongo-driver/bson"
 	// "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
+    
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+    
+
 )
+
 
 // proposed flow
 // CAR OWNER
@@ -24,6 +27,8 @@ import (
 // Navigates to url, clicks on sign up and fills basic form
 // proceeds to post onboarding where he is presented another form to update business information
 // then a virtual account is created for the business
+
+
 func RegisterUser(input models.User) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -74,6 +79,7 @@ func RegisterUser(input models.User) (*models.User, error) {
 
 	return &newUser, nil
 }
+
 
 func LoginUser(email, password string) (string, *models.User, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
