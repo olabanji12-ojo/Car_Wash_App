@@ -14,19 +14,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateCarwash(ownerID string, input models.Carwash) (*models.Carwash, error) {
-	objID, err := primitive.ObjectIDFromHex(ownerID)
-	if err != nil {
-		return nil, errors.New("invalid owner ID")
-	}
-	input.ID = primitive.NewObjectID()
-	input.OwnerID = objID
-	input.CreatedAt = time.Now()
-	input.UpdatedAt = time.Now()
-	input.QueueCount = 0
-	input.IsActive = true
+func CreateCarwash(input models.Carwash) (*models.Carwash, error) {
+	
+	input.SetDefaults()
 
-	_, err = repositories.CreateCarwash(input)
+	_, err := repositories.CreateCarwash(input)
 	if err != nil {
 		return nil, err
 	}

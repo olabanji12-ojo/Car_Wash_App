@@ -9,7 +9,7 @@ func InitRoutes(router *mux.Router) {
 	UserRoutes(router)
 	CarRoutes(router)
 	CarwashRoutes(router)
-	ServiceRoutes(router)
+	// ServiceRoutes(router)
 	BookingRoutes(router)
 	PaymentRoutes(router)
 	ReviewRoutes(router)
@@ -17,6 +17,5 @@ func InitRoutes(router *mux.Router) {
 	WorkerRoutes(router)
 	NotificationRoutes(router) // Notification system
 }
-
 
 

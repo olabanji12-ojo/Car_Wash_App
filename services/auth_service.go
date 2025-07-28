@@ -18,7 +18,6 @@ import (
 
 )
 
-
 // proposed flow
 // CAR OWNER
 // Navigates to url, clicks on sign up and fills basic form
@@ -62,12 +61,13 @@ func RegisterUser(input models.User) (*models.User, error) {
 	}
 
 	// Optional: Add role-specific sub-structs
-	switch input.Role {
-	case utils.WORKER:
-		newUser.WorkerData = input.WorkerData
-	case utils.CAR_OWNER:
-		newUser.OwnerData = input.OwnerData
-	}
+	
+	// switch input.Role { 
+	// case utils.ROLE_WORKER:
+	// 	newUser.WorkerData = input.WorkerData
+	// case utils.ROLE_CAR_OWNER:
+	// 	newUser.OwnerData = input.OwnerData
+	// }
 
 	logrus.Info("Reached RegistrationUser Service")
 	// 4. Insert into DB
@@ -105,3 +105,4 @@ func LoginUser(email, password string) (string, *models.User, error) {
 
 	return token, user, nil
 }
+

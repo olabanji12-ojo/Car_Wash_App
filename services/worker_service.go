@@ -1,34 +1,39 @@
 package services
 
 import (
+
 	"errors"
 	"time"
 
 	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+
 )
 
 // ✅ Create new worker (called by business)
 func CreateWorkerService(requester models.User, input models.User) error {
-	if requester.Role != "business" {
-		return errors.New("only business users can create workers")
+
+	if requester.AccountType != "carwash" || requester.Role != "business_owner" {
+		return errors.New("only business owners can create workers")
 	}
 
-	input.ID = primitive.NewObjectID()
-	input.Role = "worker"
+	input.ID = primitive.NewObjectID() 
+	input.AccountType = utils.ACCOUNT_TYPE_CAR_WASH
+	input.Role = utils.ROLE_WORKER
 	input.Status = "active"
+	input.WorkerStatus = "active"
+	input.CarWashID = requester.CarWashID
+
 	input.CreatedAt = time.Now()
 	input.UpdatedAt = time.Now()
 
-	input.WorkerData = &models.WorkerProfile{
-		BusinessID: requester.ID.Hex(),
-		JobRole:    input.WorkerData.JobRole,
-		
-	}
-
 	return repositories.CreateUser(input)
+
 }
+
 
 // ✅ Get all workers under a business
 func GetWorkersByBusinessID(businessID string) ([]*models.User, error) {
@@ -38,6 +43,7 @@ func GetWorkersByBusinessID(businessID string) ([]*models.User, error) {
 	}
 	return repositories.FindWorkersByBusinessID(objID)
 }
+
 
 // ✅ Update a worker's status
 func SetWorkerStatus(workerID string, status string) error {
@@ -80,6 +86,7 @@ func SetWorkerWorkStatus(workerID string, workStatus string) error {
 	return repositories.UpdateWorkerWorkStatus(objID, workStatus)
 }
 
+
 // ✅ Assign worker to order (manual assignment by business)
 func AssignWorkerToOrder(workerID string, orderID string) error {
 	// 1. Validate IDs
@@ -99,11 +106,11 @@ func AssignWorkerToOrder(workerID string, orderID string) error {
 		return errors.New("worker not found")
 	}
 
-	if worker.WorkerData.WorkerStatus != "online" {
+	if worker.WorkerStatus != "online" {
 		return errors.New("worker is not available for assignment")
 	}
 
-	if len(worker.WorkerData.ActiveOrders) > 0 {
+	if len(worker.ActiveOrders) > 0 {
 		return errors.New("worker is already busy with another order")
 	}
 

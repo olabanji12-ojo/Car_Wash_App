@@ -38,7 +38,7 @@ func FindUserByEmail(email string) (*models.User, error) {
 	defer cancel()
 
 	var user models.User
-	logrus.Info("Inserting User into mongo")
+	logrus.Info("Searching for user by email in MongoDB")
 	err := database.UserCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		logrus.Warn("User not found with email: ", email)
@@ -77,7 +77,6 @@ func UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
 
 	return err
 }
-
 
 
 

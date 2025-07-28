@@ -1,6 +1,7 @@
 package services
 
 import (
+
 	"errors"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/bson"
+
 )
 
 // GetUserByID retrieves a user's profile using their ID
@@ -35,7 +37,7 @@ func GetUserByID(userID string) (*models.User, error) {
 
 
 // UpdateUser updates basic profile info
-func UpdateUser(userID string, input *models.UserUpdateInput) (*models.User, error) {
+func UpdateUser(userID string, input *models.User) (*models.User, error) {
 	// 1. Convert to ObjectID
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -43,6 +45,7 @@ func UpdateUser(userID string, input *models.UserUpdateInput) (*models.User, err
 	}
 
 	// 2. Build update fields
+
 	update := bson.M{}
 	if input.Name != "" {
 		update["name"] = input.Name
@@ -72,8 +75,6 @@ func UpdateUser(userID string, input *models.UserUpdateInput) (*models.User, err
 
 	return updatedUser, nil
 }
-
-
 
 
 //  DeleteUser  Function(performing a soft delete)
@@ -134,22 +135,21 @@ func GetLoyaltyPoints(userID string) (int, error) {
 	user, err := repositories.FindUserByID(objID)
 	if err != nil {
 		return 0, errors.New("user not found")
-	}
+	} 
 
 	// 3. Confirm they are a car owner
-	if user.Role != "car_owner" || user.OwnerData == nil {
+	if user.Role != "car_owner" && user.AccountType != "car_owner" {
 		return 0, errors.New("loyalty points not available for this user")
 	}
 
 	// 4. Return the loyalty points
-	return user.OwnerData.LoyaltyPoints, nil
+	return user.LoyaltyPoints, nil
 }
-
 
 
 // 
 
-func GetPublicProfile(userID string) (*models.PublicUserProfile, error) {
+func GetPublicProfile(userID string) (*models.User, error) {
 	// 1. Convert to ObjectID
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -163,19 +163,18 @@ func GetPublicProfile(userID string) (*models.PublicUserProfile, error) {
 	}
 
 	// 3. Build public response
-	public := &models.PublicUserProfile{
+	public := &models.User{
 		ID:           user.ID,
 		Name:         user.Name,
 		ProfilePhoto: user.ProfilePhoto,
 		Role:         user.Role,
 	}
 
-	if user.Role == "worker" && user.WorkerData != nil {
-		public.JobRole = user.WorkerData.JobRole
+	if user.AccountType == "car_wash" && user.Role == "worker" {
+		public.JobRole = user.JobRole
 	}
 
-	return public, nil
+	return public, nil 
 }
-
-
+  
 

@@ -20,6 +20,7 @@ type AuthContext struct {
 	UserID string
 	Email  string
 	Role   string
+	AccountType string
 }
 
 //  AuthMiddleware checks for token, validates it, adds user info to context
@@ -47,18 +48,22 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		userID := claims["user_id"].(string)
 		email := claims["email"].(string)
 		role := claims["role"].(string)
+		accountType := claims["account_type"].(string)
+
+
 
 		//  4. Save user info into context
 		authCtx := AuthContext{
 			UserID: userID,
 			Email:  email,
 			Role:   role,
+			AccountType: accountType,
 		}
 
 		// type contextKey string
         // const authKey contextKey = "auth"
 
-		ctx := context.WithValue(r.Context(), "auth", authCtx)
+		ctx := context.WithValue(r.Context(), "auth", authCtx) 
 
 		// ⏭ 5. Call next handler, passing in updated request with user context
 		next.ServeHTTP(w, r.WithContext(ctx))

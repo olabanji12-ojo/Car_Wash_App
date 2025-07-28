@@ -29,6 +29,18 @@ func InitCollections() {
 	PaymentCollection = DB.Collection("payments")
 	ServiceCollection = DB.Collection("services") // touched
 	NotificationCollection = DB.Collection("notifications") // notifications
+
+	// ✅ Create unique index on email field
+	// indexModel := mongo.IndexModel{
+	// 	Keys:    bson.M{"email": 1},
+	// 	Options: options.Index().SetUnique(true),
+	// }
+
+	// _, err := UserCollection.Indexes().CreateOne(context.Background(), indexModel)
+	// if err != nil {
+	// 	log.Fatal("❌ Failed to create unique index on email:", err)
+	// }
+
 }
 
 

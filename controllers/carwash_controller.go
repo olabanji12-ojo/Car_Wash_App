@@ -11,7 +11,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 
-	"fmt"
+	// "fmt"
 
 )
 
@@ -25,27 +25,23 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	ownerID  := authCtx.UserID
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)  
+	
 	role := authCtx.Role
-	fmt.Println("Owner_id: ", ownerID)
-
-	if role == "car_owner" {
+	accountType := authCtx.AccountType
+	
+	if role !=  "business" && accountType != "car_wash" {
 		utils.Error(w, http.StatusForbidden, "Only car wash businesses can create carwashes")
 		return
 	}
 
-	if ownerID == "" {
-		utils.Error(w, http.StatusUnauthorized, "Missing owner ID")
-		return
-	}
-
+	
 // 	if err := input.Validate(); err != nil {
 // 	utils.Error(w, http.StatusBadRequest, err.Error())
 // 	return
 //    }
 
-	carwash, err := services.CreateCarwash(ownerID, input)
+	carwash, err := services.CreateCarwash(input)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -53,6 +49,7 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusCreated, carwash)
 }
+
 
 //  GET /api/carwashes/{id} — View carwash profile by ID
 func GetCarwashByIDHandler(w http.ResponseWriter, r *http.Request) {
