@@ -27,7 +27,7 @@ func AuthRoutes(router *mux.Router)  {
 
 	// POST /api/auth/register
 	auth.HandleFunc("/register", controllers.RegisterHandler).Methods("POST")
-
+    
 	// POST /api/auth/login
 	auth.HandleFunc("/login", controllers.LoginHandler).Methods("POST")
 

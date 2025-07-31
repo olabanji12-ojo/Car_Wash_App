@@ -177,4 +177,8 @@ func GetPublicProfile(userID string) (*models.User, error) {
 	return public, nil 
 }
   
-
+func UpdateUserCarwashID(userID, carwashID primitive.ObjectID) error {
+	
+	return repositories.UpdateUserCarwashID(userID, carwashID)
+}  
+ 

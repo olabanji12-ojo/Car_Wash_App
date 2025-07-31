@@ -10,7 +10,8 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
-
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/sirupsen/logrus"
 	// "fmt"
 
 )
@@ -23,18 +24,35 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusBadRequest, "Invalid JSON input")
 		return
 	}
+    
+    
+	authData := r.Context().Value("auth")
+	logrus.Info("Auth data from context:", authData)
+	authCtx, ok := authData.(middleware.AuthContext)
 
-
-	authCtx := r.Context().Value("auth").(middleware.AuthContext)  
-	
-	role := authCtx.Role
-	accountType := authCtx.AccountType
-	
-	if role !=  "business" && accountType != "car_wash" {
-		utils.Error(w, http.StatusForbidden, "Only car wash businesses can create carwashes")
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "Unauthorized or missing auth context")
 		return
 	}
 
+	
+	role := authCtx.Role
+	accountType := authCtx.AccountType
+	userID := authCtx.UserID
+	objID, err := primitive.ObjectIDFromHex(userID)
+
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid user ID format")
+		return
+	}
+	
+ 
+	if !(role == "business_owner" && accountType == "car_wash"){
+		utils.Error(w, http.StatusForbidden, "Only car wash businesses can create carwashes")
+		return
+	}
+ 
+	
 	
 // 	if err := input.Validate(); err != nil {
 // 	utils.Error(w, http.StatusBadRequest, err.Error())
@@ -42,10 +60,17 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 //    }
 
 	carwash, err := services.CreateCarwash(input)
+	 
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	// Update the user’s carwash_id field
+	err = services.UpdateUserCarwashID(objID, carwash.ID)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Failed to assign carwash to user")
+		return
+	}   
 
 	utils.JSON(w, http.StatusCreated, carwash)
 }

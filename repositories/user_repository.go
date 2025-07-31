@@ -79,5 +79,16 @@ func UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
 }
 
 
+func UpdateUserCarwashID(userID, carwashID primitive.ObjectID) error {
+	collection := database.DB.Collection("users")
+
+	filter := bson.M{"_id": userID}
+	update := bson.M{"$set": bson.M{"carwash_id": carwashID}}
+
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	return err
+}
+
+
 
 

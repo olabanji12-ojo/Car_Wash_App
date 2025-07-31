@@ -89,7 +89,6 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 		UserID:       ownerID,
 		CarID:        input.CarID,
 		CarwashID:    input.CarwashID,
-		ServiceIDs:   input.ServiceIDs,
 		BookingTime:  input.BookingTime,
 		BookingType:  input.BookingType,
 		UserLocation: input.UserLocation,

@@ -4,7 +4,7 @@ package utils
 const (
 	ROLE_WORKER      = "worker"       // Works for a business
 	ROLE_CAR_OWNER   = "car_owner"    // Owns a car but no business
-	ROLE_BUSINESS    = "business"     // Has a business (e.g. car wash)
+	ROLE_BUSINESS    = "business_owner"     // Has a business (e.g. car wash)
 	ROLE_ADMIN       = "admin"        // Optional: for system or business admin
 )
 
