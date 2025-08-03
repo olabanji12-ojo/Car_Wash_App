@@ -19,6 +19,8 @@ func CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
 	userID  := authCtx.UserID
+	role := authCtx.Role 
+	accountType := authCtx.AccountType
 
 	var input models.Booking
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -31,6 +33,10 @@ func CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 	return
    }
 
+	if role != "car_owner" || accountType != "car_owner" {
+		utils.Error(w, http.StatusForbidden, "Only car owners can create bookings")
+		return
+	}
 
 	newBooking, err := services.CreateBooking(userID, input)
 	if err != nil {

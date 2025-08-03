@@ -38,7 +38,7 @@ func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	userID := params["id"]
 
 	// 2. Decode the JSON body
-	var input *models.UserUpdateInput
+	var input *models.User
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		utils.Error(w, http.StatusBadRequest, "Invalid request body")
 		return

@@ -41,7 +41,6 @@ func CreateOrderFromBooking(bookingID string) (*models.Order, error) {
 		UserID:        booking.UserID,
 		CarID:         booking.CarID,
 		CarwashID:     booking.CarwashID,
-		ServiceIDs:    booking.ServiceIDs,
 		QueueNumber:   booking.QueueNumber,
 		BookingType:   booking.BookingType,
 		UserLocation:  booking.UserLocation,

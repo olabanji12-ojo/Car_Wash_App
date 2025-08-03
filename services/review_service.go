@@ -35,7 +35,6 @@ func CreateReview(userID string, input models.Review) (*models.Review, error) {
 	}
 
 
-
 	// 4. Create Review object
 	newReview := models.Review{
 		ID:        primitive.NewObjectID(),

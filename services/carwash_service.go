@@ -1,37 +1,33 @@
 package services
 
 import (
-	// "context"
-	"errors"
-	"fmt"
-	"sort"
-	"time"
 
+	// "context" 
+	"errors" 
+	"fmt"    
+	"sort"   
+	"time"   
+             
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+ 
 )
 
-func CreateCarwash(ownerID string, input models.Carwash) (*models.Carwash, error) {
-	objID, err := primitive.ObjectIDFromHex(ownerID)
-	if err != nil {
-		return nil, errors.New("invalid owner ID")
-	}
-	input.ID = primitive.NewObjectID()
-	input.OwnerID = objID
-	input.CreatedAt = time.Now()
-	input.UpdatedAt = time.Now()
-	input.QueueCount = 0
-	input.IsActive = true
-
-	_, err = repositories.CreateCarwash(input)
+ 
+func CreateCarwash(input models.Carwash) (*models.Carwash, error) {
+    
+	input.SetDefaults()
+	
+	_, err := repositories.CreateCarwash(input)
 	if err != nil {
 		return nil, err
 	}
 	return &input, nil
-}
+    
+}   
 
 func GetCarwashByID(id string) (*models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(id)

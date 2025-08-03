@@ -29,29 +29,51 @@ type TimeRange struct {
 
 type Carwash struct {
 
-
 	ID            primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
-	OwnerID       primitive.ObjectID   `bson:"owner_id" json:"owner_id"`                         // Linked to users._id
 	Name          string               `bson:"name" json:"name"`                                 // Business name
 	Description   string               `bson:"description,omitempty" json:"description,omitempty"` // Optional business info
 	Address       string               `bson:"address" json:"address"`                           // Full address
 	Location      GeoLocation          `bson:"location" json:"location"`                         // Geo search
+
 	PhotoGallery  []string             `bson:"photo_gallery,omitempty" json:"photo_gallery,omitempty"` // Images
-	Services      []string             `bson:"services" json:"services"`                         // List of service IDs
+	Services      []Service             `bson:"services" json:"services"`                         // List of service IDs
 	IsActive      bool                 `bson:"is_active" json:"is_active"`                       // Can accept bookings?
 	Rating        float64              `bson:"rating" json:"rating"`                             // Avg from reviews
 	QueueCount    int                  `bson:"queue_count" json:"queue_count"`                   // Cars waiting
 	OpenHours     map[string]TimeRange  `bson:"open_hours" json:"open_hours"`                     // E.g., { "mon": "8am–6pm" }
-	HomeService   bool                 `bson:"home_service" json:"home_service"`                 // Mobile service?
+	HomeService   bool                 `bson:"home_service,omitempty" json:"home_service,omitempty"`                 // Mobile service?
 	DeliveryRadiusKM int               `bson:"delivery_radius_km,omitempty" json:"delivery_radius_km,omitempty"` // e.g., 10 means 10km max
 	CreatedAt     time.Time            `bson:"created_at" json:"created_at"`                     // Joined on
 	UpdatedAt     time.Time            `bson:"updated_at" json:"updated_at"`                     // Last update
-   
+    State        string                `bson:"state,omitempty" json:"state,omitempty"`
+	Country      string                `bson:"country,omitempty" json:"country,omitempty"`
+	LGA          string                `bson:"lga,omitempty" json:"lga,omitempty"`
 	HasLocation   bool                 `bson:"has_location" json:"has_location"`   // true if location is set
 
 	ServiceRangeMinutes int `bson:"service_range_minutes,omitempty" json:"service_range_minutes,omitempty"`
 	
+} 
+
+type Service struct {
+
+    Name string `bson:"name" json:"name"`
+	Description string `bson:"description" json:"description"`
+	Price float64 `bson:"price" json:"price"`
+	Duration int `bson:"duration" json:"duration"`
+	
 }
+
+
+func (c *Carwash) SetDefaults() {
+	c.CreatedAt = time.Now() 
+	c.ID = primitive.NewObjectID() 
+	c.UpdatedAt = time.Now()
+	c.QueueCount = 0
+	c.IsActive = true  
+
+}
+
+
 
 
 // func (c Carwash) Validate() error {

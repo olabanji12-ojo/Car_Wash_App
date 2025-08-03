@@ -19,6 +19,8 @@ import (
 func CreateCarHandler(w http.ResponseWriter, r *http.Request) {
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
 	userID  := authCtx.UserID
+	accountType := authCtx.AccountType
+	role := authCtx.Role 
 	fmt.Println("user_id: ", userID)
 
 	// ownerID, err := primitive.ObjectIDFromHex(userID)
@@ -33,6 +35,12 @@ func CreateCarHandler(w http.ResponseWriter, r *http.Request) {
 	utils.Error(w, http.StatusBadRequest, err.Error())
 	return
     }
+	 
+	if role != "car_owner" || accountType != "car_owner" {
+		utils.Error(w, http.StatusForbidden, "Only car owners can create cars")
+		return
+	}
+	
 
 	newCar, err := services.CreateCar(userID, input)
 	if err != nil {

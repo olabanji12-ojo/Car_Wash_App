@@ -45,11 +45,12 @@ func init() {
 }
 
 //  GenerateToken creates a JWT for a given user with a 24-hour expiration
-func GenerateToken(userID, email, role string) (string, error) {
+func GenerateToken(userID, email, role string, accountType string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"email":   email,
 		"role":    role,
+		"account_type": accountType,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(), // token expires in 24h
 	}
 
