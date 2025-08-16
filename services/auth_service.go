@@ -14,8 +14,8 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+	// "fmt"
     
-
 )
 
 // proposed flow
@@ -43,7 +43,7 @@ func RegisterUser(input models.User) (*models.User, error) {
 		logrus.Error("Error hashing password: ", err)
 		return nil, err
 	}
-
+    
 	// 3. Build new user object
 	newUser := models.User{
 		ID:           primitive.NewObjectID(),
@@ -55,7 +55,7 @@ func RegisterUser(input models.User) (*models.User, error) {
 		AccountType:  input.AccountType,
 		Status:       "active",
 		Verified:     false,
-		ProfilePhoto: "",
+		ProfilePhoto: input.ProfilePhoto, 
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -77,6 +77,7 @@ func RegisterUser(input models.User) (*models.User, error) {
 		return nil, err
 	}
 
+	newUser.Password = ""
 	return &newUser, nil
 }
 
@@ -103,129 +104,11 @@ func LoginUser(email, password string) (string, *models.User, error) {
 		return "", nil, err
 	}
 
+	// fmt.Println(user)
+	
 	return token, user, nil
-
+    
 }
+ 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// {
-// 	"name": "E-Newton Car Spa",
-// 	"description": "Premium hand wash and detailing services.",
-// 	"address": "12 Unity Road, Ikeja, Lagos",
-// 	"location": {
-// 	  "type": "Point",
-// 	  "coordinates": [3.3506, 6.5244]
-// 	},
-// 	"photo_gallery": [
-// 	  "https://example.com/image1.jpg",
-// 	  "https://example.com/image2.jpg"
-// 	],
-
-// 	"services": [
-// 	  {
-// 		"name": "Basic Wash",
-// 		"description": "Exterior wash and dry.",
-// 		"price": 2000.0,
-// 		"duration": 30
-// 	  },
-// 	  {
-// 		"name": "Interior Detailing",
-// 		"description": "Full interior cleaning.",
-// 		"price": 5000.0,
-// 		"duration": 60
-// 	  }
-// 	],
-// 	"open_hours": {
-// 	  "mon": { "start": "08:00", "end": "18:00" },
-// 	  "tue": { "start": "08:00", "end": "18:00" },
-// 	  "wed": { "start": "08:00", "end": "18:00" },
-// 	  "thu": { "start": "08:00", "end": "18:00" },
-// 	  "fri": { "start": "08:00", "end": "18:00" },
-// 	  "sat": { "start": "09:00", "end": "17:00" }
-// 	},
-// 	"home_service": true,
-// 	"delivery_radius_km": 10,
-// 	"state": "Lagos",
-// 	"country": "Nigeria",
-// 	"lga": "Ikeja",
-// 	"has_location": true,
-// 	"service_range_minutes": 20
-//   }
-  
 

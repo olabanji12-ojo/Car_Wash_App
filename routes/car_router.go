@@ -6,24 +6,22 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 )
 
+
 func CarRoutes(router *mux.Router) {
 	car := router.PathPrefix("/api/cars").Subrouter()
 
-	// Apply auth middleware to all car routes
-	car.Use(middleware.AuthMiddleware)
+	// Apply auth middleware to all car routes 
 
-	car.HandleFunc("/", controllers.CreateCarHandler).Methods("POST") // tested
-	car.HandleFunc("/my", controllers.GetMyCarsHandler).Methods("GET") // tested
+	car.Use(middleware.AuthMiddleware)
+    
+	car.HandleFunc("/", controllers.CreateCarHandler).Methods("POST") //        
+	car.HandleFunc("/my", controllers.GetMyCarsHandler).Methods("GET") // tested      
+	car.HandleFunc("/{carID}", controllers.GetCarByIDHandler).Methods("GET") // tested
+    
 	car.HandleFunc("/{carID}", controllers.UpdateCarHandler).Methods("PUT") // tested 
 	car.HandleFunc("/{carID}", controllers.DeleteCarHandler).Methods("DELETE") // tested
 	car.HandleFunc("/{carID}/default", controllers.SetDefaultCarHandler).Methods("PATCH") // tested
-
-
+    
+    
 }
-
-
-
-
-
-
 

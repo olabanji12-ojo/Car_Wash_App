@@ -1,6 +1,8 @@
 package models
 
+
 import (
+	
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,13 +14,13 @@ import (
 
 )
 
+
 // A user account. All users (workers, business owners, car owners) will have a User document.
 // If a business signs up, a corresponding business document is created.
 // If a worker is added to a business, a user is created with the business’s CarWashID linked.
 
 
 type User struct {
-
 
 	ID            primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
 	Name          string              `bson:"name,omitempty" json:"name,omitempty"`
@@ -39,8 +41,8 @@ type User struct {
 	UpdatedAt     time.Time           `bson:"updated_at" json:"updated_at"`
 	ActiveOrders  []primitive.ObjectID `bson:"active_orders,omitempty" json:"active_orders,omitempty"` 
 	
-    
 }
+
 
 
 func (u User) Validate() error {
@@ -64,32 +66,6 @@ func (u User) Validate() error {
 	
 	)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

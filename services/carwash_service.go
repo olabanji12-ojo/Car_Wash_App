@@ -2,32 +2,30 @@ package services
 
 import (
 
-	// "context" 
-	"errors" 
-	"fmt"    
-	"sort"   
-	"time"   
-             
+	// "context"
+	"errors"
+	"fmt"
+	"sort"
+	"time"
+
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
- 
 )
 
- 
 func CreateCarwash(input models.Carwash) (*models.Carwash, error) {
-    
+
 	input.SetDefaults()
-	
+
 	_, err := repositories.CreateCarwash(input)
 	if err != nil {
 		return nil, err
 	}
 	return &input, nil
-    
-}   
+
+}
 
 func GetCarwashByID(id string) (*models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
@@ -90,7 +88,6 @@ func GetNearbyCarwashesForUser(userLat, userLng float64) (*models.CarwashSearchR
 			carwash.Location.Coordinates[1],
 			carwash.Location.Coordinates[0],
 			carwash.ServiceRangeMinutes,
-			
 		)
 
 		carwashesWithDistance = append(carwashesWithDistance, models.CarwashWithDistance{
@@ -128,7 +125,7 @@ func UpdateCarwashLocation(carwashID string, locationReq models.LocationUpdateRe
 		},
 		"service_range_minutes": locationReq.ServiceRangeMinutes,
 		"has_location":          true,
-		"updated_at":           time.Now(),
+		"updated_at":            time.Now(),
 	}
 
 	if locationReq.Address != "" {
