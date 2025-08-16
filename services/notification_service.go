@@ -8,7 +8,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+)   
 
 // NotificationService handles all notification operations
 type NotificationService struct{}
@@ -174,3 +174,6 @@ func (ns *NotificationService) MarkAllAsRead(userID string) error {
 
 // Global notification service instance
 var NotificationSvc = &NotificationService{}
+
+
+

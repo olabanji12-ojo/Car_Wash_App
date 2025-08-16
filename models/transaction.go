@@ -9,7 +9,8 @@ import (
 )
 
 type Payment struct {
-	
+
+
 
 	ID              primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	UserID          primitive.ObjectID `bson:"user_id" json:"user_id"`

@@ -12,9 +12,8 @@ import (
 )
 
 
-
-
 func UserRoutes(router *mux.Router) {
+	
 	
 	//  User Routes
 
@@ -23,11 +22,11 @@ func UserRoutes(router *mux.Router) {
 	// userRouter.Use(middleware.AuthMiddleware)
 
 	userRouter.HandleFunc("/{id}", controllers.GetUserProfile).Methods("GET") // tested
-
+    
 	userRouter.HandleFunc("/{id}", controllers.UpdateUserProfile).Methods("PUT") // tested
-
+    
 	userRouter.HandleFunc("/{id}", controllers.DeleteUser).Methods("DELETE") // tested
-
+    
 	userRouter.HandleFunc("/{id}/role", controllers.GetUserRole).Methods("GET")  // tested
 
 	userRouter.HandleFunc("/{id}/loyalty", controllers.GetLoyaltyPoints).Methods("GET") // tested

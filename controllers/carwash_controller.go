@@ -27,7 +27,7 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
     
     
 	authData := r.Context().Value("auth")
-	logrus.Info("Auth data from context:", authData)
+	logrus.Info("Auth data from context:", authData) 
 	authCtx, ok := authData.(middleware.AuthContext)
 
 	if !ok {
@@ -51,8 +51,7 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusForbidden, "Only car wash businesses can create carwashes")
 		return
 	}
- 
-	
+ 	
 	
 // 	if err := input.Validate(); err != nil {
 // 	utils.Error(w, http.StatusBadRequest, err.Error())
@@ -164,7 +163,7 @@ func GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusBadRequest, "Missing required parameters: lat and lng")
 		return
 	}
-
+    
 	lat, err := strconv.ParseFloat(latStr, 64)
 	if err != nil {
 		utils.Error(w, http.StatusBadRequest, "Invalid latitude format")

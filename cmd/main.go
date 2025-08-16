@@ -13,6 +13,8 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/routes"
+	"github.com/olabanji12-ojo/CarWashApp/config"
+
 )
 
 func main() {
@@ -36,6 +38,9 @@ func main() {
 	// Initialize router
 	router := mux.NewRouter()
 	routes.InitRoutes(router)
+
+	// Initialize Cloudinary
+	config.InitCloudinary()
 
 	// Negroni middleware stack
 	n := negroni.New()
@@ -63,3 +68,6 @@ func main() {
 	}
 
 }
+
+
+

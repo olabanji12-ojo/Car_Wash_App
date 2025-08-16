@@ -8,15 +8,15 @@ import (
 
 // CarwashRoutes sets up all routes for carwash-related actions
 func CarwashRoutes(router *mux.Router) {
-    
-    
+      
 	carwash := router.PathPrefix("/api/carwashes").Subrouter()
 
 	carwash.Use(middleware.AuthMiddleware)
 
 	// Public routes
 	carwash.HandleFunc("", controllers.GetAllActiveCarwashesHandler).Methods("GET") // tested
-	carwash.HandleFunc("/{id}", controllers.GetCarwashByIDHandler).Methods("GET")  //  tested
+	carwash.HandleFunc("/{id}", controllers.GetCarwashByIDHandler).Methods("GET")  //  tested 
+
 	carwash.HandleFunc("/nearby", controllers.GetNearbyCarwashesHandler).Methods("GET") // location-based search
     
 	// Owner-specific routes (authenticated)
