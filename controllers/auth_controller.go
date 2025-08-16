@@ -4,27 +4,32 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/sirupsen/logrus"
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+	"github.com/sirupsen/logrus"
 
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"fmt"
 	"strings"
 	"time"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
+type AuthController struct {
+	AuthService *services.AuthService
+}
 
+func NewAuthController(authService *services.AuthService) *AuthController {
+	return &AuthController{AuthService: authService}
+}
 
-// REGISTER HANDLER 
+// REGISTER HANDLER
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (ac *AuthController) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("RegisterHandler hit")
-	
+
 	// Parse multipart form (32MB max)
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
@@ -54,7 +59,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	file, header, err := r.FormFile("profile_photo")
 	if err == nil { // File was provided
 		defer file.Close()
-		
+
 		// Validate file type
 		if !isValidImageType(header.Filename) {
 			utils.Error(w, http.StatusBadRequest, "Invalid file type. Only JPG, PNG, GIF allowed")
@@ -62,7 +67,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Generate unique filename
-		filename := fmt.Sprintf("user_%s_%d", 
+		filename := fmt.Sprintf("user_%s_%d",
 			strings.ReplaceAll(input.Email, "@", "_"),
 			time.Now().Unix())
 
@@ -82,7 +87,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	input.ProfilePhoto = profilePhotoURL
 
 	// Call service to register user
-	newUser, err := services.RegisterUser(input)
+	newUser, err := ac.AuthService.RegisterUser(input)
 	if err != nil {
 		// If user creation fails but image was uploaded, clean up
 		if profilePhotoURL != "" {
@@ -103,7 +108,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func isValidImageType(filename string) bool {
 	validTypes := []string{".jpg", ".jpeg", ".png", ".gif"}
 	filename = strings.ToLower(filename)
-	
+
 	for _, ext := range validTypes {
 		if strings.HasSuffix(filename, ext) {
 			return true
@@ -124,11 +129,9 @@ func validateRegistrationInput(input models.User) error {
 	)
 }
 
-
 // LOGIN HANDLER
 
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var credentials struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -152,7 +155,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call service to login
-	token, user, err := services.LoginUser(credentials.Email, credentials.Password)
+	token, user, err := ac.AuthService.LoginUser(credentials.Email, credentials.Password)
 	if err != nil {
 		utils.Error(w, http.StatusUnauthorized, err.Error())
 		return
@@ -165,5 +168,3 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusOK, response)
 }
-
-

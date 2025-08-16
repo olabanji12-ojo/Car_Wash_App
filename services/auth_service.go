@@ -9,13 +9,12 @@ import (
 	// "go.mongodb.org/mongo-driver/bson"
 	// "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-    
+
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	// "fmt"
-    
 )
 
 // proposed flow
@@ -26,13 +25,20 @@ import (
 // proceeds to post onboarding where he is presented another form to update business information
 // then a virtual account is created for the business
 
+type AuthService struct {
+	userRepository repositories.UserRepository
+}
 
-func RegisterUser(input models.User) (*models.User, error) {
+func NewAuthService(userRepository repositories.UserRepository) *AuthService {
+	return &AuthService{userRepository: userRepository}
+}
+
+func (as *AuthService) RegisterUser(input models.User) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// 1. Check if user with email already exists
-	existing, _ := repositories.FindUserByEmail(input.Email)
+	existing, _ := as.userRepository.FindUserByEmail(input.Email)
 	if existing != nil {
 		return nil, errors.New("user with this email already exists")
 	}
@@ -43,7 +49,7 @@ func RegisterUser(input models.User) (*models.User, error) {
 		logrus.Error("Error hashing password: ", err)
 		return nil, err
 	}
-    
+
 	// 3. Build new user object
 	newUser := models.User{
 		ID:           primitive.NewObjectID(),
@@ -55,14 +61,14 @@ func RegisterUser(input models.User) (*models.User, error) {
 		AccountType:  input.AccountType,
 		Status:       "active",
 		Verified:     false,
-		ProfilePhoto: input.ProfilePhoto, 
+		ProfilePhoto: input.ProfilePhoto,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 
 	// Optional: Add role-specific sub-structs
-	
-	// switch input.Role { 
+
+	// switch input.Role {
 	// case utils.ROLE_WORKER:
 	// 	newUser.WorkerData = input.WorkerData
 	// case utils.ROLE_CAR_OWNER:
@@ -81,13 +87,12 @@ func RegisterUser(input models.User) (*models.User, error) {
 	return &newUser, nil
 }
 
-
-func LoginUser(email, password string) (string, *models.User, error) {
+func (as *AuthService) LoginUser(email, password string) (string, *models.User, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// 1. Find user by email
-	user, err := repositories.FindUserByEmail(email)
+	user, err := as.userRepository.FindUserByEmail(email)
 	if err != nil {
 		return "", nil, errors.New("user not found")
 	}
@@ -105,10 +110,7 @@ func LoginUser(email, password string) (string, *models.User, error) {
 	}
 
 	// fmt.Println(user)
-	
+
 	return token, user, nil
-    
+
 }
- 
-
-

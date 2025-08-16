@@ -10,14 +10,23 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type UserRepository struct {
+	db *mongo.Database
+}
+
+func NewUserRepository(db *mongo.Database) *UserRepository {
+	return &UserRepository{db: db}
+}
+
 // CreateUser inserts a new user into the MongoDB users collection
-func CreateUser(user models.User) error {
+func (ur *UserRepository) CreateUser(user models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := database.UserCollection.InsertOne(ctx, user)
+	_, err := ur.db.Collection("users").InsertOne(ctx, user)
 	if err != nil {
 		logrus.Error("Error inserting user: ", err)
 		return err
@@ -27,7 +36,7 @@ func CreateUser(user models.User) error {
 }
 
 // FindUserByEmail searches for a user by their email
-func FindUserByEmail(email string) (*models.User, error) {
+func (ur *UserRepository) FindUserByEmail(email string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -43,12 +52,12 @@ func FindUserByEmail(email string) (*models.User, error) {
 }
 
 // FindUserByID fetches a user by MongoDB ObjectID
-func FindUserByID(userID primitive.ObjectID) (*models.User, error) {
+func (ur *UserRepository) FindUserByID(userID primitive.ObjectID) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var user models.User
-	err := database.UserCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	err := ur.db.Collection("users").FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -57,11 +66,11 @@ func FindUserByID(userID primitive.ObjectID) (*models.User, error) {
 }
 
 // New: Update user profile fields
-func UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
+func (ur *UserRepository) UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := database.UserCollection.UpdateOne(
+	_, err := ur.db.Collection("users").UpdateOne(
 		ctx,
 		bson.M{"_id": userID},  // filter
 		bson.M{"$set": update}, // update operation
@@ -70,8 +79,8 @@ func UpdateUserByID(userID primitive.ObjectID, update bson.M) error {
 	return err
 }
 
-func UpdateUserCarwashID(userID, carwashID primitive.ObjectID) error {
-	collection := database.DB.Collection("users")
+func (ur *UserRepository) UpdateUserCarwashID(userID, carwashID primitive.ObjectID) error {
+	collection := ur.db.Collection("users")
 
 	filter := bson.M{"_id": userID}
 	update := bson.M{"$set": bson.M{"carwash_id": carwashID}}

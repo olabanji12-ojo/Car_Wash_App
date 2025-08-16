@@ -14,7 +14,7 @@ import (
 
 var DB *mongo.Database
 
-func ConnectDB() {
+func ConnectDB() *mongo.Database {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found, using defaults")
@@ -50,4 +50,5 @@ func ConnectDB() {
 
 	DB = client.Database(dbName)
 	fmt.Println("✅ MongoDB connected successfully")
+	return DB
 }
