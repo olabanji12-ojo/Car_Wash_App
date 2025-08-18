@@ -33,7 +33,9 @@ func (ur *UserRepository) CreateUser(user models.User) error {
 	}
 	logrus.Info("User inserted successfully")
 	return nil
+
 }
+
 
 // FindUserByEmail searches for a user by their email
 func (ur *UserRepository) FindUserByEmail(email string) (*models.User, error) {

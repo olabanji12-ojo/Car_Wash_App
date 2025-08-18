@@ -13,10 +13,20 @@ func InitAuthService(db *mongo.Database) *controllers.AuthController {
 	return &controllers.AuthController{AuthService: authService}
 }
 
+func InitCarService(db *mongo.Database) *controllers.CarController {
+	carService := services.NewCarService(*repositories.NewCarRepository(db))
+	return &controllers.CarController{CarService: carService}
+}
+
 func InitRoutes(router *mux.Router, db *mongo.Database) {
 	AuthRoutes(router, InitAuthService(db))
 	UserRoutes(router)
-	CarRoutes(router)
+
+	// Initialize CarRouter and set up car routes
+	carController := InitCarService(db)
+	carRouter := NewCarRouter(*carController)
+	carRouter.CarRoutes(router)
+
 	CarwashRoutes(router)
 	// ServiceRoutes(router)
 	BookingRoutes(router)

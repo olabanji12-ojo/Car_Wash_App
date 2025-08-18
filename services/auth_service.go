@@ -36,7 +36,7 @@ func NewAuthService(userRepository repositories.UserRepository) *AuthService {
 func (as *AuthService) RegisterUser(input models.User) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
+    
 	// 1. Check if user with email already exists
 	existing, _ := as.userRepository.FindUserByEmail(input.Email)
 	if existing != nil {
