@@ -30,6 +30,7 @@ func InitCollections() {
 	ServiceCollection = DB.Collection("services") // touched
 	NotificationCollection = DB.Collection("notifications") // notifications
 
+	
 	// ✅ Create unique index on email field
 	// indexModel := mongo.IndexModel{
 	// 	Keys:    bson.M{"email": 1},
