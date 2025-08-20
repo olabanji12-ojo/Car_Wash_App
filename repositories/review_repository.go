@@ -9,10 +9,20 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
+
+type ReviewRepository struct {
+    db *mongo.Database
+}
+
+func NewReviewRepository(db *mongo.Database) *ReviewRepository {
+    return &ReviewRepository{db:db}
+}
+
 // 1. CreateReview inserts a new review
-func CreateReview(review *models.Review) error {
+func(rr *ReviewRepository) CreateReview(review *models.Review) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -21,7 +31,7 @@ func CreateReview(review *models.Review) error {
 }
 
 // 2. GetReviewsByUserID returns reviews written by a specific user
-func GetReviewsByUserID(userID primitive.ObjectID) ([]models.Review, error) {
+func(rr *ReviewRepository) GetReviewsByUserID(userID primitive.ObjectID) ([]models.Review, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -43,7 +53,7 @@ func GetReviewsByUserID(userID primitive.ObjectID) ([]models.Review, error) {
 }
 
 // 3. GetReviewsByCarwashID returns reviews for a carwash
-func GetReviewsByCarwashID(carwashID primitive.ObjectID) ([]models.Review, error) {
+func(rr *ReviewRepository) GetReviewsByCarwashID(carwashID primitive.ObjectID) ([]models.Review, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -65,7 +75,7 @@ func GetReviewsByCarwashID(carwashID primitive.ObjectID) ([]models.Review, error
 }
 
 // 4. GetReviewByOrderID ensures one review per order
-func GetReviewByOrderID(orderID primitive.ObjectID) (*models.Review, error) {
+func(rr *ReviewRepository) GetReviewByOrderID(orderID primitive.ObjectID) (*models.Review, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -78,7 +88,7 @@ func GetReviewByOrderID(orderID primitive.ObjectID) (*models.Review, error) {
 }
 
 // 5. GetAverageRatingForCarwash calculates average rating
-func GetAverageRatingForCarwash(carwashID primitive.ObjectID) (float64, error) {
+func(rr *ReviewRepository) GetAverageRatingForCarwash(carwashID primitive.ObjectID) (float64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -109,7 +119,7 @@ func GetAverageRatingForCarwash(carwashID primitive.ObjectID) (float64, error) {
 }
 
 
-func HasUserReviewedOrder(userID, orderID primitive.ObjectID) (bool, error) {
+func(rr *ReviewRepository) HasUserReviewedOrder(userID, orderID primitive.ObjectID) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

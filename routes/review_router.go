@@ -9,17 +9,26 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 )
 
-func ReviewRoutes(router *mux.Router) {
+type ReviewRouter struct {
+	reviewController controllers.ReviewController
+}
+
+func NewReviewRouter(reviewController controllers.ReviewController) *ReviewRouter {
+	return &ReviewRouter{reviewController: reviewController}
+}
+
+
+func(rr *ReviewRouter) ReviewRoutes(router *mux.Router) {
 	review := router.PathPrefix("/api/reviews").Subrouter()
 
 	review.Use(middleware.AuthMiddleware)
 
 	// 🔐 Authenticated routes
-	review.HandleFunc("", controllers.LeaveReviewHandler).Methods("POST") // tested
-	review.HandleFunc("/user", controllers.GetReviewsByUserHandler).Methods("GET") // tested
+	review.HandleFunc("", rr.reviewController.LeaveReviewHandler).Methods("POST") // tested
+	review.HandleFunc("/user", rr.reviewController.GetReviewsByUserHandler).Methods("GET") // tested
 
 	// 🌐 Public access
-	review.HandleFunc("/order/{id}", controllers.GetReviewByOrderIDHandler).Methods("GET") // tested
-	review.HandleFunc("/business/{id}", controllers.GetReviewsByBusinessIDHandler).Methods("GET") // tested
-	review.HandleFunc("/carwash/{id}/average", controllers.GetCarwashAverageRatingHandler).Methods("GET") // tested
+	review.HandleFunc("/order/{id}", rr.reviewController.GetReviewByOrderIDHandler).Methods("GET") // tested
+	review.HandleFunc("/business/{id}", rr.reviewController.GetReviewsByBusinessIDHandler).Methods("GET") // tested
+	review.HandleFunc("/carwash/{id}/average", rr.reviewController.GetCarwashAverageRatingHandler).Methods("GET") // tested
 }
