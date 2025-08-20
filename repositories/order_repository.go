@@ -10,15 +10,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 
 // THE REPOSITORY RELATES AND INTERACTS DIRECTLY WITH THE DATABASE 
 
+type OrderRepository struct {
+	db *mongo.Database
+}
+
+func NewOrderRepository(db *mongo.Database) *OrderRepository {
+
+	return &OrderRepository{db: db}
+}
+
 
 // 1. CreateOrder - insert new order
-
-func CreateOrder(order *models.Order) error {
+func(or *OrderRepository) CreateOrder(order *models.Order) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -32,7 +41,7 @@ func CreateOrder(order *models.Order) error {
 }
 
 // 2. GetOrderByID - fetch one order by ID
-func GetOrderByID(orderID primitive.ObjectID) (*models.Order, error) {
+func(or *OrderRepository) GetOrderByID(orderID primitive.ObjectID) (*models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -45,7 +54,7 @@ func GetOrderByID(orderID primitive.ObjectID) (*models.Order, error) {
 }
 
 // 3. GetOrdersByUserID - list of orders made by a user
-func GetOrdersByUserID(userID primitive.ObjectID) ([]models.Order, error) {
+func(or *OrderRepository) GetOrdersByUserID(userID primitive.ObjectID) ([]models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -66,7 +75,7 @@ func GetOrdersByUserID(userID primitive.ObjectID) ([]models.Order, error) {
 }
 
 // 4. GetOrdersByCarwashID - orders received by a carwash
-func GetOrdersByCarwashID(carwashID primitive.ObjectID) ([]models.Order, error) {
+func(or *OrderRepository) GetOrdersByCarwashID(carwashID primitive.ObjectID) ([]models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -87,7 +96,7 @@ func GetOrdersByCarwashID(carwashID primitive.ObjectID) ([]models.Order, error) 
 }
 
 // 5. UpdateOrderStatus - mark order as in_progress, completed, etc.
-func UpdateOrderStatus(orderID primitive.ObjectID, status string) error {
+func(or *OrderRepository) UpdateOrderStatus(orderID primitive.ObjectID, status string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -105,7 +114,7 @@ func UpdateOrderStatus(orderID primitive.ObjectID, status string) error {
 }
 
 // 6. AssignWorker - attach a worker to this order
-func AssignWorker(orderID, workerID primitive.ObjectID) error {
+func(or *OrderRepository) AssignWorker(orderID, workerID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

@@ -16,8 +16,18 @@ import (
 
 )
 
+type CarWashController struct {
+      CarWashService *services.CarWashService
+}
+
+func NewCarWashController(carwashService *services.CarWashService) *CarWashController {
+	return &CarWashController{CarWashService: carwashService}
+}
+
+
+
 //  POST /api/carwashes — Create new carwash
-func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 	var input models.Carwash
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -58,7 +68,7 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 // 	return
 //    }
 
-	carwash, err := services.CreateCarwash(input)
+	carwash, err := cwc.CarWashService.CreateCarwash(input)
 	 
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
@@ -76,10 +86,10 @@ func CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 
 
 //  GET /api/carwashes/{id} — View carwash profile by ID
-func GetCarwashByIDHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) GetCarwashByIDHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	carwash, err := services.GetCarwashByID(id)
+	carwash, err := cwc.CarWashService.GetCarwashByID(id)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "Carwash not found")
 		return
@@ -89,8 +99,8 @@ func GetCarwashByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  GET /api/carwashes — View all active carwashes
-func GetAllActiveCarwashesHandler(w http.ResponseWriter, r *http.Request) {
-	carwashes, err := services.GetAllActiveCarwashes()
+func(cwc *CarWashController) GetAllActiveCarwashesHandler(w http.ResponseWriter, r *http.Request) {
+	carwashes, err := cwc.CarWashService.GetAllActiveCarwashes()
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -100,7 +110,7 @@ func GetAllActiveCarwashesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  PUT /api/carwashes/{id} — Update carwash profile
-func UpdateCarwashHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) UpdateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	var updates map[string]interface{}
@@ -109,7 +119,7 @@ func UpdateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.UpdateCarwash(id, updates); err != nil {
+	if err := cwc.CarWashService.UpdateCarwash(id, updates); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -118,7 +128,7 @@ func UpdateCarwashHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  PATCH /api/carwashes/{id}/status — Toggle is_active status
-func SetCarwashStatusHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) SetCarwashStatusHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	var payload struct {
@@ -131,7 +141,7 @@ func SetCarwashStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.SetCarwashStatus(id, payload.IsActive); err != nil {
+	if err := cwc.CarWashService.SetCarwashStatus(id, payload.IsActive); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -140,10 +150,10 @@ func SetCarwashStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  GET /api/carwashes/owner/{owner_id} — Business can view their own carwashes
-func GetCarwashesByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) GetCarwashesByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
 	ownerID := mux.Vars(r)["owner_id"]
 
-	carwashes, err := services.GetCarwashesByOwnerID(ownerID)
+	carwashes, err := cwc.CarWashService.GetCarwashesByOwnerID(ownerID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -154,7 +164,7 @@ func GetCarwashesByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
 
 
 // GET /api/carwashes/nearby?lat={lat}&lng={lng} — Find nearby carwashes with fallback
-func GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse latitude and longitude from query parameters
 	latStr := r.URL.Query().Get("lat")
 	lngStr := r.URL.Query().Get("lng")
@@ -187,7 +197,7 @@ func GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call service to get nearby carwashes
-	result, err := services.GetNearbyCarwashesForUser(lat, lng)
+	result, err := cwc.CarWashService.GetNearbyCarwashesForUser(lat, lng)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -197,7 +207,7 @@ func GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // PUT /api/carwashes/{id}/location — Update carwash location and service range
-func UpdateCarwashLocationHandler(w http.ResponseWriter, r *http.Request) {
+func(cwc *CarWashController) UpdateCarwashLocationHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	var locationReq models.LocationUpdateRequest
@@ -213,7 +223,7 @@ func UpdateCarwashLocationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update carwash location
-	if err := services.UpdateCarwashLocation(id, locationReq); err != nil {
+	if err := cwc.CarWashService.UpdateCarwashLocation(id, locationReq); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -15,8 +15,18 @@ import (
 
 )
 
+type CarWashRepository struct {
+	db *mongo.Database
+}
+
+
+func NewCarWashRepository(db *mongo.Database) *CarWashRepository {
+	return &CarWashRepository{db: db}
+}
+
+
 //  1. Create a new carwash
-func CreateCarwash(carwash models.Carwash) (*mongo.InsertOneResult, error) {
+func (cw *CarWashRepository) CreateCarwash(carwash models.Carwash) (*mongo.InsertOneResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -29,7 +39,7 @@ func CreateCarwash(carwash models.Carwash) (*mongo.InsertOneResult, error) {
 
 
 //  2. Get a carwash by ID
-func GetCarwashByID(objID primitive.ObjectID) (*models.Carwash, error) {
+func(cw *CarWashRepository) GetCarwashByID(objID primitive.ObjectID) (*models.Carwash, error) {
 	
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -45,7 +55,7 @@ func GetCarwashByID(objID primitive.ObjectID) (*models.Carwash, error) {
 }
 
 //  3. Get all active carwashes (for customers to browse)
-func GetActiveCarwashes() ([]models.Carwash, error) {
+func (cw *CarWashRepository) GetActiveCarwashes() ([]models.Carwash, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -69,7 +79,7 @@ func GetActiveCarwashes() ([]models.Carwash, error) {
 }
 
 //  4. Update a carwash
-func UpdateCarwash(id string, update bson.M) error {
+func(cw *CarWashRepository) UpdateCarwash(id string, update bson.M) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("invalid carwash ID format")
@@ -87,16 +97,17 @@ func UpdateCarwash(id string, update bson.M) error {
 }
 
 //  5. Toggle carwash online status
-func SetCarwashStatus(id string, isActive bool) error {
-	return UpdateCarwash(id, bson.M{"is_active": isActive})
+func (cw *CarWashRepository)SetCarwashStatus(id string, isActive bool) error {
+	return cw.UpdateCarwash(id, bson.M{"is_active": isActive})
 }
 
 //  6. Get all carwashes by business owner ID
-func GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
+func (cw *CarWashRepository) GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(ownerID)
+
 	if err != nil {
 		return nil, errors.New("invalid owner ID")
-	}
+	} 
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -118,7 +129,7 @@ func GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
 }
 
 //  7. Filter carwashes (optional advanced search)
-func GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
+func(cw *CarWashRepository) GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -139,17 +150,17 @@ func GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
 }
 
 //  8. Update queue count
-func UpdateQueueCount(id string, count int) error {
-	return UpdateCarwash(id, bson.M{"queue_count": count})
+func (cw *CarWashRepository) UpdateQueueCount(id string, count int) error {
+	return cw.UpdateCarwash(id, bson.M{"queue_count": count})
 }
 
 
 // Add to repositories/carwash_repository.go
 
 // 🔎 Find carwashes with intelligent fallback
-func FindCarwashesWithFallback(userLat, userLng float64) ([]*models.Carwash, string, error) {
+func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64) ([]*models.Carwash, string, error) {
     // Step 1: Try 10km radius
-    carwashes, err := findCarwashesInRadius(userLat, userLng, 10.0)
+    carwashes, err := cw.findCarwashesInRadius(userLat, userLng, 10.0)
     if err != nil {
         return nil, "", err
     }
@@ -158,7 +169,7 @@ func FindCarwashesWithFallback(userLat, userLng float64) ([]*models.Carwash, str
     }
 
     // Step 2: Try 100km radius
-    carwashes, err = findCarwashesInRadius(userLat, userLng, 100.0)
+    carwashes, err = cw.findCarwashesInRadius(userLat, userLng, 100.0)
     if err != nil {
         return nil, "", err
     }
@@ -167,15 +178,15 @@ func FindCarwashesWithFallback(userLat, userLng float64) ([]*models.Carwash, str
     }
 
     // Step 3: Show all with location
-    carwashes, err = findAllCarwashesWithLocation()
-    if err != nil {
+    carwashes, err = cw.findAllCarwashesWithLocation()
+    if err != nil { 
         return nil, "", err
     }
     return carwashes, "all", nil
 }
 
 // Helper function using your existing pattern
-func findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwash, error) {
+func (cw *CarWashRepository)findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwash, error) {
     filter := bson.M{
         "location": bson.M{
             "$near": bson.M{
@@ -190,7 +201,7 @@ func findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwas
         "has_location": true,
     }
     
-    carwashes, err := GetCarwashesByFilter(filter)
+    carwashes, err := cw.GetCarwashesByFilter(filter)
     if err != nil {
         return nil, err
     }
@@ -204,13 +215,13 @@ func findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwas
 }
 
 // Helper function to get all carwashes that have location set
-func findAllCarwashesWithLocation() ([]*models.Carwash, error) {
+func (cw *CarWashRepository) findAllCarwashesWithLocation() ([]*models.Carwash, error) {
     filter := bson.M{
         "is_active": true,
         "has_location": true,
     }
     
-    carwashes, err := GetCarwashesByFilter(filter)
+    carwashes, err := cw.GetCarwashesByFilter(filter)
     if err != nil {
         return nil, err
     }

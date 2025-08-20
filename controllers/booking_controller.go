@@ -12,10 +12,21 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"time"
+
 )
 
+type BookingController struct {
+	BookingService *services.BookingService
+}
+
+func NewBookingController(bookingService *services.BookingService) *BookingController {
+	return &BookingController{BookingService: bookingService}
+}
+
+
+
 // 1. CreateBookingHandler
-func CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
 	userID  := authCtx.UserID
@@ -38,7 +49,7 @@ func CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newBooking, err := services.CreateBooking(userID, input)
+	newBooking, err := bc.BookingService.CreateBooking(userID, input)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -49,10 +60,10 @@ func CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 
 
 // 2. GetBookingByIDHandler
-func GetBookingByIDHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) GetBookingByIDHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	booking, err := services.GetBookingByID(id)
+	booking, err := bc.BookingService.GetBookingByID(id)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, err.Error())
 		return
@@ -62,11 +73,11 @@ func GetBookingByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // 3. GetMyBookingsHandler
-func GetMyBookingsHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) GetMyBookingsHandler(w http.ResponseWriter, r *http.Request) {
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
 	userID  := authCtx.UserID
 
-	bookings, err := services.GetBookingsByUserID(userID)
+	bookings, err := bc.BookingService.GetBookingsByUserID(userID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -76,10 +87,10 @@ func GetMyBookingsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // 4. GetBookingsByCarwashHandler
-func GetBookingsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) GetBookingsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
 	carwashID := mux.Vars(r)["carwash_id"]
 
-	bookings, err := services.GetBookingsByCarwashID(carwashID)
+	bookings, err := bc.BookingService.GetBookingsByCarwashID(carwashID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -89,7 +100,7 @@ func GetBookingsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // 5. UpdateBookingStatusHandler
-func UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
 	bookingID := mux.Vars(r)["id"]
 
 	var payload struct {
@@ -100,7 +111,7 @@ func UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.UpdateBookingStatus(bookingID, payload.Status); err != nil {
+	if err := bc.BookingService.UpdateBookingStatus(bookingID, payload.Status); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -109,11 +120,11 @@ func UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // 6. CancelBookingHandler
-func CancelBookingHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) CancelBookingHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 
-	if err := services.CancelBooking(id); err != nil {
+	if err := bc.BookingService.CancelBooking(id); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -123,7 +134,7 @@ func CancelBookingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // 7. GetBookingsByDateHandler (Optional)
-func GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
 	carwashID := mux.Vars(r)["carwash_id"]
 	dateStr := r.URL.Query().Get("date") // ?date=2025-07-08 or ?date=2025-07-08T14:00:00Z
 	logrus.Info("Recieved date query param:", dateStr)
@@ -148,7 +159,7 @@ func GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	bookings, err := services.GetBookingsByDate(carwashID, date)
+	bookings, err := bc.BookingService.GetBookingsByDate(carwashID, date)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -158,7 +169,7 @@ func GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func UpdateBookingHandler(w http.ResponseWriter, r *http.Request) {
+func(bc *BookingController) UpdateBookingHandler(w http.ResponseWriter, r *http.Request) {
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
 	userID  := authCtx.UserID
 	bookingID := mux.Vars(r)["bookingID"]
@@ -170,7 +181,7 @@ func UpdateBookingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.UpdateBooking(userID, bookingID, updates)
+	err := bc.BookingService.UpdateBooking(userID, bookingID, updates)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return

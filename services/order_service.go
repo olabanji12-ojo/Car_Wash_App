@@ -11,8 +11,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type OrderService struct {
+	orderRepository repositories.OrderRepository
+	bookingRepository repositories.BookingRepository
+}
+
+func NewOrderService(orderRepository repositories.OrderRepository) *OrderService {
+	return &OrderService{orderRepository: orderRepository}
+}
+
+
 // ✅ CreateOrderFromBooking
-func CreateOrderFromBooking(bookingID string) (*models.Order, error) {
+func(os *OrderService) CreateOrderFromBooking(bookingID string) (*models.Order, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -23,7 +33,7 @@ func CreateOrderFromBooking(bookingID string) (*models.Order, error) {
 	}
 
 	// 2. Fetch the booking
-	booking, err := repositories.GetBookingByID(objID)
+	booking, err := os.bookingRepository.GetBookingByID(objID)
 	if err != nil {
 		return nil, errors.New("booking not found")
 	}
@@ -53,13 +63,13 @@ func CreateOrderFromBooking(bookingID string) (*models.Order, error) {
 	}
 
 	// 5. Save the order
-	if err := repositories.CreateOrder(&newOrder); err != nil {
+	if err := os.orderRepository.CreateOrder(&newOrder); err != nil {
 		logrus.Error("Failed to create order: ", err)
 		return nil, err
 	}
 
 	// 6. Update booking status to approved
-	if err := repositories.UpdateBookingStatus(booking.ID, "approved"); err != nil {
+	if err := os.bookingRepository.UpdateBookingStatus(booking.ID, "approved"); err != nil {
 		logrus.Warn("Order created, but failed to update booking status")
 	}
 
@@ -67,51 +77,49 @@ func CreateOrderFromBooking(bookingID string) (*models.Order, error) {
 }
 
 
-func GetOrderByID(orderID string) (*models.Order, error) {
+func(os *OrderService) GetOrderByID(orderID string) (*models.Order, error) {
 	objID, err := primitive.ObjectIDFromHex(orderID)
 	if err != nil {
 		return nil, errors.New("invalid order ID")
 	}
 
-	return repositories.GetOrderByID(objID)
+	return os.orderRepository.GetOrderByID(objID)
 }
 
 
-
-func GetOrdersByUser(userID string) ([]models.Order, error) {
+func(os *OrderService) GetOrdersByUser(userID string) ([]models.Order, error) {
 	uid, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
 	}
 
-	return repositories.GetOrdersByUserID(uid)
+	return os.orderRepository.GetOrdersByUserID(uid)
 }
 
-func GetOrdersByCarwash(carwashID string) ([]models.Order, error) {
+func(os *OrderService) GetOrdersByCarwash(carwashID string) ([]models.Order, error) {
 
 	owner_id, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
 	}
 
-	return repositories.GetOrdersByCarwashID(owner_id)
+	return os.orderRepository.GetOrdersByCarwashID(owner_id)
 	
-
-}
-
+} 
 
 
-func UpdateOrderStatus(orderID string, newStatus string) error {
+
+func(os *OrderService) UpdateOrderStatus(orderID string, newStatus string) error {
 	objID, err := primitive.ObjectIDFromHex(orderID)
 	if err != nil {
 		return errors.New("invalid order ID")
 	}
 
-	return repositories.UpdateOrderStatus(objID, newStatus)
+	return os.orderRepository.UpdateOrderStatus(objID, newStatus)
 }
 
 
-func AssignWorker(orderID string, workerID string) error {
+func(os *OrderService) AssignWorker(orderID string, workerID string) error {
 	oid, err := primitive.ObjectIDFromHex(orderID)
 	if err != nil {
 		return errors.New("invalid order ID")
@@ -122,7 +130,8 @@ func AssignWorker(orderID string, workerID string) error {
 		return errors.New("invalid worker ID")
 	}
 
-	return repositories.AssignWorker(oid, wid)
+	return os.orderRepository.AssignWorker(oid, wid)
+	
 }
 
 

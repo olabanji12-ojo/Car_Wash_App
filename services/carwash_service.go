@@ -15,11 +15,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateCarwash(input models.Carwash) (*models.Carwash, error) {
+type CarWashService struct {
+	carwashRepository repositories.CarWashRepository
+}
+
+func NewCarWashService(carwashRepository repositories.CarWashRepository) *CarWashService {
+	return &CarWashService{carwashRepository: carwashRepository}
+}
+
+func (cws *CarWashService)CreateCarwash(input models.Carwash) (*models.Carwash, error) {
 
 	input.SetDefaults()
 
-	_, err := repositories.CreateCarwash(input)
+	_, err := cws.carwashRepository.CreateCarwash(input)
 	if err != nil {
 		return nil, err
 	}
@@ -27,49 +35,49 @@ func CreateCarwash(input models.Carwash) (*models.Carwash, error) {
 
 }
 
-func GetCarwashByID(id string) (*models.Carwash, error) {
+func(cws *CarWashService) GetCarwashByID(id string) (*models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, errors.New("invalid carwash ID format")
 	}
 
-	return repositories.GetCarwashByID(objID)
+	return cws.carwashRepository.GetCarwashByID(objID)
 }
 
-func GetAllActiveCarwashes() ([]models.Carwash, error) {
-	return repositories.GetActiveCarwashes()
+func(cws *CarWashService) GetAllActiveCarwashes() ([]models.Carwash, error) {
+	return cws.carwashRepository.GetActiveCarwashes()
 }
 
-func UpdateCarwash(id string, updateData map[string]interface{}) error {
+func(cws *CarWashService) UpdateCarwash(id string, updateData map[string]interface{}) error {
 	updateData["updated_at"] = time.Now()
-	return repositories.UpdateCarwash(id, updateData)
+	return cws.carwashRepository.UpdateCarwash(id, updateData)
 }
 
-func SetCarwashStatus(id string, isActive bool) error {
+func(cws *CarWashService) SetCarwashStatus(id string, isActive bool) error {
 
-	return repositories.SetCarwashStatus(id, isActive)
-
-}
-
-func GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
-
-	return repositories.GetCarwashesByOwnerID(ownerID)
+	return cws.carwashRepository.SetCarwashStatus(id, isActive)
 
 }
 
-func SearchCarwashes(filter bson.M) ([]models.Carwash, error) {
+func(cws *CarWashService) GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
 
-	return repositories.GetCarwashesByFilter(filter)
+	return cws.carwashRepository.GetCarwashesByOwnerID(ownerID)
 
 }
 
-func UpdateQueueCount(carwashID string, count int) error {
-	return repositories.UpdateQueueCount(carwashID, count)
+func(cws *CarWashService) SearchCarwashes(filter bson.M) ([]models.Carwash, error) {
+
+	return cws.carwashRepository.GetCarwashesByFilter(filter)
+
+}
+
+func(cws *CarWashService) UpdateQueueCount(carwashID string, count int) error {
+	return cws.carwashRepository.UpdateQueueCount(carwashID, count)
 }
 
 // GetNearbyCarwashesForUser finds carwashes near user location with fallback strategy
-func GetNearbyCarwashesForUser(userLat, userLng float64) (*models.CarwashSearchResult, error) {
-	carwashes, searchType, err := repositories.FindCarwashesWithFallback(userLat, userLng)
+func(cws *CarWashService) GetNearbyCarwashesForUser(userLat, userLng float64) (*models.CarwashSearchResult, error) {
+	carwashes, searchType, err := cws.carwashRepository.FindCarwashesWithFallback(userLat, userLng)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +112,7 @@ func GetNearbyCarwashesForUser(userLat, userLng float64) (*models.CarwashSearchR
 	})
 
 	// Generate appropriate message based on search type
-	message := generateSearchMessage(searchType, len(carwashesWithDistance))
+	message := cws.generateSearchMessage(searchType, len(carwashesWithDistance))
 
 	return &models.CarwashSearchResult{
 		Carwashes:   carwashesWithDistance,
@@ -117,7 +125,7 @@ func GetNearbyCarwashesForUser(userLat, userLng float64) (*models.CarwashSearchR
 }
 
 // UpdateCarwashLocation updates carwash location and service range
-func UpdateCarwashLocation(carwashID string, locationReq models.LocationUpdateRequest) error {
+func(cws *CarWashService) UpdateCarwashLocation(carwashID string, locationReq models.LocationUpdateRequest) error {
 	updateData := map[string]interface{}{
 		"location": models.GeoLocation{
 			Type:        "Point",
@@ -132,11 +140,12 @@ func UpdateCarwashLocation(carwashID string, locationReq models.LocationUpdateRe
 		updateData["address"] = locationReq.Address
 	}
 
-	return UpdateCarwash(carwashID, updateData)
+	return cws.carwashRepository.UpdateCarwash(carwashID, updateData)
 }
 
 // Helper function to generate search result messages
-func generateSearchMessage(searchType string, count int) string {
+
+func(cws *CarWashService) generateSearchMessage(searchType string, count int) string {
 	switch searchType {
 	case "nearby":
 		return fmt.Sprintf("Found %d carwashes within 10km of your location", count)
