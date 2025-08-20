@@ -16,8 +16,20 @@ import (
 )
 
 
+type BookingService struct {
+	bookingRepository repositories.BookingRepository
+	carWashRepository repositories.CarWashRepository
+}
+
+
+
+func NewBookingService(bookingRepository repositories.BookingRepository) *BookingService {
+	return &BookingService{bookingRepository: bookingRepository}
+}
+
+
 //  CreateBooking for a selected time slot
-func CreateBooking(userID string, input models.Booking) (*models.Booking, error) {
+func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*models.Booking, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -26,14 +38,14 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 	if err != nil {
 		return nil, errors.New("invalid user ID format")
 	}
-    
+     
 	// Step 2: Validate BookingTime is not empty
 	if input.BookingTime.IsZero() {
 		return nil, errors.New("booking time is required")
 	}
     
 	//  Step 3: FETCH the Carwash and VALIDATE against its OpenHours
-	carwash, err := repositories.GetCarwashByID(input.CarwashID)
+	carwash, err := bs.carWashRepository.GetCarwashByID(input.CarwashID)
 	if err != nil {
 		return nil, errors.New("carwash not found")
 	}
@@ -70,7 +82,7 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 	}
 
 	// Step 4: Check for existing bookings on same date
-	bookingsForDay, err := repositories.GetBookingsByDate(input.CarwashID, input.BookingTime)
+	bookingsForDay, err := bs.bookingRepository.GetBookingsByDate(input.CarwashID, input.BookingTime)
 	if err != nil {
 		return nil, errors.New("could not fetch bookings for that time")
 	}
@@ -102,7 +114,7 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 
 	}
 
-	// Check distance if it's a home service
+	// Check distance if it's a home service 
 	if input.BookingType == "home_service" {
 		if input.UserLocation == nil {
 			return nil, errors.New("user location is required for home service")
@@ -122,7 +134,7 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 	}
  
 	// Step 6: Save to database
-	if err := repositories.CreateBooking(&newBooking); err != nil {
+	if err := bs.bookingRepository.CreateBooking(&newBooking); err != nil {
 		return nil, err
 	}
 
@@ -139,13 +151,13 @@ func CreateBooking(userID string, input models.Booking) (*models.Booking, error)
 
 
 
-func GetBookingByID(bookingID string) (*models.Booking, error) {
+func (bs *BookingService) GetBookingByID(bookingID string) (*models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
 		return nil, errors.New("invalid booking ID")
 	}
 
-	booking, err := repositories.GetBookingByID(objID)
+	booking, err := bs.bookingRepository.GetBookingByID(objID)
 	if err != nil {
 		return nil, errors.New("booking not found")
 	}
@@ -154,13 +166,13 @@ func GetBookingByID(bookingID string) (*models.Booking, error) {
 }
 
 
-func GetBookingsByUserID(userID string) ([]models.Booking, error) {
+func (bs *BookingService) GetBookingsByUserID(userID string) ([]models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
 	}
 
-	bookings, err := repositories.GetBookingsByUserID(objID)
+	bookings, err := bs.bookingRepository.GetBookingsByUserID(objID)
 	if err != nil {
 		return nil, err
 	}
@@ -169,13 +181,13 @@ func GetBookingsByUserID(userID string) ([]models.Booking, error) {
 }
 
 
-func GetBookingsByCarwashID(carwashID string) ([]models.Booking, error) {
+func(bs *BookingService)  GetBookingsByCarwashID(carwashID string) ([]models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, errors.New("invalid carwash ID")
 	}
 
-	bookings, err := repositories.GetBookingsByCarwashID(objID)
+	bookings, err := bs.bookingRepository.GetBookingsByCarwashID(objID)
 	if err != nil {
 		return nil, err
 	}
@@ -184,36 +196,36 @@ func GetBookingsByCarwashID(carwashID string) ([]models.Booking, error) {
 }
 
 
-func UpdateBookingStatus(bookingID string, newStatus string) error {
+func(bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string) error {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
 		return errors.New("invalid booking ID")
 	}
 
-	return repositories.UpdateBookingStatus(objID, newStatus)
+	return bs.bookingRepository.UpdateBookingStatus(objID, newStatus)
 }
 
 
-func CancelBooking(bookingID string) error {
+func(bs *BookingService) CancelBooking(bookingID string) error {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
 		return errors.New("invalid booking ID")
 	}
 
-	return repositories.CancelBooking(objID)
+	return bs.bookingRepository.CancelBooking(objID)
 }
 
-func GetBookingsByDate(carwashID string, date time.Time) ([]models.Booking, error) {
+func(bs *BookingService) GetBookingsByDate(carwashID string, date time.Time) ([]models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, errors.New("invalid carwash ID")
 	}
 
-	return repositories.GetBookingsByDate(objID, date)
+	return bs.bookingRepository.GetBookingsByDate(objID, date)
 }
 
 
-func UpdateBooking(userID, bookingID string, updates map[string]interface{}) error {
+func(bs *BookingService) UpdateBooking(userID, bookingID string, updates map[string]interface{}) error {
 	_, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return errors.New("invalid user ID")
@@ -229,7 +241,7 @@ func UpdateBooking(userID, bookingID string, updates map[string]interface{}) err
 	// Add updatedAt
 	updates["updated_at"] = time.Now()
 
-	return repositories.UpdateBooking(bookingObjID, bson.M(updates))
+	return bs.bookingRepository.UpdateBooking(bookingObjID, bson.M(updates))
 }
 
 

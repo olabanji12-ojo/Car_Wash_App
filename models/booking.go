@@ -18,7 +18,7 @@ type Booking struct {
 	UserID       primitive.ObjectID   `bson:"user_id" json:"user_id"`
 	CarID        primitive.ObjectID   `bson:"car_id" json:"car_id"`
 	CarwashID    primitive.ObjectID   `bson:"carwash_id" json:"carwash_id"`
-	ServiceIDs   []primitive.ObjectID `bson:"service_ids" json:"service_ids"`
+	
 	BookingTime  time.Time            `bson:"booking_time" json:"booking_time"`
 	BookingType  string               `bson:"booking_type" json:"booking_type"` // slot_booking / home_service
 	UserLocation *GeoLocation         `bson:"user_location,omitempty" json:"user_location,omitempty"` // Only for home service
@@ -38,7 +38,6 @@ func (b Booking) Validate() error {
 		validation.Field(&b.UserID, validation.Required),
 		validation.Field(&b.CarID, validation.Required),
 		validation.Field(&b.CarwashID, validation.Required),
-		validation.Field(&b.ServiceIDs, validation.Required),
 		validation.Field(&b.BookingTime, validation.Required),
 		validation.Field(&b.BookingType, validation.Required, validation.In("slot_booking", "home_service")),
 	)
@@ -53,6 +52,7 @@ func (b Booking) Validate() error {
 
 		return err
 }
+
 
 
 

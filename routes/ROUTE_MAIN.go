@@ -18,6 +18,21 @@ func InitCarService(db *mongo.Database) *controllers.CarController {
 	return &controllers.CarController{CarService: carService}
 }
 
+func InitCarWashService(db *mongo.Database) *controllers.CarWashController {
+	carwashService := services.NewCarWashService(*repositories.NewCarWashRepository(db))
+	return &controllers.CarWashController{CarWashService: carwashService}
+}
+
+func InitBookingService(db *mongo.Database) *controllers.BookingController {
+	bookingService := services.NewBookingService(*repositories.NewBookingRepository(db))
+	return &controllers.BookingController{BookingService: bookingService}
+}
+
+func InitOrderService(db *mongo.Database) *controllers.OrderController {
+	orderService := services.NewOrderService(*repositories.NewOrderRepository(db))
+	return &controllers.OrderController{OrderService: orderService}
+}
+
 func InitRoutes(router *mux.Router, db *mongo.Database) {
 	AuthRoutes(router, InitAuthService(db))
 	UserRoutes(router)
@@ -27,12 +42,26 @@ func InitRoutes(router *mux.Router, db *mongo.Database) {
 	carRouter := NewCarRouter(*carController)
 	carRouter.CarRoutes(router)
 
-	CarwashRoutes(router)
-	// ServiceRoutes(router)
-	BookingRoutes(router)
+	// Initialize CarWashRouter and set up car routes
+
+	carwashController := InitCarWashService(db)
+	carwashRouter := NewCarWashRouter(*carwashController)
+	carwashRouter.CarwashRoutes(router)
+
+	// Initialize BookingRouter and set up booking routes
+	bookingController := InitBookingService(db)
+	bookingRouter := NewBookingRouter(*bookingController)
+	bookingRouter.BookingRoutes(router)
+	
+	// Initialize OrderRouter and set up order routes
+	orderController := InitOrderService(db)
+	OrderRouter := NewOrderRouter(orderController)
+	OrderRouter.OrderRoutes(router)
+
+
 	PaymentRoutes(router)
 	ReviewRoutes(router)
-	OrderRoutes(router)
+	
 	WorkerRoutes(router)
 	NotificationRoutes(router) // Notification system
 }

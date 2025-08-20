@@ -1,50 +1,62 @@
 package repositories
 
 import (
-    
 	"context"
 	"errors"
 	"time"
 
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"github.com/sirupsen/logrus"
-    
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-//  1. CreateBooking
-func CreateBooking(booking *models.Booking) error {
+type BookingRepository struct { 
+	db *mongo.Database 
+}
+
+func NewBookingRepository(db *mongo.Database) *BookingRepository {
+	return &BookingRepository{db: db}
+}
+
+
+// 1. CreateBooking
+func (br *BookingRepository) CreateBooking(booking *models.Booking) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err := database.BookingCollection.InsertOne(ctx, booking)
-	return err
+	if err != nil {
+		logrus.Error("Failed to create booking: ", err)
+		return err
+	}
+	return nil
 }
 
-//  2. GetBookingByID
-func GetBookingByID(id primitive.ObjectID) (*models.Booking, error) {
+// 2. GetBookingByID
+func (br *BookingRepository) GetBookingByID(id primitive.ObjectID) (*models.Booking, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var booking models.Booking
 	err := database.BookingCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&booking)
 	if err != nil {
+		logrus.Error("Booking not found: ", err)
 		return nil, errors.New("booking not found")
 	}
 	return &booking, nil
 }
 
-//  3. GetBookingsByUserID
-func GetBookingsByUserID(userID primitive.ObjectID) ([]models.Booking, error) {
-	
+// 3. GetBookingsByUserID
+func (br *BookingRepository) GetBookingsByUserID(userID primitive.ObjectID) ([]models.Booking, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	cursor, err := database.BookingCollection.Find(ctx, bson.M{"user_id": userID})
 	if err != nil {
+		logrus.Error("Failed to fetch bookings by user: ", err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -54,18 +66,21 @@ func GetBookingsByUserID(userID primitive.ObjectID) ([]models.Booking, error) {
 		var booking models.Booking
 		if err := cursor.Decode(&booking); err == nil {
 			bookings = append(bookings, booking)
+		} else {
+			logrus.Warn("Error decoding booking: ", err)
 		}
 	}
 	return bookings, nil
 }
 
-//  4. GetBookingsByCarwashID
-func GetBookingsByCarwashID(carwashID primitive.ObjectID) ([]models.Booking, error) {
+// 4. GetBookingsByCarwashID
+func (br *BookingRepository) GetBookingsByCarwashID(carwashID primitive.ObjectID) ([]models.Booking, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	cursor, err := database.BookingCollection.Find(ctx, bson.M{"carwash_id": carwashID})
 	if err != nil {
+		logrus.Error("Failed to fetch bookings by carwash: ", err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -75,13 +90,15 @@ func GetBookingsByCarwashID(carwashID primitive.ObjectID) ([]models.Booking, err
 		var booking models.Booking
 		if err := cursor.Decode(&booking); err == nil {
 			bookings = append(bookings, booking)
+		} else {
+			logrus.Warn("Error decoding booking: ", err)
 		}
 	}
 	return bookings, nil
 }
 
-//  5. UpdateBookingStatus
-func UpdateBookingStatus(id primitive.ObjectID, newStatus string) error {
+// 5. UpdateBookingStatus
+func (br *BookingRepository) UpdateBookingStatus(id primitive.ObjectID, newStatus string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -90,10 +107,15 @@ func UpdateBookingStatus(id primitive.ObjectID, newStatus string) error {
 		bson.M{"_id": id},
 		bson.M{"$set": bson.M{"status": newStatus, "updated_at": time.Now()}},
 	)
-	return err
+	if err != nil {
+		logrus.Error("Failed to update booking status: ", err)
+		return err
+	}
+	return nil
 }
 
-func UpdateBooking(bookingID primitive.ObjectID, updates bson.M) error {
+// UpdateBooking (general update)
+func (br *BookingRepository) UpdateBooking(bookingID primitive.ObjectID, updates bson.M) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -102,32 +124,14 @@ func UpdateBooking(bookingID primitive.ObjectID, updates bson.M) error {
 
 	_, err := database.BookingCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		logrus.Error("Failed to update car: ", err)
+		logrus.Error("Failed to update booking: ", err)
 		return err
 	}
 	return nil
 }
 
-
-//  6. GetLatestBookingTime
-// func GetLatestBookingTime(carwashID primitive.ObjectID) (*time.Time, error) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-// 	defer cancel()
-
-// 	opts := bson.D{{"$sort", bson.D{{"booking_time", -1}}}}
-// 	filter := bson.M{"carwash_id": carwashID}
-
-// 	var booking models.Booking
-// 	err := database.BookingCollection.FindOne(ctx, filter, opts).Decode(&booking)
-// 	if err != nil {
-// 		return nil, errors.New("no bookings found")
-// 	}
-// 	return &booking.BookingTime, nil
-// }
-
-
-//  7. CancelBooking (soft delete)
-func CancelBooking(id primitive.ObjectID) error {
+// 7. CancelBooking (soft delete)
+func (br *BookingRepository) CancelBooking(id primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -136,12 +140,15 @@ func CancelBooking(id primitive.ObjectID) error {
 		bson.M{"_id": id},
 		bson.M{"$set": bson.M{"status": "cancelled", "updated_at": time.Now()}},
 	)
-	return err
+	if err != nil {
+		logrus.Error("Failed to cancel booking: ", err)
+		return err
+	}
+	return nil
 }
 
-
-//  8. GetBookingsByDate
-func GetBookingsByDate(carwashID primitive.ObjectID, date time.Time) ([]models.Booking, error) {
+// 8. GetBookingsByDate
+func (br *BookingRepository) GetBookingsByDate(carwashID primitive.ObjectID, date time.Time) ([]models.Booking, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -155,6 +162,7 @@ func GetBookingsByDate(carwashID primitive.ObjectID, date time.Time) ([]models.B
 
 	cursor, err := database.BookingCollection.Find(ctx, filter)
 	if err != nil {
+		logrus.Error("Failed to fetch bookings by date: ", err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -164,10 +172,10 @@ func GetBookingsByDate(carwashID primitive.ObjectID, date time.Time) ([]models.B
 		var booking models.Booking
 		if err := cursor.Decode(&booking); err == nil {
 			bookings = append(bookings, booking)
+		} else {
+			logrus.Warn("Error decoding booking: ", err)
 		}
 	}
 	return bookings, nil
 }
-
-
 

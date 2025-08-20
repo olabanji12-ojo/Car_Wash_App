@@ -20,7 +20,7 @@ func (cr *CarRouter)CarRoutes(router *mux.Router) {
 	car := router.PathPrefix("/api/cars").Subrouter()
 
 	// Apply auth middleware to all car routes 
-
+    
 	car.Use(middleware.AuthMiddleware)
     
 	car.HandleFunc("/", cr.carController.CreateCarHandler).Methods("POST") //        

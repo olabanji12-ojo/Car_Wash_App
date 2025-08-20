@@ -1,6 +1,7 @@
 package controllers
 
 import (
+
 	"encoding/json"
 	"net/http"
 
@@ -10,8 +11,17 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 )
 
+
+type OrderController struct {
+	OrderService *services.OrderService
+}
+
+func NewOrderController(orderService *services.OrderService) *OrderController {
+	return &OrderController{OrderService: orderService}
+}
+
 //  Create Order from Booking (business only)
-func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
+func(oc *OrderController) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	
 	ctx := r.Context().Value("auth").(middleware.AuthContext)
 	// authCtx := r.Context().Value("auth").(middleware.AuthContext)
@@ -23,7 +33,7 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	bookingID := mux.Vars(r)["booking_id"]
 	
-	order, err := services.CreateOrderFromBooking(bookingID)
+	order, err := oc.OrderService.CreateOrderFromBooking(bookingID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -33,10 +43,10 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  Get Order by ID (owner or business)
-func GetOrderByIDHandler(w http.ResponseWriter, r *http.Request) {
+func(oc *OrderController) GetOrderByIDHandler(w http.ResponseWriter, r *http.Request) {
 	orderID := mux.Vars(r)["order_id"]
 
-	order, err := services.GetOrderByID(orderID)
+	order, err := oc.OrderService.GetOrderByID(orderID)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, err.Error())
 		return
@@ -47,10 +57,10 @@ func GetOrderByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 //  Get all orders for logged-in user (car owner)
 
-func GetUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
+func(oc *OrderController) GetUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context().Value("auth").(middleware.AuthContext)
 
-	orders, err := services.GetOrdersByUser(ctx.UserID)
+	orders, err := oc.OrderService.GetOrdersByUser(ctx.UserID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -62,7 +72,7 @@ func GetUserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 
 //  Get all orders for carwash (business)
-func GetCarwashOrdersHandler(w http.ResponseWriter, r *http.Request) {
+func(oc *OrderController) GetCarwashOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context().Value("auth").(middleware.AuthContext)
 
 	if ctx.Role != "business" {
@@ -70,7 +80,7 @@ func GetCarwashOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, err := services.GetOrdersByCarwash(ctx.UserID)
+	orders, err := oc.OrderService.GetOrdersByCarwash(ctx.UserID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -80,7 +90,7 @@ func GetCarwashOrdersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  Update Order Status (business)
-func UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
+func(oc *OrderController) UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context().Value("auth").(middleware.AuthContext)
 
 	if ctx.Role != "business" {
@@ -99,7 +109,7 @@ func UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.UpdateOrderStatus(orderID, input.Status); err != nil {
+	if err := oc.OrderService.UpdateOrderStatus(orderID, input.Status); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -108,7 +118,7 @@ func UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //  Assign Worker to Order (optional)
-func AssignWorkerHandler(w http.ResponseWriter, r *http.Request) {
+func(oc *OrderController) AssignWorkerHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context().Value("auth").(middleware.AuthContext)
 
 	if ctx.Role != "business" {
@@ -127,12 +137,13 @@ func AssignWorkerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.AssignWorker(orderID, input.WorkerID); err != nil {
+	if err := oc.OrderService.AssignWorker(orderID, input.WorkerID); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	utils.JSON(w, http.StatusOK, map[string]string{"message": "Worker assigned to order"})
 }
+
 
 
