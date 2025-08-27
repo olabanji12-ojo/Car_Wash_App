@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/sirupsen/logrus"
+	"reflect"
 	// "fmt"
 
 )
@@ -169,40 +171,63 @@ func(cwc *CarWashController) GetNearbyCarwashesHandler(w http.ResponseWriter, r 
 	latStr := r.URL.Query().Get("lat")
 	lngStr := r.URL.Query().Get("lng")
 
+	logrus.Info("🔍 GetNearbyCarwashesHandler called with params: lat=", latStr, ", lng=", lngStr)
+
 	if latStr == "" || lngStr == "" {
+		logrus.Error("❌ Missing required parameters: lat and lng")
 		utils.Error(w, http.StatusBadRequest, "Missing required parameters: lat and lng")
 		return
 	}
     
 	lat, err := strconv.ParseFloat(latStr, 64)
 	if err != nil {
+		logrus.Error("❌ Invalid latitude format: ", err)
 		utils.Error(w, http.StatusBadRequest, "Invalid latitude format")
 		return
 	}
 
 	lng, err := strconv.ParseFloat(lngStr, 64)
 	if err != nil {
+		logrus.Error("❌ Invalid longitude format: ", err)
 		utils.Error(w, http.StatusBadRequest, "Invalid longitude format")
 		return
 	}
 
 	// Validate latitude and longitude ranges
 	if lat < -90 || lat > 90 {
+		logrus.Error("❌ Invalid latitude range: ", lat)
 		utils.Error(w, http.StatusBadRequest, "Latitude must be between -90 and 90")
 		return
 	}
 	if lng < -180 || lng > 180 {
+		logrus.Error("❌ Invalid longitude range: ", lng)
 		utils.Error(w, http.StatusBadRequest, "Longitude must be between -180 and 180")
 		return
 	}
 
+	logrus.Info("✅ Parsed coordinates: lat=", lat, ", lng=", lng)
+
 	// Call service to get nearby carwashes
+	logrus.Info("🔍 Calling CarWashService.GetNearbyCarwashesForUser...")
 	result, err := cwc.CarWashService.GetNearbyCarwashesForUser(lat, lng)
 	if err != nil {
+		logrus.Error("❌ Service error: ", err)
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	// Log the result structure for debugging
+	resultJSON, marshalErr := json.MarshalIndent(result, "", "  ")
+	if marshalErr != nil {
+		logrus.Error("❌ Failed to marshal result for logging: ", marshalErr)
+	} else {
+		logrus.Info("✅ Service returned result: ", string(resultJSON))
+	}
+
+	// Log result summary
+	logrus.Info("📊 Result summary - Type: ", reflect.TypeOf(result), ", Value: ", result)
+
+	logrus.Info("✅ Sending successful response")
 	utils.JSON(w, http.StatusOK, result)
 }
 

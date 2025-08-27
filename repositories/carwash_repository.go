@@ -189,7 +189,7 @@ func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64)
 func (cw *CarWashRepository)findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwash, error) {
     filter := bson.M{
         "location": bson.M{
-            "$near": bson.M{
+            "$near": bson.M{ 
                 "$geometry": bson.M{
                     "type":        "Point",
                     "coordinates": []float64{userLng, userLat},
@@ -199,7 +199,7 @@ func (cw *CarWashRepository)findCarwashesInRadius(userLat, userLng, radiusKm flo
         },
         "is_active": true,
         "has_location": true,
-    }
+    }    
     
     carwashes, err := cw.GetCarwashesByFilter(filter)
     if err != nil {
