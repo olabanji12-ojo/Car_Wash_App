@@ -14,6 +14,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/routes"
 	"github.com/urfave/negroni"
+	
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 	fmt.Println("🔌 Connecting to database...")
 	db := database.ConnectDB()
 	database.InitCollections()
-
+    
 	// Initialize router
 	router := mux.NewRouter()
 	routes.InitRoutes(router, db)
@@ -67,3 +68,4 @@ func main() {
 	}
 
 }
+

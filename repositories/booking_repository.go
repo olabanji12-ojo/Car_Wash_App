@@ -11,16 +11,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type BookingRepository struct { 
-	db *mongo.Database 
+type BookingRepository struct {
+	db *mongo.Database
 }
 
 func NewBookingRepository(db *mongo.Database) *BookingRepository {
 	return &BookingRepository{db: db}
 }
-
 
 // 1. CreateBooking
 func (br *BookingRepository) CreateBooking(booking *models.Booking) error {
@@ -54,7 +54,11 @@ func (br *BookingRepository) GetBookingsByUserID(userID primitive.ObjectID) ([]m
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cursor, err := database.BookingCollection.Find(ctx, bson.M{"user_id": userID})
+	
+	options := options.Find()
+	options.SetSort(bson.D{{"created_at", -1}})
+
+	cursor, err := database.BookingCollection.Find(ctx, bson.M{"user_id": userID}, options)
 	if err != nil {
 		logrus.Error("Failed to fetch bookings by user: ", err)
 		return nil, err
@@ -178,4 +182,3 @@ func (br *BookingRepository) GetBookingsByDate(carwashID primitive.ObjectID, dat
 	}
 	return bookings, nil
 }
-

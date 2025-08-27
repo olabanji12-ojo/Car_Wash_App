@@ -29,6 +29,7 @@ func InitCollections() {
 	PaymentCollection = DB.Collection("payments")
 	ServiceCollection = DB.Collection("services") // touched
 	NotificationCollection = DB.Collection("notifications") // notifications
+	
 
 	
 	// ✅ Create unique index on email field

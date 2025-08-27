@@ -1,11 +1,11 @@
 package services
 
 import (
-
+    
 	"context"
 	"errors"
 	"time"
-
+    
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/sirupsen/logrus"
@@ -13,8 +13,18 @@ import (
 
 )
 
+type ReviewService struct {
+
+	reviewRepository repositories.ReviewRepository
+
+}   
+
+func NewReviewService(reviewRepository repositories.ReviewRepository) *ReviewService {
+    return &ReviewService{reviewRepository: reviewRepository}
+}
+
 //  LeaveReview allows a user to review a carwash after a completed order
-func CreateReview(userID string, input models.Review) (*models.Review, error) {
+func(rs *ReviewService) CreateReview(userID string, input models.Review) (*models.Review, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -26,7 +36,7 @@ func CreateReview(userID string, input models.Review) (*models.Review, error) {
 
 	// orderID, err := primitive.ObjectIDFromHex(input.OrderID)
 	
-	reviewExists, err := repositories.HasUserReviewedOrder(userObjID, *input.OrderID)
+	reviewExists, err := rs.reviewRepository.HasUserReviewedOrder(userObjID, *input.OrderID)
 	if err != nil {
 		return nil, errors.New("error checking for existing review")
 	}
@@ -49,7 +59,7 @@ func CreateReview(userID string, input models.Review) (*models.Review, error) {
 	}
 
 	// 5. Save to DB
-	if err := repositories.CreateReview(&newReview); err != nil {
+	if err := rs.reviewRepository.CreateReview(&newReview); err != nil {
 		logrus.Error("Error creating review: ", err)
 		return nil, errors.New("failed to create review")
 	}
@@ -58,44 +68,44 @@ func CreateReview(userID string, input models.Review) (*models.Review, error) {
 }
 
 //  GetReviewsByUserID fetches reviews made by a user
-func GetReviewsByUserID(userID string) ([]models.Review, error) {
+func(rs *ReviewService) GetReviewsByUserID(userID string) ([]models.Review, error) {
 	userObjID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
 	}
 
-	return repositories.GetReviewsByUserID(userObjID)
+	return rs.reviewRepository.GetReviewsByUserID(userObjID)
 
 }
 
 //  GetReviewsByCarwashID fetches reviews for a specific carwash
-func GetReviewsByCarwashID(carwashID string) ([]models.Review, error) {
+func(rs *ReviewService) GetReviewsByCarwashID(carwashID string) ([]models.Review, error) {
 	carwashObjID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, errors.New("invalid carwash ID")
 	}
 
-	return repositories.GetReviewsByCarwashID(carwashObjID)
+	return rs.reviewRepository.GetReviewsByCarwashID(carwashObjID)
 }
 
 //  GetReviewByOrderID fetches the review for a specific order
-func GetReviewByOrderID(orderID string) (*models.Review, error) {
+func(rs *ReviewService) GetReviewByOrderID(orderID string) (*models.Review, error) {
 	orderObjID, err := primitive.ObjectIDFromHex(orderID)
 	if err != nil {
 		return nil, errors.New("invalid order ID")
 	}
 
-	return repositories.GetReviewByOrderID(orderObjID)
+	return rs.reviewRepository.GetReviewByOrderID(orderObjID)
 }
 
 //  GetAverageRating calculates the average rating of a carwash
-func GetAverageRating(carwashID string) (float64, error) {
+func(rs *ReviewService) GetAverageRating(carwashID string) (float64, error) {
 	carwashObjID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return 0, errors.New("invalid carwash ID")
 	}
 
-	return repositories.GetAverageRatingForCarwash(carwashObjID)
+	return rs.reviewRepository.GetAverageRatingForCarwash(carwashObjID)
 }
 
 

@@ -32,6 +32,10 @@ func InitOrderService(db *mongo.Database) *controllers.OrderController {
 	orderService := services.NewOrderService(*repositories.NewOrderRepository(db))
 	return &controllers.OrderController{OrderService: orderService}
 }
+func InitReviewService(db *mongo.Database) *controllers.ReviewController {
+	reviewService := services.NewReviewService(*repositories.NewReviewRepository(db))
+	return controllers.NewReviewController(reviewService)
+}
 
 func InitRoutes(router *mux.Router, db *mongo.Database) {
 	AuthRoutes(router, InitAuthService(db))
@@ -58,10 +62,19 @@ func InitRoutes(router *mux.Router, db *mongo.Database) {
 	OrderRouter := NewOrderRouter(orderController)
 	OrderRouter.OrderRoutes(router)
 
+    // Initialize ReviewRouter and set up order routes
+    
+	reviewController := InitReviewService(db)
+	ReviewRouter := NewReviewRouter(*reviewController)
+	ReviewRouter.ReviewRoutes(router)
+    	
+	
+	
 
 	PaymentRoutes(router)
-	ReviewRoutes(router)
 	
 	WorkerRoutes(router)
 	NotificationRoutes(router) // Notification system
+
 }
+
