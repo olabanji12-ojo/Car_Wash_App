@@ -69,12 +69,10 @@ func InitRoutes(router *mux.Router, db *mongo.Database) {
 	ReviewRouter.ReviewRoutes(router)
     	
 	
-	
-
 	PaymentRoutes(router)
 	
 	WorkerRoutes(router)
 	NotificationRoutes(router) // Notification system
-
+    
 }
 

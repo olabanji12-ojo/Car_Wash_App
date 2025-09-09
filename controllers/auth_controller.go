@@ -14,7 +14,7 @@ import (
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	// "github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 type AuthController struct {
@@ -121,7 +121,7 @@ func isValidImageType(filename string) bool {
 func validateRegistrationInput(input models.User) error {
 	return validation.ValidateStruct(&input,
 		validation.Field(&input.Name, validation.Required, validation.Length(2, 100)),
-		validation.Field(&input.Email, validation.Required, is.Email),
+		// validation.Field(&input.Email, validation.Required, is.Email),
 		validation.Field(&input.Phone, validation.Required),
 		validation.Field(&input.Password, validation.Required, validation.Length(6, 100)),
 		validation.Field(&input.AccountType, validation.Required, validation.In("car_owner", "car_wash")),
@@ -146,7 +146,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	//  Validate login input
 	err := validation.ValidateStruct(&credentials,
-		validation.Field(&credentials.Email, validation.Required, is.Email),
+		// validation.Field(&credentials.Email, validation.Required, is.Email),
 		validation.Field(&credentials.Password, validation.Required, validation.Length(6, 100)),
 	)
 	if err != nil {

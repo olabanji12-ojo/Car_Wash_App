@@ -245,4 +245,35 @@ func(bs *BookingService) UpdateBooking(userID, bookingID string, updates map[str
 }
 
 
+// Get Bookings with filter 
+func (bs *BookingService) GetBookingsByCarwashWithFilters(carwashID string, status string, from, to string) ([]models.Booking, error) {
+    objID, err := primitive.ObjectIDFromHex(carwashID)
+    if err != nil {
+        return nil, errors.New("invalid carwash ID")
+    }
+
+    var fromDate, toDate time.Time
+    if from != "" && to != "" {
+        fromDate, err = time.Parse("2006-01-02", from)
+        if err != nil {
+            return nil, errors.New("invalid from date format")
+        }
+        toDate, err = time.Parse("2006-01-02", to)
+        if err != nil {
+            return nil, errors.New("invalid to date format")
+        }
+        // Adjust toDate to include the full day
+        toDate = time.Date(toDate.Year(), toDate.Month(), toDate.Day(), 23, 59, 59, 999999999, toDate.Location())
+    }
+
+    bookings, err := bs.bookingRepository.GetBookingsByCarwashWithFilters(objID, status, fromDate, toDate)
+    if err != nil {
+        return nil, err
+    }
+
+	
+
+    return bookings, nil
+}
+
 

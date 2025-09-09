@@ -20,7 +20,7 @@ func WorkerRoutes(router *mux.Router) {
 
 	// New routes for worker assignment functionality
 	subRouter.HandleFunc("/available/{id}", controllers.GetAvailableWorkersForBusiness).Methods("GET")
-	subRouter.HandleFunc("/work-status/{id}", controllers.UpdateWorkerWorkStatus).Methods("PATCH")
+	subRouter.HandleFunc("/work-status/{id}", controllers.UpdateWorkerWorkStatus).Methods("PATCH") 
 	subRouter.HandleFunc("/assign", controllers.AssignWorkerToOrder).Methods("POST")
 	subRouter.HandleFunc("/remove", controllers.RemoveWorkerFromOrder).Methods("POST")
 

@@ -16,7 +16,7 @@ func NewBookingRouter(bookingController controllers.BookingController) *BookingR
     return &BookingRouter{bookingController: bookingController}
 
 }
-
+ 
 
 func(br *BookingRouter) BookingRoutes(router *mux.Router) {
 
@@ -40,8 +40,8 @@ func(br *BookingRouter) BookingRoutes(router *mux.Router) {
     // PUT/api/bookings/{id}
     booking.HandleFunc("/booking/{bookingID}", br.bookingController.UpdateBookingHandler).Methods("PUT")
    
-	// PUT /api/bookings/{id}/status
-	booking.HandleFunc("/{id}/status", br.bookingController.UpdateBookingStatusHandler).Methods("PUT") // tested 
+	// PATCH /api/bookings/{id}/status
+	booking.HandleFunc("/{id}/status", br.bookingController.UpdateBookingStatusHandler).Methods("PATCH") // tested 
 
 	// DELETE /api/bookings/{id}
 	booking.HandleFunc("/{id}", br.bookingController.CancelBookingHandler).Methods("DELETE") // tested 
@@ -49,6 +49,8 @@ func(br *BookingRouter) BookingRoutes(router *mux.Router) {
 	// Optional: GET /api/bookings/carwash/{carwash_id}/date?date=2025-07-08
 	booking.HandleFunc("/carwash/{carwash_id}/date", br.bookingController.GetBookingsByDateHandler).Methods("GET") // tested
 
+	booking.HandleFunc("/carwash/{carwash_id}/filter", br.bookingController.GetBookingsByCarwashWithFiltersHandler).Methods("GET")
+    
 	
 }
 
