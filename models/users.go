@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	// "github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/olabanji12-ojo/CarWashApp/utils" 
 
 
@@ -48,7 +48,7 @@ type User struct {
 func (u User) Validate() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(&u.Name, validation.Required, validation.Length(2, 50)),
-		validation.Field(&u.Email, validation.Required, is.Email),
+		// validation.Field(&u.Email, validation.Required, is.Email),
 		validation.Field(&u.Password, validation.Required, validation.Length(6, 100)),
 		validation.Field(&u.Role, validation.Required, validation.In(
 			utils.ROLE_CAR_OWNER,
@@ -66,12 +66,6 @@ func (u User) Validate() error {
 	
 	)
 }
-
-
-
-
-
-
 
 
 // type UserUpdateInput struct {

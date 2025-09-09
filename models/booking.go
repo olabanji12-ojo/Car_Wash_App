@@ -12,8 +12,7 @@ import (
 
 
 type Booking struct {
-    
-	
+    	
 	ID           primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
 	UserID       primitive.ObjectID   `bson:"user_id" json:"user_id"`
 	CarID        primitive.ObjectID   `bson:"car_id" json:"car_id"`
@@ -23,7 +22,7 @@ type Booking struct {
 	BookingType  string               `bson:"booking_type" json:"booking_type"` // slot_booking / home_service
 	UserLocation *GeoLocation         `bson:"user_location,omitempty" json:"user_location,omitempty"` // Only for home service
 	AddressNote  string               `bson:"address_note,omitempty" json:"address_note,omitempty"`   // Optional directions 
-	Status       string               `bson:"status" json:"status"`               // pending, approved, etc
+	Status       string               `bson:"status" json:"status"`               // pending, confirmed, etc
 	Notes        string               `bson:"notes,omitempty" json:"notes,omitempty"`
 	QueueNumber  int                  `bson:"queue_number" json:"queue_number"`
 	CreatedAt    time.Time            `bson:"created_at" json:"created_at"`
@@ -40,7 +39,9 @@ func (b Booking) Validate() error {
 		validation.Field(&b.CarwashID, validation.Required),
 		validation.Field(&b.BookingTime, validation.Required),
 		validation.Field(&b.BookingType, validation.Required, validation.In("slot_booking", "home_service")),
-	)
+		// validation.Field(&b.Status, validation.Required, validation.In("pending", "confirmed", "completed", "cancelled")),
+
+	) 
 
 	// Conditional check for home service
 	// add them to constants and consider using enums if you have the time
@@ -54,5 +55,13 @@ func (b Booking) Validate() error {
 }
 
 
-
-
+func (b *Booking) SetDefaults() {
+    b.CreatedAt = time.Now()
+    b.UpdatedAt = time.Now()
+    b.ID = primitive.NewObjectID()
+    
+    // Set default status if empty
+    if b.Status == "" {
+        b.Status = "pending"
+    }
+}

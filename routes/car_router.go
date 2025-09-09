@@ -27,10 +27,12 @@ func (cr *CarRouter)CarRoutes(router *mux.Router) {
 	car.HandleFunc("/my", cr.carController.GetMyCarsHandler).Methods("GET") // tested      
 	car.HandleFunc("/{carID}", cr.carController.GetCarByIDHandler).Methods("GET") // tested
     
-	car.HandleFunc("/{carID}", cr.carController.UpdateCarHandler).Methods("PUT") // tested 
-	car.HandleFunc("/{carID}", cr.carController.DeleteCarHandler).Methods("DELETE") // tested
+	car.HandleFunc("/update/{carID}", cr.carController.UpdateCarHandler).Methods("PUT") // tested 
+	car.HandleFunc("/{carID}", cr.carController.DeleteCarHandler).Methods("DELETE") //  
+
 	car.HandleFunc("/{carID}/default", cr.carController.SetDefaultCarHandler).Methods("PATCH") // tested
     
 	
 }
+
 

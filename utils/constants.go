@@ -15,6 +15,7 @@ const (
 	ACCOUNT_TYPE_CAR_WASH  = "car_wash"
 )
 
+
 // // User Status
 // const (
 // 	STATUS_ACTIVE    = "active"
