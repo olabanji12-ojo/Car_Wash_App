@@ -20,7 +20,8 @@ func ConnectDB() *mongo.Database {
 		log.Println("No .env file found, using defaults")
 	}
 
-	mongoURL := os.Getenv("MONGO_URL")
+	mongoURL := os.Getenv("MONGO_URI")
+	log.Println(mongoURL)
 	
 
 	dbName := os.Getenv("DB_NAME")
