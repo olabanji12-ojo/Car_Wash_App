@@ -20,16 +20,12 @@ func ConnectDB() *mongo.Database {
 		log.Println("No .env file found, using defaults")
 	}
 
-	mongoURL := os.Getenv("MONGO_URL")
-	if mongoURL == "" {
-		mongoURL = "mongodb://localhost:27017"
-	}
+	mongoURL := os.Getenv("MONGO_URI")
+	log.Println(mongoURL)
+	
 
 	dbName := os.Getenv("DB_NAME")
-	if dbName == "" {
-		dbName = "CarWashApp"
-	}
-
+	
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURL))
 	if err != nil {
 		log.Fatalf("❌ Failed to create MongoDB client: %v", err)
