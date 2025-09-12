@@ -202,7 +202,7 @@ func generateNonceCookie(w http.ResponseWriter) (string, error) {
 		Path:     "/",
 		Expires:  time.Now().Add(10 * time.Minute),
 		HttpOnly: true,
-		Secure:   false, // set true in production (HTTPS)
+		Secure:   true, // set true in production (HTTPS)
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, cookie)
