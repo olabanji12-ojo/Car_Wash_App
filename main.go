@@ -13,11 +13,17 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/routes"
+	"github.com/joho/godotenv"
+	"log" 
+
 )
 
 func main() {
 	// Initialize config (loads env vars)
-	config.Init()
+	err := godotenv.Load()
+    if err != nil {
+        log.Println("No .env file found")
+    }
 	config.InitGoogleOAuth()
 
 	// Get PORT from env or default to 8080
@@ -61,8 +67,9 @@ func main() {
 
 	// Start server
 	fmt.Println("🚀 Listening on http://localhost:" + port)
-	err := http.ListenAndServe(":"+port, n)
+	http.ListenAndServe(":"+port, n)
 	if err != nil {
 		logrus.Fatal("Server failed to start: ", err)
 	}
 }
+

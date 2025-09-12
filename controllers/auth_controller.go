@@ -30,6 +30,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
     "github.com/olabanji12-ojo/CarWashApp/database"
     "go.mongodb.org/mongo-driver/bson"
+	// "github.com/joho/godotenv"
 )
 
 type AuthController struct {
@@ -387,7 +388,7 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	redirectURL := fmt.Sprintf("%s/?token=%s", config.Cfg.FrontendURL, url.QueryEscape(signedToken))
+	redirectURL := fmt.Sprintf("%s/?token=%s", os.Getenv("FrontendURL"), url.QueryEscape(signedToken))
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
