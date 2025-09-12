@@ -27,4 +27,11 @@ func AuthRoutes(router *mux.Router, authService *controllers.AuthController) {
 	// POST /api/auth/login
 	auth.HandleFunc("/login", authService.LoginHandler).Methods("POST")
 
+	// GET /api/auth/google/login
+	auth.HandleFunc("/google/login", authService.GoogleLoginHandler).Methods("GET")
+
+	router.HandleFunc("/api/google-reg", authService.GoogleCallbackHandler).Methods("GET")
+
+
 }
+
