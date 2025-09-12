@@ -168,3 +168,22 @@ func GetPublicUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusOK, profile)
 }
+
+
+func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := utils.GetUserIDFromRequest(r)
+	if err != nil {
+		utils.Error(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	user, err := services.GetUserByID(userID)
+	if err != nil {
+		utils.Error(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, map[string]interface{}{
+		"user": user,
+	})
+}   

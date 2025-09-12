@@ -19,7 +19,7 @@ func ConnectDB() *mongo.Database {
 	if err != nil {
 		log.Println("No .env file found, using defaults")
 	}
-
+ 
 	mongoURL := os.Getenv("MONGO_URI")
 	log.Println(mongoURL)
 	
@@ -31,7 +31,7 @@ func ConnectDB() *mongo.Database {
 		log.Fatalf("❌ Failed to create MongoDB client: %v", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	err = client.Connect(ctx)

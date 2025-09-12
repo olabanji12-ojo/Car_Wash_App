@@ -6,23 +6,19 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/negroni"
 
 	"github.com/olabanji12-ojo/CarWashApp/config"
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/routes"
-	"github.com/urfave/negroni"
-	
 )
 
 func main() {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		logrus.Info("No .env file found, using defaults")
-	}
+	// Initialize config (loads env vars)
+	config.Init()
+	config.InitGoogleOAuth()
 
 	// Get PORT from env or default to 8080
 	port := os.Getenv("PORT")
@@ -30,30 +26,27 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Println("Mongo URL: ", os.Getenv("MONGO_URL"))
-	fmt.Println("DB Name: ", os.Getenv("DB_NAME"))
+	// Show some info
+	// fmt.Println("Environment:", config.Cfg.Env)
+	fmt.Println("Mongo URL:", os.Getenv("MONGO_URI"))
+	fmt.Println("DB Name:", os.Getenv("DB_NAME"))
 
 	// Connect to database
 	fmt.Println("🔌 Connecting to database...")
 	db := database.ConnectDB()
 	database.InitCollections()
 
-	// print the mongoURL
-	
-    
 	// Initialize router
 	router := mux.NewRouter()
 	routes.InitRoutes(router, db)
 
-
-	// Initialize Cloudinary
+	// Initialize Cloudinary (if you’re using config.Cfg vars inside)
 	config.InitCloudinary()
 
-	// Negroni middleware stack
+	// Middleware stack
 	n := negroni.New()
-
-	n.Use(negroni.NewRecovery()) // Handles panic recovery
-	n.Use(middleware.Cors())     // Enable CORS
+	n.Use(negroni.NewRecovery())
+	n.Use(middleware.Cors())
 	n.Use(negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		secureMiddleware := middleware.Secure()
 		if err := secureMiddleware.Process(w, r); err != nil {
@@ -63,16 +56,13 @@ func main() {
 		if next != nil {
 			next(w, r)
 		}
-	})) // Custom security headers (not circular)
-	n.UseHandler(router) // Final handler: the actual router
+	}))
+	n.UseHandler(router)
 
 	// Start server
 	fmt.Println("🚀 Listening on http://localhost:" + port)
-	err = http.ListenAndServe(":"+port, n)
-
+	err := http.ListenAndServe(":"+port, n)
 	if err != nil {
 		logrus.Fatal("Server failed to start: ", err)
 	}
-
 }
-
