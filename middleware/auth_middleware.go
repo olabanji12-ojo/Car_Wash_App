@@ -88,7 +88,8 @@ func Cors() *cors.Cors {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{
 			
-            "https://foam-up.onrender.com", // add this
+            "https://foam-up.onrender.com",
+			"http://localhost:3000", // add this
 			
 			}, // ✅ exact frontend URL
 		AllowCredentials: true,

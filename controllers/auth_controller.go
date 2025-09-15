@@ -393,12 +393,10 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		Value:    signedToken,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-		Domain:   ".onrender.com",  // shared across foam-up & car-wash-app-j54r
+		Secure:   true, // true in production (HTTPS)
+		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().Add(72 * time.Hour),
 	})
-	
 	  
 	// redirect to frontend without token in URL
 	http.Redirect(w, r, os.Getenv("FRONTEND_URL"), http.StatusFound)
