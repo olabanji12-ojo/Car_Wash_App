@@ -7,6 +7,8 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/sirupsen/logrus"
+
 )
 
 // GET /api/user/{id}
@@ -171,19 +173,28 @@ func GetPublicUser(w http.ResponseWriter, r *http.Request) {
 
 
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("👉 /api/user/me endpoint hit")
+
 	userID, err := utils.GetUserIDFromRequest(r)
 	if err != nil {
+		logrus.Warn("❌ Failed to extract user ID from request: ", err)
 		utils.Error(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
+	logrus.Infof("✅ Extracted userID from token: %s", userID)
+
 	user, err := services.GetUserByID(userID)
 	if err != nil {
+		logrus.Warnf("❌ User not found in DB for userID=%s: %v", userID, err)
 		utils.Error(w, http.StatusNotFound, "User not found")
 		return
 	}
 
+	logrus.Infof("✅ Found user in DB: %+v", user)
+
 	utils.JSON(w, http.StatusOK, map[string]interface{}{
 		"user": user,
 	})
-}   
+}
+   

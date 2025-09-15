@@ -388,7 +388,17 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	redirectURL := fmt.Sprintf("%s/?token=%s", os.Getenv("FrontendURL"), url.QueryEscape(signedToken))
-	http.Redirect(w, r, redirectURL, http.StatusFound)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    signedToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true, // true in production (HTTPS)
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Now().Add(72 * time.Hour),
+	})
+	  
+	// redirect to frontend without token in URL
+	http.Redirect(w, r, os.Getenv("FRONTEND_URL"), http.StatusFound)
+	
 }
-

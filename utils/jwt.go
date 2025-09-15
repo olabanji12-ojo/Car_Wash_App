@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"strings"
+	// "strings"
 	"net/http" 
 	// "errors" 
 
@@ -104,32 +104,23 @@ func ExtractClaims(tokenString string) (map[string]interface{}, error) {
 }
 
 
+
 func GetUserIDFromRequest(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return "", errors.New("missing Authorization header")
-	}
+    cookie, err := r.Cookie("auth_token")
+    if err != nil {
+        return "", errors.New("missing auth_token cookie")
+    }
 
-	// Expect "Bearer <token>"
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", errors.New("invalid Authorization header format")
-	}
+    claims, err := ExtractClaims(cookie.Value)
+    if err != nil {
+        return "", err
+    }
 
-	tokenStr := parts[1]
+    userID, ok := claims["user_id"].(string)
+    if !ok {
+        return "", errors.New("user_id not found in token claims")
+    }
 
-	// Validate & extract claims
-	claims, err := ExtractClaims(tokenStr)
-	if err != nil {
-		return "", err
-	}
-
-	// Get user_id claim
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		return "", errors.New("user_id not found in token claims")
-	}
-
-	return userID, nil
+    return userID, nil
 }
 
