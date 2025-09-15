@@ -86,9 +86,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 func Cors() *cors.Cors {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // ✅ exact frontend URL
+		AllowedOrigins:   []string{
+			
+            "https://foam-up.onrender.com", // add this
+			
+			}, // ✅ exact frontend URL
 		AllowCredentials: true,
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Origin"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 	})
 	return c
