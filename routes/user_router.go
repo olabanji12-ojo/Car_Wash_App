@@ -23,7 +23,7 @@ func UserRoutes(router *mux.Router) {
 
 	userRouter.HandleFunc("/{id}", controllers.GetUserProfile).Methods("GET") // tested
 
-	userRouter.HandleFunc("/me", controllers.GetCurrentUser).Methods("GET")
+	userRouter.HandleFunc("/me/", controllers.GetCurrentUser).Methods("GET")
     
 	userRouter.HandleFunc("/{id}", controllers.UpdateUserProfile).Methods("PUT") // tested
 
@@ -41,5 +41,3 @@ func UserRoutes(router *mux.Router) {
     
 	
 }
-
-
