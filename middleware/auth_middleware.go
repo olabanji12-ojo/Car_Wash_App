@@ -88,7 +88,7 @@ func Cors() *cors.Cors {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{
 			
-            "https://foam-up.onrender.com",
+            "https://foam-up.vercel.app/",
 			"http://localhost:3000", // add this
 			
 			}, // ✅ exact frontend URL
