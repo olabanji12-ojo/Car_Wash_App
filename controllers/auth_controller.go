@@ -25,7 +25,7 @@ import (
 	"io/ioutil"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	// "github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
     "github.com/olabanji12-ojo/CarWashApp/database"
@@ -160,9 +160,9 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//  Validate login input
+	// Validate login input
 	err := validation.ValidateStruct(&credentials,
-		// validation.Field(&credentials.Email, validation.Required, is.Email),
+		validation.Field(&credentials.Email, validation.Required, is.Email),
 		validation.Field(&credentials.Password, validation.Required, validation.Length(6, 100)),
 	)
 	if err != nil {
@@ -177,13 +177,26 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 🔑 Set token in cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,                 // JavaScript can't access it
+		Secure:   true,                 // only over HTTPS (set false in local dev)
+		SameSite: http.SameSiteNoneMode, // allow frontend <-> backend
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
+
+	// Return only user info (not token)
 	response := map[string]interface{}{
-		"token": token,
-		"user":  user,
+		"message": "Login successful",
+		"user":    user,
 	}
 
 	utils.JSON(w, http.StatusOK, response)
 }
+
 
 
 // GOOGLE LOGIN HANDLER
@@ -402,4 +415,24 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 	callbackURL := fmt.Sprintf("%s/CallbackPage", os.Getenv("FRONTEND_URL"))
     http.Redirect(w, r, callbackURL, http.StatusFound)
 
+}
+
+
+func (ac *AuthController) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    // Overwrite the auth cookie with empty value and past expiry date
+    http.SetCookie(w, &http.Cookie{
+        Name:     "auth_token",
+        Value:    "",
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   true, // true in production (HTTPS)
+        SameSite: http.SameSiteNoneMode,
+        Expires:  time.Unix(0, 0), // already expired
+        MaxAge:   -1,              // remove immediately
+    })
+
+    // Optionally, return JSON response
+    response := map[string]string{"message": "Logged out successfully"}
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
 }
