@@ -194,19 +194,19 @@ func generateNonceCookie(w http.ResponseWriter) (string, error) {
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	nonce := base64.URLEncoding.EncodeToString(b)
+	tokenString := base64.URLEncoding.EncodeToString(b)
 
 	cookie := &http.Cookie{
 		Name:     "oauthstate",
-		Value:    nonce,
+		Value:    tokenString,
 		Path:     "/",
 		Expires:  time.Now().Add(10 * time.Minute),
 		HttpOnly: true,
 		Secure:   true, // set true in production (HTTPS)
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, cookie)
-	return nonce, nil
+	return tokenString, nil
 }
 
 // GoogleLoginHandler expects optional query params: ?role=car_owner&account_type=car_owner
@@ -394,11 +394,12 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true, // true in production (HTTPS)
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(72 * time.Hour),
 	})
 	  
 	// redirect to frontend without token in URL
-	http.Redirect(w, r, os.Getenv("FRONTEND_URL"), http.StatusFound)
-	
+	callbackURL := fmt.Sprintf("%s/CallbackPage", os.Getenv("FRONTEND_URL"))
+    http.Redirect(w, r, callbackURL, http.StatusFound)
+
 }
