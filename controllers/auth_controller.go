@@ -25,7 +25,7 @@ import (
 	"io/ioutil"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	// "github.com/go-ozzo/ozzo-validation/v4/is"
 
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
     "github.com/olabanji12-ojo/CarWashApp/database"
@@ -160,9 +160,8 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate login input
+	// Validate input
 	err := validation.ValidateStruct(&credentials,
-		validation.Field(&credentials.Email, validation.Required, is.Email),
 		validation.Field(&credentials.Password, validation.Required, validation.Length(6, 100)),
 	)
 	if err != nil {
@@ -177,25 +176,30 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 🔑 Set token in cookie
-	http.SetCookie(w, &http.Cookie{
+	// Set persistent auth_token cookie
+	cookie := &http.Cookie{
 		Name:     "auth_token",
 		Value:    token,
 		Path:     "/",
-		HttpOnly: true,                 // JavaScript can't access it
-		Secure:   true,                 // only over HTTPS (set false in local dev)
-		SameSite: http.SameSiteNoneMode, // allow frontend <-> backend
-		Expires:  time.Now().Add(24 * time.Hour),
-	})
+		HttpOnly: true,                        // JS cannot read this
+		Secure:   true,                        // true in production (HTTPS)
+		SameSite: http.SameSiteNoneMode,       // required for cross-origin
+		Expires:  time.Now().Add(72 * time.Hour), // persists across reloads
+	}
+	http.SetCookie(w, cookie)
 
-	// Return only user info (not token)
+	// CORS headers for cross-origin frontend (React)
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Origin", os.Getenv("FRONTEND_URL"))
+
+	// Send user info in response
 	response := map[string]interface{}{
-		"message": "Login successful",
-		"user":    user,
+		"user": user,
 	}
 
 	utils.JSON(w, http.StatusOK, response)
 }
+
 
 
 

@@ -45,6 +45,7 @@ func init() {
 	if len(jwtSecret) == 0 {
 		logrus.Fatal("JWT_SECRET not set in environment variables")
 	}
+	logrus.Infof("JWT_SECRET length: %d", len(jwtSecret))
 }
 
 //  GenerateToken creates a JWT for a given user with a 24-hour expiration
