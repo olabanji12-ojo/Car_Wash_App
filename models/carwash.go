@@ -60,7 +60,9 @@ func (c *Carwash) SetDefaults() {
 	c.UpdatedAt = time.Now()
 	c.QueueCount = 0
 	c.IsActive = true
+	c.Services = []Service{} // initialize Services as empty slice
 }
+
 
 func (s Service) Validate() error {
 	return validation.ValidateStruct(&s,
