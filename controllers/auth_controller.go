@@ -395,8 +395,10 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 
 	// 7) Redirect to frontend with token + role + account_type
 frontendURL := os.Getenv("FRONTEND_URL") // e.g. http://localhost:5173/callback
-redirectURL := fmt.Sprintf("%s?token=%s&role=%s&account_type=%s",
+callbackPath := "/CallbackPage"
+redirectURL := fmt.Sprintf("%s%s?token=%s&role=%s&account_type=%s",
     frontendURL,
+	callbackPath,
     url.QueryEscape(signedToken),
     url.QueryEscape(u.Role),
     url.QueryEscape(u.AccountType),
