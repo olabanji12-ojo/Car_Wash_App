@@ -379,11 +379,11 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	claims := jwt.MapClaims{
-		"user_id": u.ID.Hex(),
-		"email":   u.Email,
-		"role":    u.Role,
+		"user_id":      u.ID.Hex(),
+		"email":        u.Email,
+		"role":         u.Role,
 		"account_type": u.AccountType,
-		"exp":     time.Now().Add(72 * time.Hour).Unix(),
+		"exp":          time.Now().Add(72 * time.Hour).Unix(),
 	}
 	tokenJwt := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := tokenJwt.SignedString([]byte(jwtSecret))
@@ -393,10 +393,15 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// 7) Redirect to frontend with token in query
-	callbackURL := fmt.Sprintf("%s/CallbackPage?token=%s", os.Getenv("FRONTEND_URL"), signedToken)
-	http.Redirect(w, r, callbackURL, http.StatusFound)
+	// 7) Return JSON with token + user
+	response := map[string]interface{}{
+		"user":  u,
+		"token": signedToken,
+	}
+
+	utils.JSON(w, http.StatusOK, response)
 }
+
 
 
 
