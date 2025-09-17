@@ -27,62 +27,63 @@ type contextKey string
 const authKey contextKey = "auth"
 
 //  AuthMiddleware checks for token, validates it, adds user info to context
+//  AuthMiddleware checks for token, validates it, adds user info to context
 func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var tokenString string
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        var tokenString string
 
-		// 1️⃣ Try Authorization header first
-		authHeader := r.Header.Get("Authorization")
-		if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
-		} else {
-			// 2️⃣ If no header, try cookie
-			cookie, err := r.Cookie("auth_token")
-			if err != nil {
-				http.Error(w, "Missing auth token", http.StatusUnauthorized)
-				return
-			}
-			tokenString = cookie.Value
-		}
+        // 1️⃣ Try Authorization header first
+        authHeader := r.Header.Get("Authorization")
+        if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+            tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+        } else {
+            // 2️⃣ If no header, try query param
+            tokenString = r.URL.Query().Get("auth_token")
+            if tokenString == "" {
+                http.Error(w, "Missing auth token", http.StatusUnauthorized)
+                return
+            }
+        }
 
-		// 3️⃣ Validate token using our utils function
-		token, claims, err := utils.ValidateToken(tokenString)
-		if err != nil || !token.Valid {
-			logrus.Warn("Token invalid or expired:", err)
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-			return
-		}
+        // 3️⃣ Validate token
+        token, claims, err := utils.ValidateToken(tokenString)
+        if err != nil || !token.Valid {
+            logrus.Warn("Token invalid or expired: ", err)
+            http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+            return
+        }
 
-		// 4️⃣ Extract user data from claims
-		userID, ok1 := claims["user_id"].(string)
-		email, ok2 := claims["email"].(string)
-		role, ok3 := claims["role"].(string)
-		accountType, ok4 := claims["account_type"].(string)
+        // 4️⃣ Extract claims
+        userID, ok1 := claims["user_id"].(string)
+        email, ok2 := claims["email"].(string)
+        role, ok3 := claims["role"].(string)
+        accountType, ok4 := claims["account_type"].(string)
 
-		if !ok1 || !ok2 || !ok3 || !ok4 {
-			logrus.Warn("Token claims missing or invalid types")
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
-			return
-		}
+        if !ok1 || !ok2 || !ok3 || !ok4 {
+            logrus.Warn("Token claims missing or invalid types")
+            http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+            return
+        }
 
-		// 5️⃣ Save user info into context
-		authCtx := AuthContext{
-			UserID:      userID,
-			Email:       email,
-			Role:        role,
-			AccountType: accountType,
-		}
-		logrus.WithFields(logrus.Fields{
-			"user_id": userID,
-			"email":   email,
-		}).Info("Authenticated request")
+        // 5️⃣ Save into context
+        authCtx := AuthContext{
+            UserID:      userID,
+            Email:       email,
+            Role:        role,
+            AccountType: accountType,
+        }
+        logrus.WithFields(logrus.Fields{
+            "user_id": userID,
+            "email":   email,
+        }).Info("Authenticated request")
 
-		ctx := context.WithValue(r.Context(), authKey, authCtx)
+        ctx := context.WithValue(r.Context(), authKey, authCtx)
 
-		// 6️⃣ Pass updated request with user context
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+        // 6️⃣ Continue
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
 }
+
 
 func Cors() *cors.Cors {
 	c := cors.New(cors.Options{
