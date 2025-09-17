@@ -393,13 +393,18 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// 7) Return JSON with token + user
-	response := map[string]interface{}{
-		"user":  u,
-		"token": signedToken,
-	}
+	// 7) Redirect to frontend with token + role + account_type
+frontendURL := os.Getenv("FRONTEND_URL") // e.g. http://localhost:5173/callback
+redirectURL := fmt.Sprintf("%s?token=%s&role=%s&account_type=%s",
+    frontendURL,
+    url.QueryEscape(signedToken),
+    url.QueryEscape(u.Role),
+    url.QueryEscape(u.AccountType),
+)
 
-	utils.JSON(w, http.StatusOK, response)
+http.Redirect(w, r, redirectURL, http.StatusFound)
+
+	
 }
 
 
