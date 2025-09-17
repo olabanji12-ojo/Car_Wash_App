@@ -176,18 +176,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set persistent auth_token cookie
-	cookie := &http.Cookie{
-		Name:     "auth_token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,                        // JS cannot read this
-		Secure:   true,                        // true in production (HTTPS)
-		SameSite: http.SameSiteNoneMode,       // required for cross-origin
-		Expires:  time.Now().Add(72 * time.Hour), // persists across reloads
-	}
-	http.SetCookie(w, cookie)
-
+	
 	// CORS headers for cross-origin frontend (React)
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Origin", os.Getenv("FRONTEND_URL"))
@@ -195,6 +184,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Send user info in response
 	response := map[string]interface{}{
 		"user": user,
+		"token": token,
 	}
 
 	utils.JSON(w, http.StatusOK, response)
@@ -292,9 +282,7 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		role = values.Get("role")
 		accountType = values.Get("account_type")
 	}
-	// If frontend didn't pass values, you can set a fallback or leave empty.
 	if role == "" {
-		// fallback (optional). You can change this to reject or force frontend to pass.
 		role = "car_owner"
 	}
 	if accountType == "" {
@@ -346,13 +334,12 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// 5) Upsert user (use your repo)
+	// 5) Upsert user
 	userRepo := repositories.NewUserRepository(database.DB)
 	existingUser, err := userRepo.FindUserByEmail(gi.Email)
 	var u *models.User
 	now := time.Now()
 	if err == nil && existingUser != nil {
-		// update fields:
 		update := bson.M{
 			"name":          gi.Name,
 			"profile_photo": gi.Picture,
@@ -366,7 +353,6 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		}
 		u, _ = userRepo.FindUserByEmail(gi.Email)
 	} else {
-		// create new user using role/account_type from state payload
 		newUser := models.User{
 			Name:         gi.Name,
 			Email:        gi.Email,
@@ -385,7 +371,7 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		u, _ = userRepo.FindUserByEmail(gi.Email)
 	}
 
-	// 6) create your JWT and redirect to frontend
+	// 6) Create JWT
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		logrus.Error("missing JWT_SECRET env")
@@ -395,6 +381,8 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 	claims := jwt.MapClaims{
 		"user_id": u.ID.Hex(),
 		"email":   u.Email,
+		"role":    u.Role,
+		"account_type": u.AccountType,
 		"exp":     time.Now().Add(72 * time.Hour).Unix(),
 	}
 	tokenJwt := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -405,37 +393,14 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    signedToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true, // true in production (HTTPS)
-		SameSite: http.SameSiteNoneMode,
-		Expires:  time.Now().Add(72 * time.Hour),
-	})
-	  
-	// redirect to frontend without token in URL
-	callbackURL := fmt.Sprintf("%s/CallbackPage", os.Getenv("FRONTEND_URL"))
-    http.Redirect(w, r, callbackURL, http.StatusFound)
-
+	// 7) Redirect to frontend with token in query
+	callbackURL := fmt.Sprintf("%s/CallbackPage?token=%s", os.Getenv("FRONTEND_URL"), signedToken)
+	http.Redirect(w, r, callbackURL, http.StatusFound)
 }
 
 
-func (ac *AuthController) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-    // Overwrite the auth cookie with empty value and past expiry date
-    http.SetCookie(w, &http.Cookie{
-        Name:     "auth_token",
-        Value:    "",
-        Path:     "/",
-        HttpOnly: true,
-        Secure:   true, // true in production (HTTPS)
-        SameSite: http.SameSiteNoneMode,
-        Expires:  time.Unix(0, 0), // already expired
-        MaxAge:   -1,              // remove immediately
-    })
 
-    // Optionally, return JSON response
+func (ac *AuthController) LogoutHandler(w http.ResponseWriter, r *http.Request) {
     response := map[string]string{"message": "Logged out successfully"}
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(response)
