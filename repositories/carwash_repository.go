@@ -3,6 +3,8 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/olabanji12-ojo/CarWashApp/database"
@@ -12,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"github.com/sirupsen/logrus"
-	"fmt"
 )
 
 type CarWashRepository struct {
@@ -90,15 +91,12 @@ func (cw *CarWashRepository) UpdateCarwash(id string, update bson.M) error {
 	return err
 }
 
-
-
-
 // 5. Toggle carwash online status
 func (cw *CarWashRepository) SetCarwashStatus(id string, isActive bool) error {
 	return cw.UpdateCarwash(id, bson.M{"is_active": isActive})
 }
 
-
+// 6. Post onboarding status
 func (cw *CarWashRepository) Postboarding(id primitive.ObjectID, hasOnboarded bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -111,9 +109,7 @@ func (cw *CarWashRepository) Postboarding(id primitive.ObjectID, hasOnboarded bo
 	return err
 }
 
-
-
-// 6. Get all carwashes by business owner ID
+// 7. Get all carwashes by business owner ID
 func (cw *CarWashRepository) GetCarwashesByOwnerID(ownerID string) ([]models.Carwash, error) {
 	objID, err := primitive.ObjectIDFromHex(ownerID)
 	if err != nil {
@@ -139,7 +135,7 @@ func (cw *CarWashRepository) GetCarwashesByOwnerID(ownerID string) ([]models.Car
 	return results, nil
 }
 
-// 7. Filter carwashes (optional advanced search)
+// 8. Filter carwashes (optional advanced search)
 func (cw *CarWashRepository) GetCarwashesByFilter(filter bson.M) ([]models.Carwash, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -160,20 +156,21 @@ func (cw *CarWashRepository) GetCarwashesByFilter(filter bson.M) ([]models.Carwa
 	return carwashes, nil
 }
 
-// 8. Update queue count
+// 9. Update queue count
 func (cw *CarWashRepository) UpdateQueueCount(id string, count int) error {
 	return cw.UpdateCarwash(id, bson.M{"queue_count": count})
 }
 
-// 9. Find carwashes with intelligent fallback
-func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64) ([]*models.Carwash, string, error) {
+// 10. Find carwashes with intelligent fallback
+func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64) ([]map[string]interface{}, string, error) {
 	// Step 1: Try 10km radius
 	carwashes, err := cw.findCarwashesInRadius(userLat, userLng, 10.0)
 	if err != nil {
 		return nil, "", err
 	}
 	if len(carwashes) > 0 {
-		return carwashes, "nearby", nil
+		result := cw.addDistanceToCarwashes(carwashes, userLat, userLng)
+		return result, "nearby", nil
 	}
 
 	// Step 2: Try 100km radius
@@ -182,7 +179,8 @@ func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64)
 		return nil, "", err
 	}
 	if len(carwashes) > 0 {
-		return carwashes, "extended", nil
+		result := cw.addDistanceToCarwashes(carwashes, userLat, userLng)
+		return result, "extended", nil
 	}
 
 	// Step 3: Show all with location
@@ -190,7 +188,9 @@ func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64)
 	if err != nil {
 		return nil, "", err
 	}
-	return carwashes, "all", nil
+
+	result := cw.addDistanceToCarwashes(carwashes, userLat, userLng)
+	return result, "all", nil
 }
 
 // Helper function using your existing pattern
@@ -242,6 +242,29 @@ func (cw *CarWashRepository) findAllCarwashesWithLocation() ([]*models.Carwash, 
 	return result, nil
 }
 
+// Helper function to add distance information to carwashes
+func (cw *CarWashRepository) addDistanceToCarwashes(carwashes []*models.Carwash, userLat, userLng float64) []map[string]interface{} {
+	var result []map[string]interface{}
+	for _, cw := range carwashes {
+		if cw != nil {
+			result = append(result, cw.WithDistance(userLat, userLng))
+		}
+	}
+
+	// Sort by distance (nearest first)
+	sort.Slice(result, func(i, j int) bool {
+		distI, okI := result[i]["distance_km"].(float64)
+		distJ, okJ := result[j]["distance_km"].(float64)
+
+		if !okI || !okJ {
+			return false
+		}
+		return distI < distJ
+	})
+
+	return result
+}
+
 // CreateService appends a new service to the carwash's services array
 func (cw *CarWashRepository) CreateService(carwashID string, service models.Service) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -278,7 +301,6 @@ func (cw *CarWashRepository) CreateService(carwashID string, service models.Serv
 
 	return result, nil
 }
-
 
 // GetServices retrieves the services array for a carwash
 func (cw *CarWashRepository) GetServices(carwashID string) ([]models.Service, error) {

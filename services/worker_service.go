@@ -1,26 +1,36 @@
 package services
 
 import (
-
 	"errors"
 	"time"
 
 	"github.com/olabanji12-ojo/CarWashApp/models"
-	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
+	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-
 )
 
-// ✅ Create new worker (called by business)
-func CreateWorkerService(requester models.User, input models.User) error {
+// WorkerService handles business logic for worker operations
+type WorkerService struct {
+	userRepo   *repositories.UserRepository
+	workerRepo *repositories.WorkerRepository
+}
 
+// NewWorkerService creates a new WorkerService instance
+func NewWorkerService(userRepo *repositories.UserRepository, workerRepo *repositories.WorkerRepository) *WorkerService {
+	return &WorkerService{
+		userRepo:   userRepo,
+		workerRepo: workerRepo,
+	}
+}
+
+// CreateWorker creates a new worker (called by business)
+func (ws *WorkerService) CreateWorker(requester models.User, input models.User) error {
 	if requester.AccountType != "carwash" || requester.Role != "business_owner" {
 		return errors.New("only business owners can create workers")
 	}
 
-	input.ID = primitive.NewObjectID() 
+	input.ID = primitive.NewObjectID()
 	input.AccountType = utils.ACCOUNT_TYPE_CAR_WASH
 	input.Role = utils.ROLE_WORKER
 	input.Status = "active"
@@ -30,41 +40,38 @@ func CreateWorkerService(requester models.User, input models.User) error {
 	input.CreatedAt = time.Now()
 	input.UpdatedAt = time.Now()
 
-	return repositories.CreateUser(input)
-
+	return ws.userRepo.CreateUser(input)
 }
 
-
-// ✅ Get all workers under a business
-func GetWorkersByBusinessID(businessID string) ([]*models.User, error) {
+// GetWorkersByBusinessID gets all workers under a business
+func (ws *WorkerService) GetWorkersByBusinessID(businessID string) ([]*models.User, error) {
 	objID, err := primitive.ObjectIDFromHex(businessID)
 	if err != nil {
 		return nil, errors.New("invalid business ID format")
 	}
-	return repositories.FindWorkersByBusinessID(objID)
+	return ws.workerRepo.FindWorkersByBusinessID(objID)
 }
 
-
-// ✅ Update a worker's status
-func SetWorkerStatus(workerID string, status string) error {
+// SetWorkerStatus updates a worker's status
+func (ws *WorkerService) SetWorkerStatus(workerID string, status string) error {
 	objID, err := primitive.ObjectIDFromHex(workerID)
 	if err != nil {
 		return errors.New("invalid worker ID")
 	}
-	return repositories.UpdateWorkerStatus(objID, status)
+	return ws.workerRepo.UpdateWorkerStatus(objID, status)
 }
 
-// ✅ Get available workers for assignment (online and not busy)
-func GetAvailableWorkersForAssignment(businessID string) ([]*models.User, error) {
+// GetAvailableWorkersForAssignment gets available workers for assignment (online and not busy)
+func (ws *WorkerService) GetAvailableWorkersForAssignment(businessID string) ([]*models.User, error) {
 	objID, err := primitive.ObjectIDFromHex(businessID)
 	if err != nil {
 		return nil, errors.New("invalid business ID format")
 	}
-	return repositories.FindAvailableWorkersByBusinessID(objID)
+	return ws.workerRepo.FindAvailableWorkersByBusinessID(objID)
 }
 
-// ✅ Update a worker's work status (online, offline, busy, on_break)
-func SetWorkerWorkStatus(workerID string, workStatus string) error {
+// SetWorkerWorkStatus updates a worker's work status (online, offline, busy, on_break)
+func (ws *WorkerService) SetWorkerWorkStatus(workerID string, workStatus string) error {
 	objID, err := primitive.ObjectIDFromHex(workerID)
 	if err != nil {
 		return errors.New("invalid worker ID")
@@ -83,12 +90,11 @@ func SetWorkerWorkStatus(workerID string, workStatus string) error {
 		return errors.New("invalid work status. Must be: online, offline, busy, or on_break")
 	}
 
-	return repositories.UpdateWorkerWorkStatus(objID, workStatus)
+	return ws.workerRepo.UpdateWorkerWorkStatus(objID, workStatus)
 }
 
-
-// ✅ Assign worker to order (manual assignment by business)
-func AssignWorkerToOrder(workerID string, orderID string) error {
+// AssignWorkerToOrder assigns worker to order (manual assignment by business)
+func (ws *WorkerService) AssignWorkerToOrder(workerID string, orderID string) error {
 	// 1. Validate IDs
 	workerObjID, err := primitive.ObjectIDFromHex(workerID)
 	if err != nil {
@@ -101,7 +107,7 @@ func AssignWorkerToOrder(workerID string, orderID string) error {
 	}
 
 	// 2. Check if worker is available (optional validation)
-	worker, err := repositories.FindWorkerByID(workerObjID)
+	worker, err := ws.workerRepo.FindWorkerByID(workerObjID)
 	if err != nil {
 		return errors.New("worker not found")
 	}
@@ -115,24 +121,24 @@ func AssignWorkerToOrder(workerID string, orderID string) error {
 	}
 
 	// 3. Update order with worker ID
-	err = repositories.AssignWorkerToOrder(orderObjID, workerObjID)
+	err = ws.workerRepo.AssignWorkerToOrder(orderObjID, workerObjID)
 	if err != nil {
 		return errors.New("failed to assign worker to order: " + err.Error())
 	}
 
 	// 4. Update worker status and active orders
-	err = repositories.AddActiveOrderToWorker(workerObjID, orderObjID)
+	err = ws.workerRepo.AddActiveOrderToWorker(workerObjID, orderObjID)
 	if err != nil {
 		// Rollback: Remove worker from order if worker update fails
-		repositories.RemoveWorkerFromOrder(orderObjID)
+		ws.workerRepo.RemoveWorkerFromOrder(orderObjID)
 		return errors.New("failed to update worker status: " + err.Error())
 	}
 
 	return nil
 }
 
-// ✅ Remove worker from order (unassign worker)
-func RemoveWorkerFromOrder(workerID string, orderID string) error {
+// RemoveWorkerFromOrder removes worker from order (unassign worker)
+func (ws *WorkerService) RemoveWorkerFromOrder(workerID string, orderID string) error {
 	// 1. Validate IDs
 	workerObjID, err := primitive.ObjectIDFromHex(workerID)
 	if err != nil {
@@ -145,13 +151,13 @@ func RemoveWorkerFromOrder(workerID string, orderID string) error {
 	}
 
 	// 2. Remove worker from order
-	err = repositories.RemoveWorkerFromOrder(orderObjID)
+	err = ws.workerRepo.RemoveWorkerFromOrder(orderObjID)
 	if err != nil {
 		return errors.New("failed to remove worker from order: " + err.Error())
 	}
 
 	// 3. Free up the worker (remove order from active orders and set status to online)
-	err = repositories.RemoveActiveOrderFromWorker(workerObjID, orderObjID)
+	err = ws.workerRepo.RemoveActiveOrderFromWorker(workerObjID, orderObjID)
 	if err != nil {
 		return errors.New("failed to free up worker: " + err.Error())
 	}

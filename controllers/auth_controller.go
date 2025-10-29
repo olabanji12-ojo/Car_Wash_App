@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+    "bytes"
 	"io/ioutil"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -44,95 +45,77 @@ func NewAuthController(authService *services.AuthService) *AuthController {
 // REGISTER HANDLER
 
 func (ac *AuthController) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("RegisterHandler hit")
+    logrus.Info("🔵 [RegisterHandler] New registration request received")
+    logrus.Infof("🔵 [RegisterHandler] Headers: %+v", r.Header)
 
-	// Parse multipart form (32MB max)
-	err := r.ParseMultipartForm(32 << 20)
-	if err != nil {
-		logrus.Error("Failed to parse multipart form: ", err)
-		utils.Error(w, http.StatusBadRequest, "Failed to parse form data")
-		return
-	}
+    // Log request body
+    bodyBytes, _ := ioutil.ReadAll(r.Body)
+    logrus.Infof("🔵 [RegisterHandler] Request body: %s", string(bodyBytes))
+    r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	// Extract form fields
-	input := models.User{
-		Name:        r.FormValue("name"),
-		Email:       r.FormValue("email"),
-		Phone:       r.FormValue("phone"),
-		Password:    r.FormValue("password"),
-		AccountType: r.FormValue("account_type"),
-		Role:        r.FormValue("role"),
-	}
+    if r.Header.Get("Content-Type") != "application/json" {
+        errMsg := "Content-Type must be application/json"
+        logrus.Warnf("❌ [RegisterHandler] %s", errMsg)
+        utils.Error(w, http.StatusUnsupportedMediaType, errMsg)
+        return
+    }
 
-	// Validate input
-	if err := validateRegistrationInput(input); err != nil {
-		utils.Error(w, http.StatusBadRequest, err.Error())
-		return
-	}
+    var input models.User
+    if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+        logrus.Errorf("❌ [RegisterHandler] Failed to parse JSON: %v", err)
+        utils.Error(w, http.StatusBadRequest, "Invalid request body")
+        return
+    }
+    logrus.Infof("🔵 [RegisterHandler] Parsed input: %+v", input)
 
-	// Handle profile photo upload
-	var profilePhotoURL string
-	file, header, err := r.FormFile("profile_photo")
-	if err == nil { // File was provided
-		defer file.Close()
+    if err := validateRegistrationInput(input); err != nil {
+        logrus.Warnf("❌ [RegisterHandler] Validation failed: %v", err)
+        utils.Error(w, http.StatusBadRequest, err.Error())
+        return
+    }
 
-		// Validate file type
-		if !isValidImageType(header.Filename) {
-			utils.Error(w, http.StatusBadRequest, "Invalid file type. Only JPG, PNG, GIF allowed")
-			return
-		}
+    logrus.Info("🔄 [RegisterHandler] Calling AuthService.RegisterUser")
+    newUser, err := ac.AuthService.RegisterUser(input)
+    if err != nil {
+        logrus.Errorf("❌ [RegisterHandler] Registration failed: %v", err)
+        utils.Error(w, http.StatusBadRequest, err.Error())
+        return
+    }
+    logrus.Infof("✅ [RegisterHandler] User registered successfully: %s", newUser.Email)
 
-		// Generate unique filename
-		filename := fmt.Sprintf("user_%s_%d",
-			strings.ReplaceAll(input.Email, "@", "_"),
-			time.Now().Unix())
+    // Generate JWT token for the new user
+    token, err := utils.GenerateToken(newUser.ID.Hex(), newUser.Email, newUser.Role, newUser.AccountType)
+    if err != nil {
+        logrus.Error("❌ [RegisterHandler] Error generating token: ", err)
+        utils.Error(w, http.StatusInternalServerError, "Failed to generate token")
+        return
+    }
 
-		// Upload to Cloudinary
-		uploadResult, err := services.UploadImage(file, filename, "profile_photos")
-		if err != nil {
-			logrus.Error("Image upload failed: ", err)
-			utils.Error(w, http.StatusInternalServerError, "Failed to upload profile photo")
-			return
-		}
+    // Create response
+    response := map[string]interface{}{
+        "message": "Registration successful",
+        "data": map[string]interface{}{
+            "user": map[string]interface{}{
+                "id":           newUser.ID.Hex(),
+                "email":        newUser.Email,
+                "role":         newUser.Role,
+                "account_type": newUser.AccountType,
+                "name":         newUser.Name,
+                "phone":        newUser.Phone,
+            },
+            "token": token,
+        },
+    }
 
-		profilePhotoURL = uploadResult.SecureURL
-		logrus.Info("Image uploaded successfully: ", profilePhotoURL)
-	}
+    // Set response headers and encode response
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    if err := json.NewEncoder(w).Encode(response); err != nil {
+        logrus.Errorf("❌ [RegisterHandler] Failed to encode response: %v", err)
+    }
 
-	// Set profile photo URL in user struct
-	input.ProfilePhoto = profilePhotoURL
-
-	// Call service to register user
-	newUser, err := ac.AuthService.RegisterUser(input)
-	if err != nil {
-		// If user creation fails but image was uploaded, clean up
-		if profilePhotoURL != "" {
-			go func() {
-				// Extract public_id from URL or store it separately
-				// For now, we'll skip cleanup, but in production you should handle this
-				logrus.Warn("User creation failed but image was uploaded: ", profilePhotoURL)
-			}()
-		}
-		utils.Error(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	utils.JSON(w, http.StatusCreated, newUser)
+    logrus.Info("✅ [RegisterHandler] Registration completed and response sent")
 }
-
-// Helper function to validate image file types
-func isValidImageType(filename string) bool {
-	validTypes := []string{".jpg", ".jpeg", ".png", ".gif"}
-	filename = strings.ToLower(filename)
-
-	for _, ext := range validTypes {
-		if strings.HasSuffix(filename, ext) {
-			return true
-		}
-	}
-	return false
-}
-
 // Validation function for registration input
 func validateRegistrationInput(input models.User) error {
 	return validation.ValidateStruct(&input,
@@ -148,46 +131,43 @@ func validateRegistrationInput(input models.User) error {
 // LOGIN HANDLER
 
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var credentials struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+    var credentials struct {
+        Email    string `json:"email"`
+        Password string `json:"password"`
+    }
 
-	// Decode JSON login input
-	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-		logrus.Warn("Invalid login input: ", err)
-		utils.Error(w, http.StatusBadRequest, "Invalid request format")
-		return
-	}
+    if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+        logrus.Warn("Invalid login input: ", err)
+        utils.Error(w, http.StatusBadRequest, "Invalid request format")
+        return
+    }
 
-	// Validate input
-	err := validation.ValidateStruct(&credentials,
-		validation.Field(&credentials.Password, validation.Required, validation.Length(6, 100)),
-	)
-	if err != nil {
-		utils.Error(w, http.StatusBadRequest, err.Error())
-		return
-	}
+    err := validation.ValidateStruct(&credentials,
+        validation.Field(&credentials.Password, validation.Required, validation.Length(6, 100)),
+    )
+    if err != nil {
+        utils.Error(w, http.StatusBadRequest, err.Error())
+        return
+    }
 
-	// Call service to login
-	token, user, err := ac.AuthService.LoginUser(credentials.Email, credentials.Password)
-	if err != nil {
-		utils.Error(w, http.StatusUnauthorized, err.Error())
-		return
-	}
+    token, user, err := ac.AuthService.LoginUser(credentials.Email, credentials.Password)
+    if err != nil {
+        utils.Error(w, http.StatusUnauthorized, err.Error())
+        return
+    }
 
-	
-	// CORS headers for cross-origin frontend (React)
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Access-Control-Allow-Origin", os.Getenv("FRONTEND_URL"))
+    // Set HttpOnly cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "jwt",
+        Value:    token,
+        Path:     "/",
+        Expires:  time.Now().Add(24 * time.Hour),
+        HttpOnly: true,
+        Secure:   os.Getenv("ENVIRONMENT") == "production",
+        SameSite: http.SameSiteStrictMode,
+    })
 
-	// Send user info in response
-	response := map[string]interface{}{
-		"user": user,
-		"token": token,
-	}
-
-	utils.JSON(w, http.StatusOK, response)
+    utils.JSON(w, http.StatusOK, map[string]interface{}{"user": user})
 }
 
 
@@ -252,168 +232,171 @@ func (ac *AuthController) GoogleLoginHandler(w http.ResponseWriter, r *http.Requ
 
 
 func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	// 1) parse state and validate nonce cookie
-	queryState := r.URL.Query().Get("state")
-	if queryState == "" {
-		utils.Error(w, http.StatusBadRequest, "missing state")
-		return
-	}
-	parts := strings.SplitN(queryState, "|", 2)
-	if len(parts) != 2 {
-		utils.Error(w, http.StatusBadRequest, "invalid state format")
-		return
-	}
-	nonceFromState := parts[0]
-	encodedPayload := parts[1]
+    queryState := r.URL.Query().Get("state")
+    if queryState == "" {
+        utils.Error(w, http.StatusBadRequest, "missing state")
+        return
+    }
+    parts := strings.SplitN(queryState, "|", 2)
+    if len(parts) != 2 {
+        utils.Error(w, http.StatusBadRequest, "invalid state format")
+        return
+    }
+    nonceFromState := parts[0]
+    encodedPayload := parts[1]
 
-	cookie, err := r.Cookie("oauthstate")
-	if err != nil || cookie.Value == "" || cookie.Value != nonceFromState {
-		logrus.Warn("invalid or missing oauthstate cookie")
-		utils.Error(w, http.StatusBadRequest, "invalid oauth state")
-		return
-	}
+    cookie, err := r.Cookie("oauthstate")
+    if err != nil || cookie.Value != nonceFromState {
+        logrus.Warn("invalid or missing oauthstate cookie")
+        utils.Error(w, http.StatusBadRequest, "invalid oauth state")
+        return
+    }
 
-	// 2) decode payload to get role/account_type
-	payloadBytes, err := base64.URLEncoding.DecodeString(encodedPayload)
-	role := ""
-	accountType := ""
-	if err == nil && len(payloadBytes) > 0 {
-		values, _ := url.ParseQuery(string(payloadBytes))
-		role = values.Get("role")
-		accountType = values.Get("account_type")
-	}
-	if role == "" {
-		role = "car_owner"
-	}
-	if accountType == "" {
-		accountType = "car_owner"
-	}
+    payloadBytes, err := base64.URLEncoding.DecodeString(encodedPayload)
+    role := ""
+    accountType := ""
+    if err == nil && len(payloadBytes) > 0 {
+        values, _ := url.ParseQuery(string(payloadBytes))
+        role = values.Get("role")
+        accountType = values.Get("account_type")
+    }
+    if role == "" {
+        role = "car_owner"
+    }
+    if accountType == "" {
+        accountType = "car_owner"
+    }
 
-	// 3) get code and exchange for token
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		utils.Error(w, http.StatusBadRequest, "code not found")
-		return
-	}
+    code := r.URL.Query().Get("code")
+    if code == "" {
+        utils.Error(w, http.StatusBadRequest, "code not found")
+        return
+    }
 
-	ctx := context.Background()
-	token, err := config.GoogleOauthConfig.Exchange(ctx, code)
-	if err != nil {
-		logrus.Error("token exchange failed: ", err)
-		utils.Error(w, http.StatusInternalServerError, "failed to exchange token")
-		return
-	}
+    ctx := context.Background()
+    token, err := config.GoogleOauthConfig.Exchange(ctx, code)
+    if err != nil {
+        logrus.Error("token exchange failed: ", err)
+        utils.Error(w, http.StatusInternalServerError, "failed to exchange token")
+        return
+    }
 
-	// 4) fetch userinfo from Google
-	client := config.GoogleOauthConfig.Client(ctx, token)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
-	if err != nil {
-		logrus.Error("failed to fetch userinfo: ", err)
-		utils.Error(w, http.StatusInternalServerError, "failed to fetch user info")
-		return
-	}
-	defer resp.Body.Close()
+    client := config.GoogleOauthConfig.Client(ctx, token)
+    resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+    if err != nil {
+        logrus.Error("failed to fetch userinfo: ", err)
+        utils.Error(w, http.StatusInternalServerError, "failed to fetch user info")
+        return
+    }
+    defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		logrus.Error("failed to read userinfo body: ", err)
-		utils.Error(w, http.StatusInternalServerError, "failed to read user info")
-		return
-	}
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        logrus.Error("failed to read userinfo body: ", err)
+        utils.Error(w, http.StatusInternalServerError, "failed to read user info")
+        return
+    }
 
-	var gi struct {
-		ID            string `json:"id"`
-		Email         string `json:"email"`
-		VerifiedEmail bool   `json:"verified_email"`
-		Name          string `json:"name"`
-		Picture       string `json:"picture"`
-	}
-	if err := json.Unmarshal(body, &gi); err != nil {
-		logrus.Error("failed to parse userinfo: ", err)
-		utils.Error(w, http.StatusInternalServerError, "failed to parse user info")
-		return
-	}
+    var gi struct {
+        ID            string `json:"id"`
+        Email         string `json:"email"`
+        VerifiedEmail bool   `json:"verified_email"`
+        Name          string `json:"name"`
+        Picture       string `json:"picture"`
+    }
+    if err := json.Unmarshal(body, &gi); err != nil {
+        logrus.Error("failed to parse userinfo: ", err)
+        utils.Error(w, http.StatusInternalServerError, "failed to parse user info")
+        return
+    }
 
-	// 5) Upsert user
-	userRepo := repositories.NewUserRepository(database.DB)
-	existingUser, err := userRepo.FindUserByEmail(gi.Email)
-	var u *models.User
-	now := time.Now()
-	if err == nil && existingUser != nil {
-		update := bson.M{
-			"name":          gi.Name,
-			"profile_photo": gi.Picture,
-			"verified":      true,
-			"updated_at":    now,
-		}
-		if err := userRepo.UpdateUserByID(existingUser.ID, update); err != nil {
-			logrus.Error("failed to update existing user: ", err)
-			utils.Error(w, http.StatusInternalServerError, "db error")
-			return
-		}
-		u, _ = userRepo.FindUserByEmail(gi.Email)
-	} else {
-		newUser := models.User{
-			Name:         gi.Name,
-			Email:        gi.Email,
-			ProfilePhoto: gi.Picture,
-			Verified:     true,
-			Role:         role,
-			AccountType:  accountType,
-			CreatedAt:    now,
-			UpdatedAt:    now,
-		}
-		if err := userRepo.CreateUser(newUser); err != nil {
-			logrus.Error("failed to create user: ", err)
-			utils.Error(w, http.StatusInternalServerError, "db error")
-			return
-		}
-		u, _ = userRepo.FindUserByEmail(gi.Email)
-	}
+    userRepo := repositories.NewUserRepository(database.DB)
+    existingUser, err := userRepo.FindUserByEmail(gi.Email)
+    var u *models.User
+    now := time.Now()
+    if err == nil && existingUser != nil {
+        update := bson.M{
+            "name":          gi.Name,
+            "profile_photo": gi.Picture,
+            "verified":      true,
+            "updated_at":    now,
+        }
+        if err := userRepo.UpdateUserByID(existingUser.ID, update); err != nil {
+            logrus.Error("failed to update existing user: ", err)
+            utils.Error(w, http.StatusInternalServerError, "db error")
+            return
+        }
+        u, _ = userRepo.FindUserByEmail(gi.Email)
+    } else {
+        newUser := models.User{
+            Name:         gi.Name,
+            Email:        gi.Email,
+            ProfilePhoto: gi.Picture,
+            Verified:     true,
+            Role:         role,
+            AccountType:  accountType,
+            CreatedAt:    now,
+            UpdatedAt:    now,
+        }
+        if err := userRepo.CreateUser(newUser); err != nil {
+            logrus.Error("failed to create user: ", err)
+            utils.Error(w, http.StatusInternalServerError, "db error")
+            return
+        }
+        u, _ = userRepo.FindUserByEmail(gi.Email)
+    }
 
-	// 6) Create JWT
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		logrus.Error("missing JWT_SECRET env")
-		utils.Error(w, http.StatusInternalServerError, "server misconfigured")
-		return
-	}
-	claims := jwt.MapClaims{
-		"user_id":      u.ID.Hex(),
-		"email":        u.Email,
-		"role":         u.Role,
-		"account_type": u.AccountType,
-		"exp":          time.Now().Add(72 * time.Hour).Unix(),
-	}
-	tokenJwt := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := tokenJwt.SignedString([]byte(jwtSecret))
-	if err != nil {
-		logrus.Error("failed to sign jwt: ", err)
-		utils.Error(w, http.StatusInternalServerError, "failed to sign token")
-		return
-	}
+    jwtSecret := os.Getenv("JWT_SECRET")
+    if jwtSecret == "" {
+        logrus.Error("missing JWT_SECRET env")
+        utils.Error(w, http.StatusInternalServerError, "server misconfigured")
+        return
+    }
+    claims := jwt.MapClaims{
+        "user_id":      u.ID.Hex(),
+        "email":        u.Email,
+        "role":         u.Role,
+        "account_type": u.AccountType,
+        "exp":          time.Now().Add(72 * time.Hour).Unix(),
+    }
+    tokenJwt := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    signedToken, err := tokenJwt.SignedString([]byte(jwtSecret))
+    if err != nil {
+        logrus.Error("failed to sign jwt: ", err)
+        utils.Error(w, http.StatusInternalServerError, "failed to sign token")
+        return
+    }
 
-	// 7) Redirect to frontend with token + role + account_type
-frontendURL := os.Getenv("FRONTEND_URL") // e.g. http://localhost:5173/callback
-callbackPath := "/CallbackPage"
-redirectURL := fmt.Sprintf("%s%s?token=%s&role=%s&account_type=%s",
-    frontendURL,
-	callbackPath,
-    url.QueryEscape(signedToken),
-    url.QueryEscape(u.Role),
-    url.QueryEscape(u.AccountType),
-)
+    // Set HttpOnly cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "jwt",
+        Value:    signedToken,
+        Path:     "/",
+        Expires:  time.Now().Add(72 * time.Hour),
+        HttpOnly: true,
+        Secure:   os.Getenv("ENVIRONMENT") == "production",
+        SameSite: http.SameSiteStrictMode,
+    })
 
-http.Redirect(w, r, redirectURL, http.StatusFound)
-
-	
+    // Redirect to frontend callback
+    frontendURL := os.Getenv("FRONTEND_URL")
+    callbackPath := "/CallbackPage"
+    redirectURL := fmt.Sprintf("%s%s", frontendURL, callbackPath)
+    http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
 
 
 
 func (ac *AuthController) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-    response := map[string]string{"message": "Logged out successfully"}
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
+    http.SetCookie(w, &http.Cookie{
+        Name:     "jwt",
+        Value:    "",
+        Path:     "/",
+        Expires:  time.Now().Add(-1 * time.Hour),
+        HttpOnly: true,
+        Secure:   os.Getenv("ENVIRONMENT") == "production",
+        SameSite: http.SameSiteStrictMode,
+    })
+    utils.JSON(w, http.StatusOK, map[string]string{"message": "Logged out successfully"})
 }

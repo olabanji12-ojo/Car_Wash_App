@@ -19,6 +19,39 @@ import (
 // If a business signs up, a corresponding business document is created.
 // If a worker is added to a business, a user is created with the business’s CarWashID linked.
 
+// UserAddress represents a physical address with geolocation
+type UserAddress struct {
+    // Unique identifier for the address (can be "home", "work", or a UUID)
+    ID          string    `bson:"_id" json:"id"`
+    // Type of address (home, work, other)
+    Type        string    `bson:"type" json:"type"`
+    // Full address line
+    AddressLine string    `bson:"address_line" json:"address_line"`
+    City        string    `bson:"city" json:"city"`
+    State       string    `bson:"state" json:"state"`
+    Country     string    `bson:"country" json:"country"`
+    // Geographic coordinates for the address
+    Location    GeoPoint  `bson:"location" json:"-"`
+    // Whether this is the default address
+    IsDefault   bool      `bson:"is_default" json:"is_default"`
+    // When the address was created
+    CreatedAt   time.Time `bson:"created_at" json:"created_at"`
+
+	Label       string    `bson:"label,omitempty" json:"label,omitempty"`
+}
+
+
+// Validate ensures the address has required fields
+func (a UserAddress) Validate() error {
+    return validation.ValidateStruct(&a,
+        validation.Field(&a.Type, validation.Required, validation.In("home", "work", "other")),
+        validation.Field(&a.AddressLine, validation.Required, validation.Length(5, 200)),
+        validation.Field(&a.City, validation.Required, validation.Length(2, 100)),
+        validation.Field(&a.Country, validation.Required, validation.Length(2, 100)),
+        validation.Field(&a.Location, validation.Required),
+    )
+}
+
 
 type User struct {
 
@@ -41,6 +74,12 @@ type User struct {
 	UpdatedAt     time.Time           `bson:"updated_at" json:"updated_at"`
 	ActiveOrders  []primitive.ObjectID `bson:"active_orders,omitempty" json:"active_orders,omitempty"` 
 	
+	// List of user's saved addresses
+    Addresses      []UserAddress `bson:"addresses,omitempty" json:"addresses,omitempty"`
+    // ID of the default address (references an ID in Addresses)
+    DefaultAddressID *string      `bson:"default_address_id,omitempty" json:"default_address_id,omitempty"`
+    // Last known location of the user (for nearby searches)
+    LastLocation   *GeoPoint     `bson:"last_location,omitempty" json:"-"`
 }
 
 
@@ -48,7 +87,7 @@ type User struct {
 func (u User) Validate() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(&u.Name, validation.Required, validation.Length(2, 50)),
-		// validation.Field(&u.Email, validation.Required, is.Email),
+		validation.Field(&u.Email, validation.Required),
 		validation.Field(&u.Password, validation.Required, validation.Length(6, 100)),
 		validation.Field(&u.Role, validation.Required, validation.In(
 			utils.ROLE_CAR_OWNER,

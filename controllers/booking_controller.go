@@ -19,10 +19,14 @@ import (
 
 type BookingController struct {
 	BookingService *services.BookingService
+	CarWashService *services.CarWashService
 }
 
-func NewBookingController(bookingService *services.BookingService) *BookingController {
-	return &BookingController{BookingService: bookingService}
+func NewBookingController(bookingService *services.BookingService, carWashService *services.CarWashService) *BookingController {
+	return &BookingController{
+		BookingService: bookingService,
+		CarWashService: carWashService,
+	}
 }
 
 
@@ -298,5 +302,46 @@ func (bc *BookingController) GetBookingsByCarwashWithFiltersHandler(w http.Respo
     logrus.Info("Bookings found count:", len(bookings))
 
     utils.JSON(w, http.StatusOK, map[string]interface{}{"data": bookings})
+}
+
+
+func (bc *BookingController) GetAvailableSlotsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	carwashID := vars["carwash_id"]
+	if carwashID == "" {
+		logrus.Error("Missing carwash_id parameter")
+		utils.Error(w, http.StatusBadRequest, "Missing carwash_id parameter")
+		return
+	}
+
+	dateStr := r.URL.Query().Get("date")
+	if dateStr == "" {
+		logrus.Error("Missing date parameter")
+		utils.Error(w, http.StatusBadRequest, "Missing date parameter")
+		return
+	}
+
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		logrus.Error("Invalid date format: ", err)
+		utils.Error(w, http.StatusBadRequest, "Invalid date format, use YYYY-MM-DD")
+		return
+	}
+
+	carwashObjID, err := primitive.ObjectIDFromHex(carwashID)
+	if err != nil {
+		logrus.Error("Invalid carwash ID format: ", err)
+		utils.Error(w, http.StatusBadRequest, "Invalid carwash ID format")
+		return
+	}
+
+	slots, err := bc.CarWashService.GetAvailableSlots(carwashObjID, date)
+	if err != nil {
+		logrus.Error("Failed to retrieve available slots: ", err)
+		utils.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, slots)
 }
 

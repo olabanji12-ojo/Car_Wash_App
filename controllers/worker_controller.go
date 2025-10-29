@@ -11,14 +11,26 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 )
 
+type WorkerController struct {
+	WorkerService *services.WorkerService
+	UserService   *services.UserService
+}
+
+func NewWorkerController(workerService *services.WorkerService, userService *services.UserService) *WorkerController {
+	return &WorkerController{
+		WorkerService: workerService,
+		UserService:   userService,
+	}
+}
+
 // CreateWorkersForBusiness creates a new worker for a business
-func CreateWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) CreateWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 	// Get authenticated business user
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
 	requesterUserID := authCtx.UserID
 
 	// Get requester (business owner) details
-	requester, err := services.GetUserByID(requesterUserID)
+	requester, err := wc.UserService.GetUserByID(requesterUserID)
 	if err != nil {
 		utils.Error(w, http.StatusUnauthorized, "Invalid user")
 		return
@@ -32,7 +44,7 @@ func CreateWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create worker using service
-	err = services.CreateWorkerService(*requester, workerInput)
+	err = wc.WorkerService.CreateWorker(*requester, workerInput)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -43,22 +55,21 @@ func CreateWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func GetWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) GetWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	businessID := params["id"]
 
-	workers, err := services.GetWorkersByBusinessID(businessID)
+	workers, err := wc.WorkerService.GetWorkersByBusinessID(businessID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	utils.JSON(w, http.StatusOK, workers)
-
 }
 
 // UpdateWorkerStatus handles status update (e.g., active, on_break, busy)
-func UpdateWorkerStatus(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) UpdateWorkerStatus(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	workerID := params["id"]
 
@@ -75,7 +86,7 @@ func UpdateWorkerStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.SetWorkerStatus(workerID, data.Status); err != nil {
+	if err := wc.WorkerService.SetWorkerStatus(workerID, data.Status); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -84,11 +95,11 @@ func UpdateWorkerStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAvailableWorkersForBusiness handles getting available workers for assignment
-func GetAvailableWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) GetAvailableWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	businessID := params["id"]
 
-	workers, err := services.GetAvailableWorkersForAssignment(businessID)
+	workers, err := wc.WorkerService.GetAvailableWorkersForAssignment(businessID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -98,7 +109,7 @@ func GetAvailableWorkersForBusiness(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateWorkerWorkStatus handles worker operational status update (online, offline, busy, on_break)
-func UpdateWorkerWorkStatus(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) UpdateWorkerWorkStatus(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	workerID := params["id"]
 
@@ -110,7 +121,7 @@ func UpdateWorkerWorkStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.SetWorkerWorkStatus(workerID, data.WorkStatus); err != nil {
+	if err := wc.WorkerService.SetWorkerWorkStatus(workerID, data.WorkStatus); err != nil {
 		utils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -119,7 +130,7 @@ func UpdateWorkerWorkStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 // AssignWorkerToOrder handles manual worker assignment to orders
-func AssignWorkerToOrder(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) AssignWorkerToOrder(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		WorkerID string `json:"worker_id"`
 		OrderID  string `json:"order_id"`
@@ -134,7 +145,7 @@ func AssignWorkerToOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.AssignWorkerToOrder(data.WorkerID, data.OrderID); err != nil {
+	if err := wc.WorkerService.AssignWorkerToOrder(data.WorkerID, data.OrderID); err != nil {
 		utils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -147,7 +158,7 @@ func AssignWorkerToOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // RemoveWorkerFromOrder handles removing/unassigning worker from order
-func RemoveWorkerFromOrder(w http.ResponseWriter, r *http.Request) {
+func (wc *WorkerController) RemoveWorkerFromOrder(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		WorkerID string `json:"worker_id"`
 		OrderID  string `json:"order_id"`
@@ -162,7 +173,7 @@ func RemoveWorkerFromOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := services.RemoveWorkerFromOrder(data.WorkerID, data.OrderID); err != nil {
+	if err := wc.WorkerService.RemoveWorkerFromOrder(data.WorkerID, data.OrderID); err != nil {
 		utils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}

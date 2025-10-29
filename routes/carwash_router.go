@@ -15,31 +15,24 @@ func NewCarWashRouter(carwashController controllers.CarWashController) *CarWashR
 }
 
 func (cwr *CarWashRouter) CarwashRoutes(router *mux.Router) {
-	carwash := router.PathPrefix("/api/carwashes").Subrouter()
-	carwash.Use(middleware.AuthMiddleware)
-
-	// Public routes
-	carwash.HandleFunc("", cwr.carwashController.GetAllActiveCarwashesHandler).Methods("GET")
-	carwash.HandleFunc("/{id}", cwr.carwashController.GetCarwashByIDHandler).Methods("GET")
-	carwash.HandleFunc("/nearby/", cwr.carwashController.GetNearbyCarwashesHandler).Methods("GET")
-
-
-	// Owner-specific routes (authenticated)
-	carwash.HandleFunc("", cwr.carwashController.CreateCarwashHandler).Methods("POST")
-	carwash.HandleFunc("/{id}", cwr.carwashController.UpdateCarwashHandler).Methods("PUT")
-	carwash.HandleFunc("/{id}/status", cwr.carwashController.SetCarwashStatusHandler).Methods("PATCH")
-	carwash.HandleFunc("/{id}/location", cwr.carwashController.UpdateCarwashLocationHandler).Methods("PUT")
-	carwash.HandleFunc("/owner/{owner_id}", cwr.carwashController.GetCarwashesByOwnerIDHandler).Methods("GET")
-	carwash.HandleFunc("/carwash/{id}/onboarding", cwr.carwashController.CompleteOnboarding).Methods("PUT")
-
-	// Service management routes
-	carwash.HandleFunc("/services/{carwashid}", cwr.carwashController.CreateServiceHandler).Methods("POST")
-	carwash.HandleFunc("/services/carwash/{carwashid}", cwr.carwashController.GetServicesHandler).Methods("GET")
-
+	// Public routes (no auth)
+	publicCarwash := router.PathPrefix("/api/carwashes").Subrouter()
+	publicCarwash.HandleFunc("", cwr.carwashController.GetAllActiveCarwashesHandler).Methods("GET")
+	publicCarwash.HandleFunc("/{id}", cwr.carwashController.GetCarwashByIDHandler).Methods("GET")
+	publicCarwash.HandleFunc("/nearby/", cwr.carwashController.GetNearbyCarwashesHandler).Methods("GET")
+	publicCarwash.HandleFunc("/services/carwash/{carwashid}", cwr.carwashController.GetServicesHandler).Methods("GET")
+    publicCarwash.HandleFunc("/services/{carwashid}/{serviceid}", cwr.carwashController.GetServiceByIDHandler).Methods("GET")
+	// Protected routes (require auth)
+	protectedCarwash := router.PathPrefix("/api/carwashes").Subrouter()
+	protectedCarwash.Use(middleware.AuthMiddleware)
+	protectedCarwash.HandleFunc("", cwr.carwashController.CreateCarwashHandler).Methods("POST")
+	protectedCarwash.HandleFunc("/{id}", cwr.carwashController.UpdateCarwashHandler).Methods("PUT")
+	protectedCarwash.HandleFunc("/{id}/status", cwr.carwashController.SetCarwashStatusHandler).Methods("PATCH")
+	protectedCarwash.HandleFunc("/{id}/location", cwr.carwashController.UpdateCarwashLocationHandler).Methods("PUT")
+	protectedCarwash.HandleFunc("/owner/{owner_id}", cwr.carwashController.GetCarwashesByOwnerIDHandler).Methods("GET")
+	protectedCarwash.HandleFunc("/carwash/{id}/onboarding", cwr.carwashController.CompleteOnboarding).Methods("PUT")
+	protectedCarwash.HandleFunc("/services/{carwashid}", cwr.carwashController.CreateServiceHandler).Methods("POST")
+	protectedCarwash.HandleFunc("/services/{carwashid}/{serviceid}", cwr.carwashController.UpdateServiceHandler).Methods("PUT")
+	protectedCarwash.HandleFunc("/services/{carwashid}/{serviceid}", cwr.carwashController.DeleteServiceHandler).Methods("DELETE")
 	
-
-	carwash.HandleFunc("/services/{carwashid}", cwr.carwashController.UpdateServiceHandler).Methods("PUT")
-	carwash.HandleFunc("/services/{carwashid}", cwr.carwashController.DeleteServiceHandler).Methods("DELETE")
 }
-
-

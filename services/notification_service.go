@@ -11,7 +11,9 @@ import (
 )   
 
 // NotificationService handles all notification operations
-type NotificationService struct{}
+type NotificationService struct{
+	userRepo *repositories.UserRepository
+}
 
 // CreateNotification creates a notification and optionally sends email
 func (ns *NotificationService) CreateNotification(userID primitive.ObjectID, title, message, notificationType string, sendEmail bool) error {
@@ -44,7 +46,7 @@ func (ns *NotificationService) CreateNotification(userID primitive.ObjectID, tit
 // sendEmailAsync sends email in background (like Django's async tasks)
 func (ns *NotificationService) sendEmailAsync(notificationID, userID primitive.ObjectID, title, message string) {
 	// Get user email
-	user, err := repositories.FindUserByID(userID)
+	user, err := ns.userRepo.FindUserByID(userID)
 	if err != nil {
 		log.Printf("Failed to get user for email notification: %v", err)
 		return
