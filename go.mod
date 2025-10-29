@@ -10,26 +10,41 @@ require (
 	github.com/cloudinary/cloudinary-go/v2 v2.12.0 // indirect
 	github.com/coreos/go-oidc/v3 v3.15.0 // indirect
 	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/gin-contrib/sessions v0.0.0-20190101140330-dc5246754963 // indirect
+	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
+	github.com/gin-gonic/gin v1.3.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
+	github.com/gorilla/context v1.1.1 // indirect
+	github.com/gorilla/csrf v1.7.3 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/gorilla/sessions v1.1.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
 	github.com/unrolled/secure v1.17.0 // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
+	github.com/utrack/gin-csrf v0.0.0-20190424104817-40fb8d2c8fca // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
@@ -51,4 +66,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
+	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

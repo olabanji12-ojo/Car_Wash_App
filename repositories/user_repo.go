@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"fmt"
 )
 
 type UserRepository struct {
@@ -89,4 +90,204 @@ func (ur *UserRepository) UpdateUserCarwashID(userID, carwashID primitive.Object
 
 	_, err := collection.UpdateOne(context.TODO(), filter, update)
 	return err
+}
+
+
+// AddAddress adds a new address to a user's profile
+func (ur *UserRepository) AddAddress(userID primitive.ObjectID, address models.UserAddress) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    // Set created at time
+    address.CreatedAt = time.Now()
+
+    // Get the user to check for existing default address
+    user, err := ur.FindUserByID(userID)
+    if err != nil {
+        return err
+    }
+
+    // If no default address exists, make this one default
+    if user.DefaultAddressID == nil || *user.DefaultAddressID == "" {
+        address.IsDefault = true
+    }
+
+    // Add the address to the user's addresses array
+    update := bson.M{
+        "$push": bson.M{"addresses": address},
+        "$set":  bson.M{"updated_at": time.Now()},
+    }
+
+    // If this is the first address or it's marked as default, update default address
+    if address.IsDefault {
+        update["$set"].(bson.M)["default_address_id"] = address.ID
+    }
+
+    _, err = ur.db.Collection("users").UpdateByID(ctx, userID, update)
+    return err
+}
+
+// UpdateAddress updates an existing address
+func (ur *UserRepository) UpdateAddress(userID primitive.ObjectID, addressID string, updates map[string]interface{}) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    // Build the update query
+    setValues := bson.M{"updated_at": time.Now()}
+    for key, value := range updates {
+        setValues["addresses.$."+key] = value
+    }
+
+    // Find the user and update the specific address
+    filter := bson.M{
+        "_id":           userID,
+        "addresses._id": addressID,
+    }
+
+    update := bson.M{
+        "$set": setValues,
+    }
+
+    result, err := ur.db.Collection("users").UpdateOne(ctx, filter, update)
+    if err != nil {
+        return err
+    }
+    if result.MatchedCount == 0 {
+        return fmt.Errorf("address not found")
+    }
+
+    // If this address is being set as default, update the default_address_id
+    if isDefault, ok := updates["is_default"].(bool); ok && isDefault {
+        _, err = ur.db.Collection("users").UpdateOne(
+            ctx,
+            bson.M{"_id": userID},
+            bson.M{"$set": bson.M{"default_address_id": addressID}},
+        )
+    }
+
+    return err
+}
+
+// DeleteAddress removes an address from a user's profile
+func (ur *UserRepository) DeleteAddress(userID primitive.ObjectID, addressID string) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
+
+    // Start a session for transaction
+    session, err := ur.db.Client().StartSession()
+    if err != nil {
+        return err
+    }
+    defer session.EndSession(ctx)
+
+    // Use transaction to ensure data consistency
+    _, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+        // Get the user to check if this is the default address
+        var user models.User
+        err := ur.db.Collection("users").FindOne(sessCtx, bson.M{"_id": userID}).Decode(&user)
+        if err != nil {
+            return nil, err
+        }
+
+        // Remove the address
+        update := bson.M{
+            "$pull": bson.M{"addresses": bson.M{"_id": addressID}},
+            "$set":  bson.M{"updated_at": time.Now()},
+        }
+        
+        _, err = ur.db.Collection("users").UpdateOne(sessCtx, bson.M{"_id": userID}, update)
+        if err != nil {
+            return nil, err
+        }
+
+        // If this was the default address, update the default
+        if user.DefaultAddressID != nil && *user.DefaultAddressID == addressID {
+            // Get the updated user to check remaining addresses
+            var updatedUser models.User
+            err := ur.db.Collection("users").FindOne(sessCtx, bson.M{"_id": userID}).Decode(&updatedUser)
+            if err != nil {
+                return nil, err
+            }
+
+            if len(updatedUser.Addresses) > 1 { // More than one because we haven't removed the address yet
+                // Set the first address that's not being deleted as default
+                var newDefault string
+                for _, addr := range updatedUser.Addresses {
+                    if addr.ID != addressID {
+                        newDefault = addr.ID
+                        break
+                    }
+                }
+                
+                if newDefault != "" {
+                    _, err = ur.db.Collection("users").UpdateOne(
+                        sessCtx,
+                        bson.M{"_id": userID},
+                        bson.M{"$set": bson.M{"default_address_id": newDefault}},
+                    )
+                }
+            } else {
+                // No addresses left, clear the default
+                _, err = ur.db.Collection("users").UpdateOne(
+                    sessCtx,
+                    bson.M{"_id": userID},
+                    bson.M{"$unset": bson.M{"default_address_id": ""}},
+                )
+            }
+            if err != nil {
+                return nil, err
+            }
+        }
+
+        return nil, nil
+    })
+
+    return err
+}
+
+// GetUserAddresses retrieves all addresses for a user
+func (ur *UserRepository) GetUserAddresses(userID primitive.ObjectID) ([]models.UserAddress, error) {
+    user, err := ur.FindUserByID(userID)
+    if err != nil {
+        return nil, err
+    }
+    return user.Addresses, nil
+}
+
+// UpdateUserLocation updates the user's last known location
+func (ur *UserRepository) UpdateUserLocation(userID primitive.ObjectID, location models.GeoPoint) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    _, err := ur.db.Collection("users").UpdateOne(
+        ctx,
+        bson.M{"_id": userID},
+        bson.M{
+            "$set": bson.M{
+                "last_location": location,
+                "updated_at":    time.Now(),
+            },
+        },
+    )
+    return err
+}
+
+// GetDefaultAddress returns the user's default address
+func (ur *UserRepository) GetDefaultAddress(userID primitive.ObjectID) (*models.UserAddress, error) {
+    user, err := ur.FindUserByID(userID)
+    if err != nil {
+        return nil, err
+    }
+
+    if user.DefaultAddressID == nil || *user.DefaultAddressID == "" {
+        return nil, fmt.Errorf("no default address found")
+    }
+
+    for _, addr := range user.Addresses {
+        if addr.ID == *user.DefaultAddressID {
+            return &addr, nil
+        }
+    }
+
+    return nil, fmt.Errorf("default address not found in addresses array")
 }

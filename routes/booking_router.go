@@ -6,51 +6,47 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 )
 
-
 type BookingRouter struct {
 	bookingController controllers.BookingController
 }
 
 func NewBookingRouter(bookingController controllers.BookingController) *BookingRouter {
-
-    return &BookingRouter{bookingController: bookingController}
-
+	return &BookingRouter{bookingController: bookingController}
 }
- 
 
-func(br *BookingRouter) BookingRoutes(router *mux.Router) {
+func (br *BookingRouter) BookingRoutes(router *mux.Router) {
+	// Public routes (no auth)
+	publicBooking := router.PathPrefix("/api/bookings").Subrouter()
+	publicBooking.HandleFunc("/carwash/{carwash_id}/slots", br.bookingController.GetAvailableSlotsHandler).Methods("GET")
 
-	booking := router.PathPrefix("/api/bookings").Subrouter()
+	// Protected routes (require auth)
+	protectedBooking := router.PathPrefix("/api/bookings").Subrouter()
+	protectedBooking.Use(middleware.AuthMiddleware)
 
-	//  JWT Middleware for all protected booking routes
-	booking.Use(middleware.AuthMiddleware)
-    
 	// POST /api/bookings
-	booking.HandleFunc("", br.bookingController.CreateBookingHandler).Methods("POST") // tested 
-    
-	// GET /api/bookings/{id}
-	booking.HandleFunc("/{id}", br.bookingController.GetBookingByIDHandler).Methods("GET") // tested 
-    
-	// GET /api/bookings/user/me
-	booking.HandleFunc("/user/me", br.bookingController.GetMyBookingsHandler).Methods("GET") // tested 
-    
-	// GET /api/bookings/carwash/{carwash_id}
-	booking.HandleFunc("/carwash/{carwash_id}", br.bookingController.GetBookingsByCarwashHandler).Methods("GET") // tested 
+	protectedBooking.HandleFunc("", br.bookingController.CreateBookingHandler).Methods("POST")
 
-    // PUT/api/bookings/{id}
-    booking.HandleFunc("/booking/{bookingID}", br.bookingController.UpdateBookingHandler).Methods("PUT")
-   
+	// GET /api/bookings/{id}
+	protectedBooking.HandleFunc("/{id}", br.bookingController.GetBookingByIDHandler).Methods("GET")
+
+	// GET /api/bookings/user/me
+	protectedBooking.HandleFunc("/user/me", br.bookingController.GetMyBookingsHandler).Methods("GET")
+
+	// GET /api/bookings/carwash/{carwash_id}
+	protectedBooking.HandleFunc("/carwash/{carwash_id}", br.bookingController.GetBookingsByCarwashHandler).Methods("GET")
+
+	// PUT /api/bookings/{id}
+	protectedBooking.HandleFunc("/{id}", br.bookingController.UpdateBookingHandler).Methods("PUT")
+
 	// PATCH /api/bookings/{id}/status
-	booking.HandleFunc("/{id}/status", br.bookingController.UpdateBookingStatusHandler).Methods("PATCH") // tested 
+	protectedBooking.HandleFunc("/{id}/status", br.bookingController.UpdateBookingStatusHandler).Methods("PATCH")
 
 	// DELETE /api/bookings/{id}
-	booking.HandleFunc("/{id}", br.bookingController.CancelBookingHandler).Methods("DELETE") // tested 
+	protectedBooking.HandleFunc("/{id}", br.bookingController.CancelBookingHandler).Methods("DELETE")
 
-	// Optional: GET /api/bookings/carwash/{carwash_id}/date?date=2025-07-08
-	booking.HandleFunc("/carwash/{carwash_id}/date", br.bookingController.GetBookingsByDateHandler).Methods("GET") // tested
+	// GET /api/bookings/carwash/{carwash_id}/date?date=YYYY-MM-DD
+	protectedBooking.HandleFunc("/carwash/{carwash_id}/date", br.bookingController.GetBookingsByDateHandler).Methods("GET")
 
-	booking.HandleFunc("/carwash/{carwash_id}/filter", br.bookingController.GetBookingsByCarwashWithFiltersHandler).Methods("GET")
-    
-	
+	// GET /api/bookings/carwash/{carwash_id}/filter
+	protectedBooking.HandleFunc("/carwash/{carwash_id}/filter", br.bookingController.GetBookingsByCarwashWithFiltersHandler).Methods("GET")
 }
-

@@ -13,6 +13,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	
 )
 
@@ -127,26 +128,49 @@ func (cs *CarController)GetMyCarsHandler(w http.ResponseWriter, r *http.Request)
 }
 
 // 3. UpdateCarHandler - PUT /api/cars/{carID} - UPDATED TO HANDLE IMAGE UPLOAD
-func (cs *CarController)UpdateCarHandler(w http.ResponseWriter, r *http.Request) {
-	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	userID := authCtx.UserID
-	carID := mux.Vars(r)["carID"]
+func (cs *CarController) UpdateCarHandler(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("UpdateCarHandler hit")
 
-	// Check Content-Type to determine how to parse request
+	// Extract user ID from auth context
+	authCtx, ok := r.Context().Value("auth").(middleware.AuthContext)
+	if !ok {
+		logrus.Error("Missing auth context")
+		utils.Error(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID := authCtx.UserID
+
+	// Extract car ID from URL
+	carID := mux.Vars(r)["carID"]
+	if carID == "" {
+		logrus.Error("Missing car ID")
+		utils.Error(w, http.StatusBadRequest, "Missing car ID")
+		return
+	}
+
+	// Validate ObjectID
+	_, err := primitive.ObjectIDFromHex(carID)
+	if err != nil {
+		logrus.Error("Invalid car ID format: ", err)
+		utils.Error(w, http.StatusBadRequest, "Invalid car ID")
+		return
+	}
+
+	// Check Content-Type
 	contentType := r.Header.Get("Content-Type")
-	
-	// If it's multipart form data (file upload), handle differently
-	if contentType != "" && contentType[:19] == "multipart/form-data" {
+	isMultipart := strings.HasPrefix(contentType, "multipart/form-data")
+
+	if isMultipart {
 		// Parse multipart form (32MB max memory)
 		err := r.ParseMultipartForm(32 << 20) // 32MB
 		if err != nil {
+			logrus.Error("Failed to parse multipart form: ", err)
 			utils.Error(w, http.StatusBadRequest, "Failed to parse form data")
 			return
 		}
 
 		// Extract form fields as updates map
 		updates := make(map[string]interface{})
-		
 		if model := r.FormValue("model"); model != "" {
 			updates["model"] = model
 		}
@@ -163,9 +187,7 @@ func (cs *CarController)UpdateCarHandler(w http.ResponseWriter, r *http.Request)
 		// Extract file if present
 		file, header, err := r.FormFile("profile_photo")
 		var carPhotoFile *services.CarPhotoFile
-		
 		if err == nil {
-			// File was uploaded successfully
 			defer file.Close()
 			carPhotoFile = &services.CarPhotoFile{
 				File:     file,
@@ -173,37 +195,43 @@ func (cs *CarController)UpdateCarHandler(w http.ResponseWriter, r *http.Request)
 				Size:     header.Size,
 			}
 		} else if err != http.ErrMissingFile {
-			// Error other than missing file
+			logrus.Error("Error processing uploaded file: ", err)
 			utils.Error(w, http.StatusBadRequest, "Error processing uploaded file")
 			return
 		}
-		// If err == http.ErrMissingFile, that's fine - no file uploaded
 
 		// Update car with photo
 		err = cs.CarService.UpdateCarWithPhoto(userID, carID, updates, carPhotoFile)
 		if err != nil {
+			logrus.Error("Failed to update car with photo: ", err)
 			utils.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		utils.JSON(w, http.StatusOK, map[string]string{"message": "Car updated successfully"})
-
-	} else {
-		// Handle as JSON (backward compatibility)
+	} else if contentType == "application/json" {
+		// Handle JSON request
 		var updates map[string]interface{}
 		if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+			logrus.Error("Failed to parse JSON: ", err)
 			utils.Error(w, http.StatusBadRequest, "Invalid update data")
 			return
 		}
+		defer r.Body.Close()
 
-		// Update car without photo (original method)
+		// Update car without photo
 		err := cs.CarService.UpdateCar(userID, carID, updates)
 		if err != nil {
+			logrus.Error("Failed to update car: ", err)
 			utils.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		utils.JSON(w, http.StatusOK, map[string]string{"message": "Car updated successfully"})
+	} else {
+		logrus.Error("Unsupported Content-Type: ", contentType)
+		utils.Error(w, http.StatusUnsupportedMediaType, "Content-Type must be application/json or multipart/form-data")
+		return
 	}
 }
 

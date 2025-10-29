@@ -1,7 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
+
+	"encoding/json" 
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,20 +12,22 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/sirupsen/logrus"
-	"reflect"
+	// "reflect"
 	"strconv"
 	"io"
 	"bytes"
 	"fmt"
 	
+    
 )
 
 type CarWashController struct {
 	CarWashService *services.CarWashService
+	UserService    *services.UserService
 }
 
-func NewCarWashController(carwashService *services.CarWashService) *CarWashController {
-	return &CarWashController{CarWashService: carwashService}
+func NewCarWashController(carwashService *services.CarWashService, userService *services.UserService) *CarWashController {
+	return &CarWashController{CarWashService: carwashService, UserService: userService}
 }
 
 func (cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +68,7 @@ func (cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	err = services.UpdateUserCarwashID(objID, carwash.ID)
+	err = cwc.UserService.UpdateUserCarwashID(objID, carwash.ID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Failed to assign carwash to user")
 		return
@@ -168,63 +171,69 @@ func (cwc *CarWashController) GetCarwashesByOwnerIDHandler(w http.ResponseWriter
 }
 
 func (cwc *CarWashController) GetNearbyCarwashesHandler(w http.ResponseWriter, r *http.Request) {
-	latStr := r.URL.Query().Get("lat")
-	lngStr := r.URL.Query().Get("lng")
+    // 1. Get and validate query parameters
+    latStr := r.URL.Query().Get("lat")
+    lngStr := r.URL.Query().Get("lng")
+    logrus.Info("🔍 GetNearbyCarwashesHandler called with params: lat=", latStr, ", lng=", lngStr)
 
-	logrus.Info("🔍 GetNearbyCarwashesHandler called with params: lat=", latStr, ", lng=", lngStr)
+    // 2. Validate required parameters
+    if latStr == "" || lngStr == "" {
+        logrus.Error("❌ Missing required parameters: lat and lng")
+        utils.Error(w, http.StatusBadRequest, "Missing required parameters: lat and lng")
+        return
+    }
 
-	if latStr == "" || lngStr == "" {
-		logrus.Error("❌ Missing required parameters: lat and lng")
-		utils.Error(w, http.StatusBadRequest, "Missing required parameters: lat and lng")
-		return
+    // 3. Parse and validate latitude
+    lat, err := strconv.ParseFloat(latStr, 64)
+    if err != nil {
+        logrus.Error("❌ Invalid latitude format: ", err)
+        utils.Error(w, http.StatusBadRequest, "Invalid latitude format")
+        return
+    }
+
+    // 4. Parse and validate longitude
+    lng, err := strconv.ParseFloat(lngStr, 64)
+    if err != nil {
+        logrus.Error("❌ Invalid longitude format: ", err)
+        utils.Error(w, http.StatusBadRequest, "Invalid longitude format")
+        return
+    }
+
+    // 5. Validate coordinate ranges
+    if lat < -90 || lat > 90 {
+        logrus.Error("❌ Invalid latitude range: ", lat)
+        utils.Error(w, http.StatusBadRequest, "Latitude must be between -90 and 90")
+        return
+    }
+    if lng < -180 || lng > 180 {
+        logrus.Error("❌ Invalid longitude range: ", lng)
+        utils.Error(w, http.StatusBadRequest, "Longitude must be between -180 and 180")
+        return
+    }
+
+    logrus.Info("✅ Valid coordinates received: lat=", lat, ", lng=", lng)
+
+    // 6. Call the service layer
+    logrus.Info("🔍 Fetching nearby carwashes...")
+    result, err := cwc.CarWashService.GetNearbyCarwashesForUser(lat, lng)
+    if err != nil {
+        logrus.Error("❌ Failed to fetch nearby carwashes: ", err)
+        utils.Error(w, http.StatusInternalServerError, "Failed to fetch nearby carwashes")
+        return
+    }
+
+    // 7. Log success and return the response
+    if count, ok := result["count"].(int); ok {
+        logrus.Infof("✅ Successfully found %d carwashes", count)
+    }
+	
+    
+    // 8. Return the response
+	responseData := map[string]interface{}{
+		"message": "Nearby carwashes retrieved successfully",
+		"data":    result,
 	}
-
-	lat, err := strconv.ParseFloat(latStr, 64)
-	if err != nil {
-		logrus.Error("❌ Invalid latitude format: ", err)
-		utils.Error(w, http.StatusBadRequest, "Invalid latitude format")
-		return
-	}
-
-	lng, err := strconv.ParseFloat(lngStr, 64)
-	if err != nil {
-		logrus.Error("❌ Invalid longitude format: ", err)
-		utils.Error(w, http.StatusBadRequest, "Invalid longitude format")
-		return
-	}
-
-	if lat < -90 || lat > 90 {
-		logrus.Error("❌ Invalid latitude range: ", lat)
-		utils.Error(w, http.StatusBadRequest, "Latitude must be between -90 and 90")
-		return
-	}
-	if lng < -180 || lng > 180 {
-		logrus.Error("❌ Invalid longitude range: ", lng)
-		utils.Error(w, http.StatusBadRequest, "Longitude must be between -180 and 180")
-		return
-	}
-
-	logrus.Info("✅ Parsed coordinates: lat=", lat, ", lng=", lng)
-
-	logrus.Info("🔍 Calling CarWashService.GetNearbyCarwashesForUser...")
-	result, err := cwc.CarWashService.GetNearbyCarwashesForUser(lat, lng)
-	if err != nil {
-		logrus.Error("❌ Service error: ", err)
-		utils.Error(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	resultJSON, marshalErr := json.MarshalIndent(result, "", "  ")
-	if marshalErr != nil {
-		logrus.Error("❌ Failed to marshal result for logging: ", marshalErr)
-	} else {
-		logrus.Info("✅ Service returned result: ", string(resultJSON))
-	}
-
-	logrus.Info("📊 Result summary - Type: ", reflect.TypeOf(result), ", Value: ", result)
-
-	logrus.Info("✅ Sending successful response")
-	utils.JSON(w, http.StatusOK, result)
+	utils.JSON(w, http.StatusOK, responseData) 
 }
 
 func (cwc *CarWashController) UpdateCarwashLocationHandler(w http.ResponseWriter, r *http.Request) {
@@ -338,27 +347,45 @@ func (cwc *CarWashController) GetServicesHandler(w http.ResponseWriter, r *http.
     utils.JSON(w, http.StatusOK, services)
 }
 
+func (cwc *CarWashController) GetServiceByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	carwashID := vars["carwashid"]
+	serviceID := vars["serviceid"]
+	if carwashID == "" || serviceID == "" {
+		logrus.Error("Missing carwash_id or service_id parameter")
+		utils.Error(w, http.StatusBadRequest, "Missing carwash_id or service_id parameter")
+		return
+	}
+
+	service, err := cwc.CarWashService.GetServiceByID(carwashID, serviceID)
+	if err != nil {
+		logrus.Error("Failed to retrieve service: ", err)
+		if err.Error() == "carwash not found" || err.Error() == "service not found" {
+			utils.Error(w, http.StatusNotFound, err.Error())
+		} else {
+			utils.Error(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, service)
+}
+
 
 // UpdateServiceHandler updates an existing service for a carwash
 func (cwc *CarWashController) UpdateServiceHandler(w http.ResponseWriter, r *http.Request) {
-	serviceID := r.URL.Query().Get("service_id")
-	if serviceID == "" {
-		logrus.Error("Missing serviceId parameter")
-		utils.Error(w, http.StatusBadRequest, "Missing serviceId parameter")
+	vars := mux.Vars(r)
+	carwashID := vars["carwashid"]
+	serviceID := vars["serviceid"]
+	if carwashID == "" || serviceID == "" {
+		logrus.Error("Missing carwash_id or service_id parameter")
+		utils.Error(w, http.StatusBadRequest, "Missing carwash_id or service_id parameter")
 		return
 	}
 
-	carwashID := mux.Vars(r)["carwashid"]
-	if carwashID == "" {
-		logrus.Error("Missing carwash_id parameter")
-		utils.Error(w, http.StatusBadRequest, "Missing carwash_id parameter")
-		return
-	}
-	
 	body, _ := io.ReadAll(r.Body)
-    logrus.Infof("📦 Raw Body: %s", string(body))
-    r.Body = io.NopCloser(bytes.NewBuffer(body)) // reattach body for decoding
-
+	logrus.Infof("📦 Raw Body: %s", string(body))
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	var service models.Service
 	if err := json.NewDecoder(r.Body).Decode(&service); err != nil {
@@ -381,18 +408,16 @@ func (cwc *CarWashController) UpdateServiceHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// ✅ Fetch the carwash directly
 	carwash, err := cwc.CarWashService.GetCarwashByID(carwashID)
 	if err != nil {
 		logrus.Error("Failed to fetch carwash: ", err)
-		utils.Error(w, http.StatusInternalServerError, "Failed to fetch carwash")
+		utils.Error(w, http.StatusNotFound, "Carwash not found")
 		return
 	}
 
-	// ✅ Check ownership
-	fmt.Println(carwash)
+	fmt.Println("Carwash owner ID: ", carwash)
+	fmt.Println("Authenticated user ID: ", authCtx.UserID)
 
-	// ✅ Proceed to update service
 	if err := cwc.CarWashService.UpdateService(carwashID, serviceID, service); err != nil {
 		logrus.Error("Failed to update service: ", err)
 		utils.Error(w, http.StatusInternalServerError, err.Error())
@@ -405,17 +430,12 @@ func (cwc *CarWashController) UpdateServiceHandler(w http.ResponseWriter, r *htt
 
 // DeleteServiceHandler deletes a service from a carwash
 func (cwc *CarWashController) DeleteServiceHandler(w http.ResponseWriter, r *http.Request) {
-	serviceID := r.URL.Query().Get("service_id")
-	if serviceID == "" {
-		logrus.Error("Missing serviceId parameter")
-		utils.Error(w, http.StatusBadRequest, "Missing serviceId parameter")
-		return
-	}
-
-	carwashID := mux.Vars(r)["carwashid"]
-	if carwashID == "" {
-		logrus.Error("Missing carwash_id parameter")
-		utils.Error(w, http.StatusBadRequest, "Missing carwash_id parameter")
+	vars := mux.Vars(r)
+	carwashID := vars["carwashid"]
+	serviceID := vars["serviceid"]
+	if carwashID == "" || serviceID == "" {
+		logrus.Error("Missing carwash_id or service_id parameter")
+		utils.Error(w, http.StatusBadRequest, "Missing carwash_id or service_id parameter")
 		return
 	}
 
@@ -433,18 +453,16 @@ func (cwc *CarWashController) DeleteServiceHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// ✅ Fetch the carwash directly
 	carwash, err := cwc.CarWashService.GetCarwashByID(carwashID)
 	if err != nil {
 		logrus.Error("Failed to fetch carwash: ", err)
-		utils.Error(w, http.StatusInternalServerError, "Failed to fetch carwash")
+		utils.Error(w, http.StatusNotFound, "Carwash not found")
 		return
 	}
 
-	// ✅ Check ownership
-	fmt.Println(carwash) 
+	fmt.Println("Carwash owner ID: ", carwash)
+	fmt.Println("Authenticated user ID: ", authCtx.UserID)
 
-	// ✅ Proceed to delete service
 	if err := cwc.CarWashService.DeleteService(carwashID, serviceID); err != nil {
 		logrus.Error("Failed to delete service: ", err)
 		utils.Error(w, http.StatusInternalServerError, err.Error())
@@ -452,6 +470,4 @@ func (cwc *CarWashController) DeleteServiceHandler(w http.ResponseWriter, r *htt
 	}
 
 	utils.JSON(w, http.StatusOK, map[string]string{"message": "Service deleted successfully"})
-}
-  
-
+}  

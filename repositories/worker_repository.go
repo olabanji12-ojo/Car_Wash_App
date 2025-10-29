@@ -4,48 +4,64 @@ import (
 	"context"
 	"time"
 
-	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// 🔎 Get all workers for a business
-func FindWorkersByBusinessID(businessID primitive.ObjectID) ([]*models.User, error) {
+// WorkerRepository handles database operations for workers
+type WorkerRepository struct {
+	db *mongo.Database
+}
+
+// NewWorkerRepository creates a new WorkerRepository instance
+func NewWorkerRepository(db *mongo.Database) *WorkerRepository {
+	return &WorkerRepository{db: db}
+}
+
+// FindWorkersByBusinessID gets all workers for a business
+func (wr *WorkerRepository) FindWorkersByBusinessID(businessID primitive.ObjectID) ([]*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	filter := bson.M{
 		"role":                    "worker",
 		"worker_data.business_id": businessID.Hex(),
 	}
 
-	cursor, err := database.UserCollection.Find(context.TODO(), filter)
+	cursor, err := wr.db.Collection("users").Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
-
-	defer cursor.Close(context.TODO())
+	defer cursor.Close(ctx)
 
 	var workers []*models.User
-	for cursor.Next(context.TODO()) {
+	for cursor.Next(ctx) {
 		var user models.User
 		if err := cursor.Decode(&user); err != nil {
 			return nil, err
 		}
 		workers = append(workers, &user)
 	}
+	
 	logrus.Infof("Found %d workers for business", len(workers))
 	return workers, nil
 }
 
-// 🔎 Get a specific worker by ID
-func FindWorkerByID(workerID primitive.ObjectID) (*models.User, error) {
+// FindWorkerByID gets a specific worker by ID
+func (wr *WorkerRepository) FindWorkerByID(workerID primitive.ObjectID) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	filter := bson.M{
 		"_id":  workerID,
 		"role": "worker",
 	}
 
 	var worker models.User
-	err := database.UserCollection.FindOne(context.TODO(), filter).Decode(&worker)
+	err := wr.db.Collection("users").FindOne(ctx, filter).Decode(&worker)
 	if err != nil {
 		return nil, err
 	}
@@ -53,37 +69,40 @@ func FindWorkerByID(workerID primitive.ObjectID) (*models.User, error) {
 	return &worker, nil
 }
 
-// � Get available workers for assignment (online and not busy)
-func FindAvailableWorkersByBusinessID(businessID primitive.ObjectID) ([]*models.User, error) {
+// FindAvailableWorkersByBusinessID gets available workers for assignment (online and not busy)
+func (wr *WorkerRepository) FindAvailableWorkersByBusinessID(businessID primitive.ObjectID) ([]*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	filter := bson.M{
 		"role":                      "worker",
-		"status":                    "active", // Account is active
+		"status":                    "active",               // Account is active
 		"worker_data.business_id":   businessID.Hex(),
-		"worker_data.status":        "online",           // Worker is online
-		"worker_data.active_orders": bson.M{"$size": 0}, // No active orders
+		"worker_data.status":        "online",              // Worker is online
+		"worker_data.active_orders": bson.M{"$size": 0},    // No active orders
 	}
 
-	cursor, err := database.UserCollection.Find(context.TODO(), filter)
+	cursor, err := wr.db.Collection("users").Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
-
-	defer cursor.Close(context.TODO())
+	defer cursor.Close(ctx)
 
 	var workers []*models.User
-	for cursor.Next(context.TODO()) {
+	for cursor.Next(ctx) {
 		var user models.User
 		if err := cursor.Decode(&user); err != nil {
 			return nil, err
 		}
 		workers = append(workers, &user)
 	}
+	
 	logrus.Infof("Found %d available workers for business", len(workers))
 	return workers, nil
 }
 
-// �🔄 Update a worker's status
-func UpdateWorkerStatus(workerID primitive.ObjectID, status string) error {
+// UpdateWorkerStatus updates a worker's account status
+func (wr *WorkerRepository) UpdateWorkerStatus(workerID primitive.ObjectID, status string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -95,30 +114,30 @@ func UpdateWorkerStatus(workerID primitive.ObjectID, status string) error {
 		},
 	}
 
-	_, err := database.UserCollection.UpdateOne(ctx, filter, update)
+	_, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
 	return err
 }
 
-// 🔄 Update a worker's work status (online, offline, busy, on_break)
-func UpdateWorkerWorkStatus(workerID primitive.ObjectID, workStatus string) error {
+// UpdateWorkerWorkStatus updates a worker's work status (online, offline, busy, on_break)
+func (wr *WorkerRepository) UpdateWorkerWorkStatus(workerID primitive.ObjectID, workStatus string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	filter := bson.M{"_id": workerID}
 	update := bson.M{
 		"$set": bson.M{
-			"worker_data.status":    workStatus, // Update WorkerProfile.WorkerStatus
-			"worker_data.last_seen": time.Now(), // Update LastSeen timestamp
-			"updated_at":            time.Now(), // Update main record timestamp
+			"worker_data.status":    workStatus,
+			"worker_data.last_seen": time.Now(),
+			"updated_at":            time.Now(),
 		},
 	}
 
-	_, err := database.UserCollection.UpdateOne(ctx, filter, update)
+	_, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
 	return err
 }
 
-// 🔄 Assign worker to order
-func AssignWorkerToOrder(orderID primitive.ObjectID, workerID primitive.ObjectID) error {
+// AssignWorkerToOrder assigns a worker to an order
+func (wr *WorkerRepository) AssignWorkerToOrder(orderID primitive.ObjectID, workerID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -130,12 +149,12 @@ func AssignWorkerToOrder(orderID primitive.ObjectID, workerID primitive.ObjectID
 		},
 	}
 
-	_, err := database.OrderCollection.UpdateOne(ctx, filter, update)
+	_, err := wr.db.Collection("orders").UpdateOne(ctx, filter, update)
 	return err
 }
 
-// 🔄 Add order to worker's active orders and set status to busy
-func AddActiveOrderToWorker(workerID primitive.ObjectID, orderID primitive.ObjectID) error {
+// AddActiveOrderToWorker adds an order to worker's active orders and sets status to busy
+func (wr *WorkerRepository) AddActiveOrderToWorker(workerID primitive.ObjectID, orderID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -151,12 +170,12 @@ func AddActiveOrderToWorker(workerID primitive.ObjectID, orderID primitive.Objec
 		},
 	}
 
-	_, err := database.UserCollection.UpdateOne(ctx, filter, update)
+	_, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
 	return err
 }
 
-// 🔄 Remove worker from order (rollback function)
-func RemoveWorkerFromOrder(orderID primitive.ObjectID) error {
+// RemoveWorkerFromOrder removes a worker from an order (rollback function)
+func (wr *WorkerRepository) RemoveWorkerFromOrder(orderID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -170,29 +189,27 @@ func RemoveWorkerFromOrder(orderID primitive.ObjectID) error {
 		},
 	}
 
-	_, err := database.OrderCollection.UpdateOne(ctx, filter, update)
+	_, err := wr.db.Collection("orders").UpdateOne(ctx, filter, update)
 	return err
 }
 
-// 🔄 Remove order from worker's active orders and set status back to online
-func RemoveActiveOrderFromWorker(workerID primitive.ObjectID, orderID primitive.ObjectID) error {
+// RemoveActiveOrderFromWorker removes an order from worker's active orders and sets status back to online
+func (wr *WorkerRepository) RemoveActiveOrderFromWorker(workerID primitive.ObjectID, orderID primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	filter := bson.M{"_id": workerID}
 	update := bson.M{
 		"$set": bson.M{
-			"worker_data.status":    "online", // Set worker back to online
+			"worker_data.status":    "online",
 			"worker_data.last_seen": time.Now(),
 			"updated_at":            time.Now(),
 		},
 		"$pull": bson.M{
-			"worker_data.active_orders": orderID, // Remove order from active orders
+			"worker_data.active_orders": orderID,
 		},
 	}
 
-	_, err := database.UserCollection.UpdateOne(ctx, filter, update)
+	_, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
 	return err
 }
-
-
