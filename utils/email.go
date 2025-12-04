@@ -1,12 +1,10 @@
 package utils
 
 import (
-
 	"fmt"
 	"net/smtp"
 	"os"
 	"strings"
-
 )
 
 // EmailConfig holds email configuration
@@ -31,16 +29,23 @@ func GetEmailConfig() *EmailConfig {
 	}
 }
 
-
 // SendEmail sends an email using SMTP
 func SendEmail(to, subject, body string) error {
 	config := GetEmailConfig()
-	
-	// Validate configuration
+
+	// Check if configuration is complete
 	if config.SMTPUsername == "" || config.SMTPPassword == "" || config.FromEmail == "" {
-		return fmt.Errorf("email configuration incomplete - check SMTP_USERNAME, SMTP_PASSWORD, and FROM_EMAIL environment variables")
+		// Log email to console for development/testing
+		fmt.Println("==================================================")
+		fmt.Println("📧 [MOCK EMAIL] SMTP Config Missing - Logging Email")
+		fmt.Printf("To: %s\n", to)
+		fmt.Printf("Subject: %s\n", subject)
+		fmt.Println("Body:")
+		fmt.Println(body)
+		fmt.Println("==================================================")
+		return nil // Return success so flow continues
 	}
-    
+
 	// Set up authentication
 	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, config.SMTPHost)
 
@@ -70,6 +75,25 @@ func SendEmail(to, subject, body string) error {
 	return nil
 }
 
+// SendVerificationEmail sends email verification code
+func SendVerificationEmail(userEmail, userName, token string) error {
+	subject := "Verify Your Email - CarWash App"
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h2>Welcome to CarWash App!</h2>
+			<p>Hi %s,</p>
+			<p>Please use the following code to verify your email address:</p>
+			<h1 style="color: #2563EB; letter-spacing: 5px;">%s</h1>
+			<p>This code will expire in 24 hours.</p>
+			<p>If you didn't create an account, please ignore this email.</p>
+		</body>
+		</html>
+	`, userName, token)
+
+	return SendEmail(userEmail, subject, body)
+}
+
 // SendBookingConfirmationEmail sends a booking confirmation email
 func SendBookingConfirmationEmail(userEmail, userName, carwashName, bookingTime string) error {
 	subject := "Booking Confirmation - CarWash App"
@@ -90,7 +114,7 @@ func SendBookingConfirmationEmail(userEmail, userName, carwashName, bookingTime 
 		</body>
 		</html>
 	`, userName, carwashName, bookingTime)
-    
+
 	return SendEmail(userEmail, subject, body)
 
 }
@@ -120,4 +144,3 @@ func getEnvOrDefault(key, defaultValue string) string {
 	}
 	return defaultValue
 }
-

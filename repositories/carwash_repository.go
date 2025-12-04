@@ -9,11 +9,11 @@ import (
 
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"github.com/sirupsen/logrus"
 )
 
 type CarWashRepository struct {
@@ -416,4 +416,17 @@ func (cw *CarWashRepository) DeleteService(carwashID, serviceID string) (*mongo.
 	}
 
 	return result, nil
+}
+
+// AddPhotoToGallery adds a photo URL to the carwash's photo gallery
+func (cw *CarWashRepository) AddPhotoToGallery(id primitive.ObjectID, photoURL string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := database.CarwashCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{"$push": bson.M{"photo_gallery": photoURL}},
+	)
+	return err
 }

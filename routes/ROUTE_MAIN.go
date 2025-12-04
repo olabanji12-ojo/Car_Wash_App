@@ -37,17 +37,27 @@ func InitCarWashService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 	carwashRepo := repositories.NewCarWashRepository(db)
 	bookingRepo := repositories.NewBookingRepository(db)
 	carwashService := services.NewCarWashService(*carwashRepo, *bookingRepo, geocoder)
-	
+
 	// Also initialize UserService for UpdateUserCarwashID
 	userRepo := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepo)
-	
+
 	return controllers.NewCarWashController(carwashService, userService)
 }
 
-func InitBookingService(db *mongo.Database) *controllers.BookingController {
-	bookingService := services.NewBookingService(*repositories.NewBookingRepository(db))
-	return &controllers.BookingController{BookingService: bookingService}
+func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *controllers.BookingController {
+	bookingService := services.NewBookingService(
+		*repositories.NewBookingRepository(db),
+		*repositories.NewCarWashRepository(db),
+		*repositories.NewUserRepository(db),
+	)
+
+	// We also need CarWashService for GetAvailableSlots
+	carwashRepo := repositories.NewCarWashRepository(db)
+	bookingRepo := repositories.NewBookingRepository(db)
+	carwashService := services.NewCarWashService(*carwashRepo, *bookingRepo, geocoder)
+
+	return controllers.NewBookingController(bookingService, carwashService)
 }
 
 func InitOrderService(db *mongo.Database) *controllers.OrderController {
@@ -79,10 +89,10 @@ func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geoco
 	carwashRouter.CarwashRoutes(router)
 
 	// Initialize BookingRouter and set up booking routes
-	bookingController := InitBookingService(db)
+	bookingController := InitBookingService(db, geocoder)
 	bookingRouter := NewBookingRouter(*bookingController)
 	bookingRouter.BookingRoutes(router)
-	
+
 	// Initialize OrderRouter and set up order routes
 	orderController := InitOrderService(db)
 	OrderRouter := NewOrderRouter(orderController)
@@ -97,7 +107,7 @@ func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geoco
 	workerController := InitWorkerService(db)
 	workerRouter := NewWorkerRouter(workerController)
 	workerRouter.WorkerRoutes(router)
-	
+
 	PaymentRoutes(router)
 	NotificationRoutes(router) // Notification system
 }

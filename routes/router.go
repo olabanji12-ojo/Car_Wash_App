@@ -33,9 +33,9 @@ func AuthRoutes(router *mux.Router, authService *controllers.AuthController) {
 	router.HandleFunc("/api/callback", authService.GoogleCallbackHandler).Methods("GET")
 
 	// POST /api/auth/logout
-    auth.HandleFunc("/logout", authService.LogoutHandler).Methods("POST")
+	auth.HandleFunc("/logout", authService.LogoutHandler).Methods("POST")
 
-
+	// POST /api/auth/verify
+	auth.HandleFunc("/verify", authService.VerifyEmailHandler).Methods("POST")
 
 }
-

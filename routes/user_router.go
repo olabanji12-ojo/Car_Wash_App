@@ -51,6 +51,3 @@ func (ur *UserRouter) UserRoutes(router *mux.Router) {
     
 	
 }
-	
-	
-
