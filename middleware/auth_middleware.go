@@ -123,6 +123,9 @@ func Cors() *cors.Cors {
 		AllowedOrigins: []string{
 			"http://localhost:3000",
 			"http://127.0.0.1:3000",
+			"https://car-wash-frontend-ten.vercel.app",
+			
+
 			
 		},
 		AllowCredentials: true,
