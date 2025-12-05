@@ -1,35 +1,36 @@
 package services
 
 import (
-	
 	"context"
 	"errors"
 	"time"
 
-	"github.com/olabanji12-ojo/CarWashApp/models"
-	"github.com/olabanji12-ojo/CarWashApp/utils"
-	"github.com/olabanji12-ojo/CarWashApp/repositories"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strings"
 
+	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/olabanji12-ojo/CarWashApp/repositories"
+	"github.com/olabanji12-ojo/CarWashApp/utils"
+	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
 
 type BookingService struct {
 	bookingRepository repositories.BookingRepository
 	carWashRepository repositories.CarWashRepository
+	userRepository    repositories.UserRepository
 }
 
-
-
-func NewBookingService(bookingRepository repositories.BookingRepository) *BookingService {
-	return &BookingService{bookingRepository: bookingRepository}
+func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository) *BookingService {
+	return &BookingService{
+		bookingRepository: bookingRepository,
+		carWashRepository: carWashRepository,
+		userRepository:    userRepository,
+	}
 }
 
-
-//  CreateBooking for a selected time slot
-func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*models.Booking, error) {
+// CreateBooking for a selected time slot
+func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*models.Booking, error) {
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -38,22 +39,27 @@ func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*mo
 	if err != nil {
 		return nil, errors.New("invalid user ID format")
 	}
-     
+
 	// Step 2: Validate BookingTime is not empty
 	if input.BookingTime.IsZero() {
 		return nil, errors.New("booking time is required")
 	}
-    
+
 	//  Step 3: FETCH the Carwash and VALIDATE against its OpenHours
 	carwash, err := bs.carWashRepository.GetCarwashByID(input.CarwashID)
 	if err != nil {
 		return nil, errors.New("carwash not found")
 	}
 
-	// Get the weekday from booking time
-	weekday := strings.ToLower(input.BookingTime.Weekday().String()[:3]) // "mon", "tue", etc
+	// Get the weekday from booking time (use full name to match open_hours keys)
+	weekday := strings.ToLower(input.BookingTime.Weekday().String()) // "monday", "tuesday", etc
+
+	logrus.Infof("Checking open hours for carwash %s on %s (derived from %v)", input.CarwashID, weekday, input.BookingTime)
+	logrus.Infof("Carwash OpenHours keys: %v", carwash.OpenHours)
+
 	timeRange, ok := carwash.OpenHours[weekday]
 	if !ok {
+		logrus.Warnf("Carwash %s is not open on %s. Available days: %v", input.CarwashID, weekday, carwash.OpenHours)
 		return nil, errors.New("carwash is not open on this day")
 	}
 
@@ -95,8 +101,7 @@ func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*mo
 	// Step 5: Create new booking
 	queueNumber := len(bookingsForDay) + 1
 	newBooking := models.Booking{
-        
-         
+
 		ID:           primitive.NewObjectID(),
 		UserID:       ownerID,
 		CarID:        input.CarID,
@@ -110,11 +115,9 @@ func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*mo
 		QueueNumber:  queueNumber,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-    
-
 	}
 
-	// Check distance if it's a home service 
+	// Check distance if it's a home service
 	if input.BookingType == "home_service" {
 		if input.UserLocation == nil {
 			return nil, errors.New("user location is required for home service")
@@ -132,7 +135,7 @@ func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*mo
 			return nil, errors.New("user is outside the delivery radius for this carwash")
 		}
 	}
- 
+
 	// Step 6: Save to database
 	if err := bs.bookingRepository.CreateBooking(&newBooking); err != nil {
 		return nil, err
@@ -149,8 +152,6 @@ func (bs *BookingService)CreateBooking(userID string, input models.Booking) (*mo
 
 }
 
-
-
 func (bs *BookingService) GetBookingByID(bookingID string) (*models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
@@ -164,7 +165,6 @@ func (bs *BookingService) GetBookingByID(bookingID string) (*models.Booking, err
 
 	return booking, nil
 }
-
 
 func (bs *BookingService) GetBookingsByUserID(userID string) ([]models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(userID)
@@ -180,8 +180,7 @@ func (bs *BookingService) GetBookingsByUserID(userID string) ([]models.Booking, 
 	return bookings, nil
 }
 
-
-func(bs *BookingService)  GetBookingsByCarwashID(carwashID string) ([]models.Booking, error) {
+func (bs *BookingService) GetBookingsByCarwashID(carwashID string) ([]models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, errors.New("invalid carwash ID")
@@ -192,11 +191,10 @@ func(bs *BookingService)  GetBookingsByCarwashID(carwashID string) ([]models.Boo
 		return nil, err
 	}
 
-	return bookings, nil
+	return bs.enrichBookingsWithCustomerDetails(bookings)
 }
 
-
-func(bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string) error {
+func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string) error {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
 		return errors.New("invalid booking ID")
@@ -205,17 +203,37 @@ func(bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string)
 	return bs.bookingRepository.UpdateBookingStatus(objID, newStatus)
 }
 
-
-func(bs *BookingService) CancelBooking(bookingID string) error {
+func (bs *BookingService) CancelBooking(bookingID string) error {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
 		return errors.New("invalid booking ID")
 	}
 
+	// 1. Fetch booking to check time
+	booking, err := bs.bookingRepository.GetBookingByID(objID)
+	if err != nil {
+		return errors.New("booking not found")
+	}
+
+	// 2. Check if already cancelled or completed
+	if booking.Status == "cancelled" {
+		return errors.New("booking is already cancelled")
+	}
+	if booking.Status == "completed" {
+		return errors.New("cannot cancel a completed booking")
+	}
+
+	// 3. Enforce 24-hour cancellation policy
+	// If booking time is within 24 hours from now, deny cancellation
+	timeUntilBooking := booking.BookingTime.Sub(time.Now())
+	if timeUntilBooking < 24*time.Hour && timeUntilBooking > 0 {
+		return errors.New("cancellation not allowed within 24 hours of appointment")
+	}
+
 	return bs.bookingRepository.CancelBooking(objID)
 }
 
-func(bs *BookingService) GetBookingsByDate(carwashID string, date time.Time) ([]models.Booking, error) {
+func (bs *BookingService) GetBookingsByDate(carwashID string, date time.Time) ([]models.Booking, error) {
 	objID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, errors.New("invalid carwash ID")
@@ -224,8 +242,7 @@ func(bs *BookingService) GetBookingsByDate(carwashID string, date time.Time) ([]
 	return bs.bookingRepository.GetBookingsByDate(objID, date)
 }
 
-
-func(bs *BookingService) UpdateBooking(userID, bookingID string, updates map[string]interface{}) error {
+func (bs *BookingService) UpdateBooking(userID, bookingID string, updates map[string]interface{}) error {
 	_, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return errors.New("invalid user ID")
@@ -244,36 +261,73 @@ func(bs *BookingService) UpdateBooking(userID, bookingID string, updates map[str
 	return bs.bookingRepository.UpdateBooking(bookingObjID, bson.M(updates))
 }
 
-
-// Get Bookings with filter 
+// Get Bookings with filter
 func (bs *BookingService) GetBookingsByCarwashWithFilters(carwashID string, status string, from, to string) ([]models.Booking, error) {
-    objID, err := primitive.ObjectIDFromHex(carwashID)
-    if err != nil {
-        return nil, errors.New("invalid carwash ID")
-    }
+	objID, err := primitive.ObjectIDFromHex(carwashID)
+	if err != nil {
+		return nil, errors.New("invalid carwash ID")
+	}
 
-    var fromDate, toDate time.Time
-    if from != "" && to != "" {
-        fromDate, err = time.Parse("2006-01-02", from)
-        if err != nil {
-            return nil, errors.New("invalid from date format")
-        }
-        toDate, err = time.Parse("2006-01-02", to)
-        if err != nil {
-            return nil, errors.New("invalid to date format")
-        }
-        // Adjust toDate to include the full day
-        toDate = time.Date(toDate.Year(), toDate.Month(), toDate.Day(), 23, 59, 59, 999999999, toDate.Location())
-    }
+	var fromDate, toDate time.Time
+	if from != "" && to != "" {
+		fromDate, err = time.Parse("2006-01-02", from)
+		if err != nil {
+			return nil, errors.New("invalid from date format")
+		}
+		toDate, err = time.Parse("2006-01-02", to)
+		if err != nil {
+			return nil, errors.New("invalid to date format")
+		}
+		// Adjust toDate to include the full day
+		toDate = time.Date(toDate.Year(), toDate.Month(), toDate.Day(), 23, 59, 59, 999999999, toDate.Location())
+	}
 
-    bookings, err := bs.bookingRepository.GetBookingsByCarwashWithFilters(objID, status, fromDate, toDate)
-    if err != nil {
-        return nil, err
-    }
+	bookings, err := bs.bookingRepository.GetBookingsByCarwashWithFilters(objID, status, fromDate, toDate)
+	if err != nil {
+		return nil, err
+	}
 
-	
-
-    return bookings, nil
+	return bs.enrichBookingsWithCustomerDetails(bookings)
 }
 
+// Helper to enrich bookings with customer details
+func (bs *BookingService) enrichBookingsWithCustomerDetails(bookings []models.Booking) ([]models.Booking, error) {
+	if len(bookings) == 0 {
+		return bookings, nil
+	}
 
+	// Collect User IDs
+	userIDs := make([]primitive.ObjectID, 0)
+	seen := make(map[primitive.ObjectID]bool)
+	for _, b := range bookings {
+		if !seen[b.UserID] {
+			userIDs = append(userIDs, b.UserID)
+			seen[b.UserID] = true
+		}
+	}
+
+	// Fetch Users
+	users, err := bs.userRepository.GetUsersByIDs(userIDs)
+	if err != nil {
+		// Log error but return bookings without names rather than failing?
+		// Or fail? Let's fail for now or log.
+		// For now, return error.
+		return nil, err
+	}
+
+	// Map Users
+	userMap := make(map[primitive.ObjectID]models.User)
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
+	// Enrich Bookings
+	for i := range bookings {
+		if user, ok := userMap[bookings[i].UserID]; ok {
+			bookings[i].CustomerName = user.Name
+			bookings[i].CustomerPhoto = user.ProfilePhoto
+		}
+	}
+
+	return bookings, nil
+}
