@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/smtp"
 	"os"
@@ -29,7 +30,7 @@ func GetEmailConfig() *EmailConfig {
 	}
 }
 
-// SendEmail sends an email using SMTP
+// SendEmail sends an email using SMTP (supports both port 587 and 465)
 func SendEmail(to, subject, body string) error {
 	config := GetEmailConfig()
 
@@ -46,9 +47,6 @@ func SendEmail(to, subject, body string) error {
 		return nil // Return success so flow continues
 	}
 
-	// Set up authentication
-	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, config.SMTPHost)
-
 	// Compose message
 	msg := []byte(fmt.Sprintf(
 		"To: %s\r\n"+
@@ -59,7 +57,20 @@ func SendEmail(to, subject, body string) error {
 			"%s\r\n",
 		to, config.FromName, config.FromEmail, subject, body))
 
-	// Send email
+	// Use different methods based on port
+	if config.SMTPPort == "465" {
+		// Port 465 uses SSL/TLS from the start
+		return sendEmailSSL(config, to, msg)
+	}
+
+	// Port 587 uses STARTTLS
+	return sendEmailSTARTTLS(config, to, msg)
+}
+
+// sendEmailSTARTTLS sends email using port 587 with STARTTLS
+func sendEmailSTARTTLS(config *EmailConfig, to string, msg []byte) error {
+	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, config.SMTPHost)
+
 	err := smtp.SendMail(
 		config.SMTPHost+":"+config.SMTPPort,
 		auth,
@@ -70,6 +81,62 @@ func SendEmail(to, subject, body string) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to send email: %v", err)
+	}
+
+	return nil
+}
+
+// sendEmailSSL sends email using port 465 with SSL/TLS
+func sendEmailSSL(config *EmailConfig, to string, msg []byte) error {
+	// TLS config
+	tlsConfig := &tls.Config{
+		ServerName: config.SMTPHost,
+	}
+
+	// Connect to SMTP server with TLS
+	conn, err := tls.Dial("tcp", config.SMTPHost+":"+config.SMTPPort, tlsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to connect to SMTP server: %v", err)
+	}
+	defer conn.Close()
+
+	// Create SMTP client
+	client, err := smtp.NewClient(conn, config.SMTPHost)
+	if err != nil {
+		return fmt.Errorf("failed to create SMTP client: %v", err)
+	}
+	defer client.Quit()
+
+	// Authenticate
+	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, config.SMTPHost)
+	if err = client.Auth(auth); err != nil {
+		return fmt.Errorf("SMTP authentication failed: %v", err)
+	}
+
+	// Set sender
+	if err = client.Mail(config.FromEmail); err != nil {
+		return fmt.Errorf("failed to set sender: %v", err)
+	}
+
+	// Set recipient
+	if err = client.Rcpt(to); err != nil {
+		return fmt.Errorf("failed to set recipient: %v", err)
+	}
+
+	// Send message
+	writer, err := client.Data()
+	if err != nil {
+		return fmt.Errorf("failed to get data writer: %v", err)
+	}
+
+	_, err = writer.Write(msg)
+	if err != nil {
+		return fmt.Errorf("failed to write message: %v", err)
+	}
+
+	err = writer.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close writer: %v", err)
 	}
 
 	return nil
