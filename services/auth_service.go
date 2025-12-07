@@ -94,8 +94,11 @@ func (as *AuthService) RegisterUser(input models.User) (*models.User, error) {
 
 	// 6. Send verification email (async)
 	go func() {
+		logrus.Infof("📧 [Email] Attempting to send verification email to %s", newUser.Email)
 		if err := utils.SendVerificationEmail(newUser.Email, newUser.Name, verificationToken); err != nil {
-			logrus.Error("Failed to send verification email: ", err)
+			logrus.Errorf("❌ [Email] Failed to send verification email: %v", err)
+		} else {
+			logrus.Infof("✅ [Email] Verification email sent successfully to %s", newUser.Email)
 		}
 	}()
 

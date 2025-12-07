@@ -69,6 +69,7 @@ func SendEmail(to, subject, body string) error {
 
 // sendEmailSTARTTLS sends email using port 587 with STARTTLS
 func sendEmailSTARTTLS(config *EmailConfig, to string, msg []byte) error {
+	fmt.Printf("🔌 Connecting to SMTP server %s:%s via STARTTLS...\n", config.SMTPHost, config.SMTPPort)
 	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, config.SMTPHost)
 
 	err := smtp.SendMail(
@@ -80,14 +81,18 @@ func sendEmailSTARTTLS(config *EmailConfig, to string, msg []byte) error {
 	)
 
 	if err != nil {
+		fmt.Printf("❌ SMTP Error: %v\n", err)
 		return fmt.Errorf("failed to send email: %v", err)
 	}
 
+	fmt.Println("✅ Email sent via STARTTLS")
 	return nil
 }
 
 // sendEmailSSL sends email using port 465 with SSL/TLS
 func sendEmailSSL(config *EmailConfig, to string, msg []byte) error {
+	fmt.Printf("🔌 Connecting to SMTP server %s:%s via SSL...\n", config.SMTPHost, config.SMTPPort)
+
 	// TLS config
 	tlsConfig := &tls.Config{
 		ServerName: config.SMTPHost,
@@ -99,6 +104,7 @@ func sendEmailSSL(config *EmailConfig, to string, msg []byte) error {
 		return fmt.Errorf("failed to connect to SMTP server: %v", err)
 	}
 	defer conn.Close()
+	fmt.Println("✅ SSL Connection established")
 
 	// Create SMTP client
 	client, err := smtp.NewClient(conn, config.SMTPHost)
@@ -108,10 +114,12 @@ func sendEmailSSL(config *EmailConfig, to string, msg []byte) error {
 	defer client.Quit()
 
 	// Authenticate
+	fmt.Println("🔐 Authenticating...")
 	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, config.SMTPHost)
 	if err = client.Auth(auth); err != nil {
 		return fmt.Errorf("SMTP authentication failed: %v", err)
 	}
+	fmt.Println("✅ Authentication successful")
 
 	// Set sender
 	if err = client.Mail(config.FromEmail); err != nil {
