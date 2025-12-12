@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"strings"
@@ -16,16 +17,18 @@ import (
 )
 
 type BookingService struct {
-	bookingRepository repositories.BookingRepository
-	carWashRepository repositories.CarWashRepository
-	userRepository    repositories.UserRepository
+	bookingRepository   repositories.BookingRepository
+	carWashRepository   repositories.CarWashRepository
+	userRepository      repositories.UserRepository
+	notificationService *NotificationService
 }
 
-func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository) *BookingService {
+func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository, notificationService *NotificationService) *BookingService {
 	return &BookingService{
-		bookingRepository: bookingRepository,
-		carWashRepository: carWashRepository,
-		userRepository:    userRepository,
+		bookingRepository:   bookingRepository,
+		carWashRepository:   carWashRepository,
+		userRepository:      userRepository,
+		notificationService: notificationService,
 	}
 }
 
@@ -141,11 +144,23 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		return nil, err
 	}
 
-	// Step 7: Trigger notification (like Django signal)
-	// This runs asynchronously so it doesn't block the booking creation
+	// Step 7: Trigger notification (Owner Notification)
+	// Alert the Business Owner about the new Pending Booking
+	// We need the customer name.
 	go func() {
-		// Import notification service when we add it
-		// NotificationSvc.SendBookingConfirmation(&newBooking)
+		user, err := bs.userRepository.FindUserByID(ownerID)
+		if err == nil && bs.notificationService != nil {
+			// Find Business Owner ID from Carwash (Assuming carwash has OwnerID)
+			// Wait, carwash model needs checking. models.Carwash usually has OwnerID.
+			// Re-fetching carwash to be sure or using cached 'carwash' variable if safe (it is local)
+
+			// Check if OwnerID exists (handle legacy data)
+			if !carwash.OwnerID.IsZero() {
+				bs.notificationService.SendNewBookingToBusiness(carwash.OwnerID, user.Name, "New Booking")
+			} else {
+				logrus.Warnf("Carwash %s has no OwnerID, cannot send notification", carwash.Name)
+			}
+		}
 	}()
 
 	return &newBooking, nil
@@ -200,7 +215,46 @@ func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string
 		return errors.New("invalid booking ID")
 	}
 
-	return bs.bookingRepository.UpdateBookingStatus(objID, newStatus)
+	// Fetch booking (needed for notifications)
+	booking, err := bs.bookingRepository.GetBookingByID(objID)
+	if err != nil {
+		return errors.New("booking not found")
+	}
+
+	if err := bs.bookingRepository.UpdateBookingStatus(objID, newStatus); err != nil {
+		return err
+	}
+
+	// Trigger Notifications (Async)
+	go func() {
+		if bs.notificationService == nil {
+			return
+		}
+
+		// Fetch carwash name
+		var carwashName string
+		cw, err := bs.carWashRepository.GetCarwashByID(booking.CarwashID)
+		if err == nil {
+			carwashName = cw.Name
+		} else {
+			carwashName = "The Carwash"
+		}
+
+		if newStatus == "confirmed" {
+			// In-App + Email (Hybrid Strategy)
+			bs.notificationService.SendBookingAccepted(booking, carwashName)
+		} else if newStatus == "cancelled" {
+			bs.notificationService.SendBookingRejected(booking, "Cancelled by business")
+		} else if newStatus == "completed" {
+			// In-App Only (Hybrid Strategy)
+			title := "Wash Completed"
+			message := fmt.Sprintf("Your service at %s is marked as completed. Please rate your experience!", carwashName)
+			// false = No Email
+			bs.notificationService.CreateNotification(booking.UserID, title, message, "booking", false)
+		}
+	}()
+
+	return nil
 }
 
 func (bs *BookingService) CancelBooking(bookingID string) error {

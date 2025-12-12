@@ -46,10 +46,14 @@ func InitCarWashService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 }
 
 func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *controllers.BookingController {
+	userRepo := repositories.NewUserRepository(db)
+	notificationService := services.NewNotificationService(userRepo)
+
 	bookingService := services.NewBookingService(
 		*repositories.NewBookingRepository(db),
 		*repositories.NewCarWashRepository(db),
-		*repositories.NewUserRepository(db),
+		*userRepo,
+		notificationService,
 	)
 
 	// We also need CarWashService for GetAvailableSlots

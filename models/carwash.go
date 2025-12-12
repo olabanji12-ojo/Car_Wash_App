@@ -1,12 +1,13 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"time"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"errors"
 )
 
 type GeoLocation struct {
@@ -29,6 +30,7 @@ type Service struct {
 
 type Carwash struct {
 	ID                  primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	OwnerID             primitive.ObjectID   `bson:"owner_id" json:"owner_id"` // Link to User who owns this
 	Name                string               `bson:"name" json:"name"`
 	Description         string               `bson:"description,omitempty" json:"description,omitempty"`
 	Address             string               `bson:"address" json:"address"`
@@ -136,20 +138,20 @@ func (c *Carwash) WithDistance(userLat, userLng float64) map[string]interface{} 
 	distanceKm, distanceText := c.GetDistanceFrom(userLat, userLng)
 
 	return map[string]interface{}{
-		"id":                  c.ID,
-		"name":                c.Name,
-		"address":             c.Address,
-		"rating":              c.Rating,
-		"queue_count":         c.QueueCount,
-		"is_active":           c.IsActive,
-		"home_service":        c.HomeService,
-		"delivery_radius_km":  c.DeliveryRadiusKM,
-		"photo":               c.getMainPhoto(),
-		"distance_km":         distanceKm,
-		"distance_text":       distanceText,
-		"state":               c.State,
-		"lga":                 c.LGA,
-		"country":             c.Country,
+		"id":                 c.ID,
+		"name":               c.Name,
+		"address":            c.Address,
+		"rating":             c.Rating,
+		"queue_count":        c.QueueCount,
+		"is_active":          c.IsActive,
+		"home_service":       c.HomeService,
+		"delivery_radius_km": c.DeliveryRadiusKM,
+		"photo":              c.getMainPhoto(),
+		"distance_km":        distanceKm,
+		"distance_text":      distanceText,
+		"state":              c.State,
+		"lga":                c.LGA,
+		"country":            c.Country,
 	}
 }
 

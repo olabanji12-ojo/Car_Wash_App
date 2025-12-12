@@ -8,11 +8,18 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-)   
+)
 
 // NotificationService handles all notification operations
-type NotificationService struct{
+type NotificationService struct {
 	userRepo *repositories.UserRepository
+}
+
+// NewNotificationService creates a new notification service
+func NewNotificationService(userRepo *repositories.UserRepository) *NotificationService {
+	return &NotificationService{
+		userRepo: userRepo,
+	}
 }
 
 // CreateNotification creates a notification and optionally sends email
@@ -74,7 +81,7 @@ func (ns *NotificationService) sendEmailAsync(notificationID, userID primitive.O
 func (ns *NotificationService) SendBookingConfirmation(booking *models.Booking) {
 	title := "Booking Confirmation"
 	message := fmt.Sprintf("Your carwash booking has been confirmed for %s", booking.BookingTime.Format("Jan 2, 2006 at 3:04 PM"))
-	
+
 	err := ns.CreateNotification(booking.UserID, title, message, models.NotificationTypeBooking, true)
 	if err != nil {
 		log.Printf("Failed to send booking confirmation: %v", err)
@@ -85,7 +92,7 @@ func (ns *NotificationService) SendBookingConfirmation(booking *models.Booking) 
 func (ns *NotificationService) SendBookingAccepted(booking *models.Booking, carwashName string) {
 	title := "Booking Accepted!"
 	message := fmt.Sprintf("Great news! %s has accepted your booking for %s", carwashName, booking.BookingTime.Format("Jan 2, 2006 at 3:04 PM"))
-	
+
 	err := ns.CreateNotification(booking.UserID, title, message, models.NotificationTypeBooking, true)
 	if err != nil {
 		log.Printf("Failed to send booking accepted notification: %v", err)
@@ -96,7 +103,7 @@ func (ns *NotificationService) SendBookingAccepted(booking *models.Booking, carw
 func (ns *NotificationService) SendBookingRejected(booking *models.Booking, reason string) {
 	title := "Booking Update"
 	message := fmt.Sprintf("Unfortunately, your booking for %s could not be confirmed. Reason: %s", booking.BookingTime.Format("Jan 2, 2006"), reason)
-	
+
 	err := ns.CreateNotification(booking.UserID, title, message, models.NotificationTypeBooking, true)
 	if err != nil {
 		log.Printf("Failed to send booking rejected notification: %v", err)
@@ -109,7 +116,7 @@ func (ns *NotificationService) SendBookingRejected(booking *models.Booking, reas
 func (ns *NotificationService) SendOrderCreated(order *models.Order) {
 	title := "Order Created"
 	message := "Your booking has been converted to an active order. We'll notify you when a worker is assigned."
-	
+
 	err := ns.CreateNotification(order.UserID, title, message, models.NotificationTypeOrder, true)
 	if err != nil {
 		log.Printf("Failed to send order created notification: %v", err)
@@ -120,7 +127,7 @@ func (ns *NotificationService) SendOrderCreated(order *models.Order) {
 func (ns *NotificationService) SendWorkerAssigned(order *models.Order, workerName string) {
 	title := "Worker Assigned"
 	message := fmt.Sprintf("Good news! %s has been assigned to your order and will be with you soon.", workerName)
-	
+
 	err := ns.CreateNotification(order.UserID, title, message, models.NotificationTypeWorker, true)
 	if err != nil {
 		log.Printf("Failed to send worker assigned notification: %v", err)
@@ -134,7 +141,7 @@ func (ns *NotificationService) SendOrderStatusUpdate(order *models.Order, newSta
 	if message == "" {
 		message = fmt.Sprintf("Your order status has been updated to: %s", newStatus)
 	}
-	
+
 	err := ns.CreateNotification(order.UserID, title, message, models.NotificationTypeOrder, true)
 	if err != nil {
 		log.Printf("Failed to send order status update: %v", err)
@@ -147,7 +154,7 @@ func (ns *NotificationService) SendOrderStatusUpdate(order *models.Order, newSta
 func (ns *NotificationService) SendNewBookingToBusiness(businessUserID primitive.ObjectID, customerName, serviceName string) {
 	title := "New Booking Received"
 	message := fmt.Sprintf("You have a new booking from %s for %s. Please review and accept/reject.", customerName, serviceName)
-	
+
 	err := ns.CreateNotification(businessUserID, title, message, models.NotificationTypeBooking, true)
 	if err != nil {
 		log.Printf("Failed to send new booking notification to business: %v", err)
@@ -176,6 +183,3 @@ func (ns *NotificationService) MarkAllAsRead(userID string) error {
 
 // Global notification service instance
 var NotificationSvc = &NotificationService{}
-
-
-

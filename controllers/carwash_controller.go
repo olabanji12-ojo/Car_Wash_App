@@ -60,6 +60,9 @@ func (cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	// ❌ CRITICAL FIX: Set the OwnerID from the authenticated user
+	input.OwnerID = objID
+
 	carwash, err := cwc.CarWashService.CreateCarwash(input)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
