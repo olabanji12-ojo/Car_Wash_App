@@ -82,6 +82,9 @@ func (cws *CarWashService) GetAvailableSlots(carwashID primitive.ObjectID, date 
 
 		currentCars := 0
 		for _, booking := range bookings {
+			if booking.Status == "cancelled" {
+				continue
+			}
 			if booking.BookingTime.Equal(currentTime) || (booking.BookingTime.After(currentTime) && booking.BookingTime.Before(slotEnd)) {
 				currentCars++
 			}
