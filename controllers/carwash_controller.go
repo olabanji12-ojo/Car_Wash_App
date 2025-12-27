@@ -227,11 +227,7 @@ func (cwc *CarWashController) GetNearbyCarwashesHandler(w http.ResponseWriter, r
 	}
 
 	// 8. Return the response
-	responseData := map[string]interface{}{
-		"message": "Nearby carwashes retrieved successfully",
-		"data":    result,
-	}
-	utils.JSON(w, http.StatusOK, responseData)
+	utils.JSON(w, http.StatusOK, result)
 }
 
 func (cwc *CarWashController) UpdateCarwashLocationHandler(w http.ResponseWriter, r *http.Request) {
