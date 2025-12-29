@@ -48,9 +48,14 @@ func (cws *CarWashService) GetAvailableSlots(carwashID primitive.ObjectID, date 
 		return nil, fmt.Errorf("carwash not found: %w", err)
 	}
 
-	bookings, err := cws.bookingRepository.GetBookingsByCarwashID(carwashID)
+	bookings, err := cws.bookingRepository.GetBookingsByDate(carwashID, date)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve bookings: %w", err)
+		return nil, fmt.Errorf("failed to retrieve bookings for date: %w", err)
+	}
+
+	maxCars := carwash.MaxCarsPerSlot
+	if maxCars == 0 {
+		maxCars = 1 // Default to 1 car per slot if not set
 	}
 
 	const slotDuration = 30 * time.Minute
@@ -72,6 +77,8 @@ func (cws *CarWashService) GetAvailableSlots(carwashID primitive.ObjectID, date 
 	start = time.Date(date.Year(), date.Month(), date.Day(), start.Hour(), start.Minute(), 0, 0, date.Location())
 	end = time.Date(date.Year(), date.Month(), date.Day(), end.Hour(), end.Minute(), 0, 0, date.Location())
 
+	logrus.Infof("[SlotDebug] Checking slots for Carwash: %s, Date: %v. Found %d total bookings in window.", carwashID.Hex(), date.Format("2006-01-02"), len(bookings))
+
 	var slots []Slot
 	currentTime := start
 	for currentTime.Before(end) {
@@ -82,10 +89,16 @@ func (cws *CarWashService) GetAvailableSlots(carwashID primitive.ObjectID, date 
 
 		currentCars := 0
 		for _, booking := range bookings {
-			if booking.Status == "cancelled" {
+			if booking.Status != "confirmed" {
 				continue
 			}
-			if booking.BookingTime.Equal(currentTime) || (booking.BookingTime.After(currentTime) && booking.BookingTime.Before(slotEnd)) {
+
+			// Robust minute-precision comparison
+			bTime := booking.BookingTime.UTC().Truncate(time.Minute)
+			sTime := currentTime.UTC().Truncate(time.Minute)
+			eTime := slotEnd.UTC().Truncate(time.Minute)
+
+			if bTime.Equal(sTime) || (bTime.After(sTime) && bTime.Before(eTime)) {
 				currentCars++
 			}
 		}
@@ -93,10 +106,14 @@ func (cws *CarWashService) GetAvailableSlots(carwashID primitive.ObjectID, date 
 		slots = append(slots, Slot{
 			StartTime:   currentTime,
 			EndTime:     slotEnd,
-			Available:   currentCars < carwash.MaxCarsPerSlot,
+			Available:   currentCars < maxCars,
 			CurrentCars: currentCars,
-			MaxCars:     carwash.MaxCarsPerSlot,
+			MaxCars:     maxCars,
 		})
+
+		if currentCars > 0 {
+			logrus.Infof("[SlotDebug] Slot %s: %d/%d cars. Available: %v", currentTime.Format("15:04"), currentCars, maxCars, currentCars < maxCars)
+		}
 
 		currentTime = slotEnd
 	}

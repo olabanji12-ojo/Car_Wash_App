@@ -12,8 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"fmt"
-	"encoding/json" 
 )
 
 type BookingRepository struct {
@@ -56,7 +54,6 @@ func (br *BookingRepository) GetBookingsByUserID(userID primitive.ObjectID) ([]m
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	
 	options := options.Find()
 	options.SetSort(bson.D{{"created_at", -1}})
 
@@ -65,8 +62,8 @@ func (br *BookingRepository) GetBookingsByUserID(userID primitive.ObjectID) ([]m
 		logrus.Error("Failed to fetch bookings by user: ", err)
 		return nil, err
 	}
-	
-	defer cursor.Close(ctx)  
+
+	defer cursor.Close(ctx)
 
 	var bookings []models.Booking
 	for cursor.Next(ctx) {
@@ -159,142 +156,67 @@ func (br *BookingRepository) GetBookingsByDate(carwashID primitive.ObjectID, dat
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Calculate date range
-	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
-	end := start.Add(24 * time.Hour)
-
-	// COMPREHENSIVE DEBUG LOGGING
-	logrus.Info("🔍 REPOSITORY DEBUG:")
-	logrus.Info("Input carwashID:", carwashID)
-	logrus.Info("Input carwashID hex:", carwashID.Hex())
-	logrus.Info("Input date:", date)
-	logrus.Info("Calculated start time:", start)
-	logrus.Info("Calculated end time:", end)
-	logrus.Info("Date location:", date.Location())
-	logrus.Info("Start time UTC:", start.UTC())
-	logrus.Info("End time UTC:", end.UTC())
+	// Ensure we use UTC for date calculations to match DB storage
+	utcDate := date.UTC()
+	// Fetch a wider range (-1 day, +1 day) to catch all possible overlapping slots in different timezones
+	start := time.Date(utcDate.Year(), utcDate.Month(), utcDate.Day(), 0, 0, 0, 0, time.UTC).Add(-24 * time.Hour)
+	end := start.Add(72 * time.Hour) // Covers yesterday, today, and tomorrow
 
 	filter := bson.M{
-		"carwash_id": carwashID,
+		"carwash_id":   carwashID,
 		"booking_time": bson.M{"$gte": start, "$lt": end},
 	}
 
-	logrus.Info("🔍 MONGODB FILTER:")
-	logrus.Info("Filter:", filter)
-	
-	// Convert filter to JSON for better readability
-	filterJSON, _ := json.Marshal(filter)
-	logrus.Info("Filter as JSON:", string(filterJSON))
-
-	// Check if there are any bookings for this carwash (regardless of date)
-	logrus.Info("🔍 CHECKING TOTAL BOOKINGS FOR CARWASH:")
-	totalCount, err := database.BookingCollection.CountDocuments(ctx, bson.M{"carwash_id": carwashID})
-	if err != nil {
-		logrus.Error("❌ Error counting total bookings:", err)
-	} else {
-		logrus.Info("Total bookings for carwash:", totalCount)
-	}
-
-	// Check bookings without date filter
-	logrus.Info("🔍 CHECKING ALL CARWASH BOOKINGS (no date filter):")
-	allBookingsCursor, err := database.BookingCollection.Find(ctx, bson.M{"carwash_id": carwashID})
-	if err != nil {
-		logrus.Error("❌ Error fetching all bookings:", err)
-	} else {
-		var allBookings []models.Booking
-		if err := allBookingsCursor.All(ctx, &allBookings); err == nil {
-			logrus.Info("All bookings count:", len(allBookings))
-			for i, booking := range allBookings {
-				logrus.Info(fmt.Sprintf("📋 ALL BOOKING %d:", i))
-				logrus.Info("  ID:", booking.ID.Hex())
-				logrus.Info("  CarwashID:", booking.CarwashID.Hex())
-				logrus.Info("  BookingTime:", booking.BookingTime)
-				logrus.Info("  BookingTime UTC:", booking.BookingTime.UTC())
-				logrus.Info("  Status:", booking.Status)
-			}
-		}
-		allBookingsCursor.Close(ctx)
-	}
-
-	// Now run the actual filtered query
-	logrus.Info("🚀 EXECUTING FILTERED QUERY:")
 	cursor, err := database.BookingCollection.Find(ctx, filter)
 	if err != nil {
-		logrus.Error("❌ Failed to fetch bookings by date:", err)
+		logrus.Error("Failed to fetch bookings by date: ", err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var bookings []models.Booking
-	bookingCount := 0
-	
-	for cursor.Next(ctx) {
-		var booking models.Booking
-		if err := cursor.Decode(&booking); err == nil {
-			bookings = append(bookings, booking)
-			bookingCount++
-			
-			logrus.Info(fmt.Sprintf("✅ DECODED BOOKING %d:", bookingCount))
-			logrus.Info("  ID:", booking.ID.Hex())
-			logrus.Info("  CarwashID:", booking.CarwashID.Hex())
-			logrus.Info("  BookingTime:", booking.BookingTime)
-			logrus.Info("  BookingTime UTC:", booking.BookingTime.UTC())
-			logrus.Info("  Status:", booking.Status)
-			logrus.Info("  Date matches filter:", booking.BookingTime.After(start) && booking.BookingTime.Before(end))
-		} else {
-			logrus.Warn("⚠️ Error decoding booking:", err)
-		}
-	}
-
-	logrus.Info("📊 FINAL RESULT:")
-	logrus.Info("Total bookings returned:", len(bookings))
-	
-	if len(bookings) == 0 {
-		logrus.Warn("⚠️ NO BOOKINGS FOUND - POSSIBLE ISSUES:")
-		logrus.Warn("1. Check if carwash_id exists in database")
-		logrus.Warn("2. Check if booking_time is stored correctly")
-		logrus.Warn("3. Check timezone handling")
-		logrus.Warn("4. Check if data exists for the specified date")
+	if err := cursor.All(ctx, &bookings); err != nil {
+		logrus.Error("Error decoding bookings: ", err)
+		return nil, err
 	}
 
 	return bookings, nil
 }
 
-
 // GetBookingsByCarwashWithFilters retrieves bookings for a car wash filtered by status and date range
 func (br *BookingRepository) GetBookingsByCarwashWithFilters(carwashID primitive.ObjectID, status string, from, to time.Time) ([]models.Booking, error) {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    filter := bson.M{
-        "carwash_id": carwashID,
-    }
-    if status != "" && status != "all" {
-        filter["status"] = status
-    }
-    if !from.IsZero() && !to.IsZero() {
-        filter["booking_time"] = bson.M{
-            "$gte": from,
-            "$lte": to,
-        }
-    }
+	filter := bson.M{
+		"carwash_id": carwashID,
+	}
+	if status != "" && status != "all" {
+		filter["status"] = status
+	}
+	if !from.IsZero() && !to.IsZero() {
+		filter["booking_time"] = bson.M{
+			"$gte": from,
+			"$lte": to,
+		}
+	}
 
-    cursor, err := database.BookingCollection.Find(ctx, filter)
-    if err != nil {
-        logrus.Error("Failed to fetch bookings by carwash with filters: ", err)
-        return nil, err
-    }
-    defer cursor.Close(ctx)
+	cursor, err := database.BookingCollection.Find(ctx, filter)
+	if err != nil {
+		logrus.Error("Failed to fetch bookings by carwash with filters: ", err)
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-    var bookings []models.Booking
-    for cursor.Next(ctx) {
-        var booking models.Booking
-        if err := cursor.Decode(&booking); err == nil {
-            bookings = append(bookings, booking)
-        } else {
-            logrus.Warn("Error decoding booking: ", err)
-        }
-    }
+	var bookings []models.Booking
+	for cursor.Next(ctx) {
+		var booking models.Booking
+		if err := cursor.Decode(&booking); err == nil {
+			bookings = append(bookings, booking)
+		} else {
+			logrus.Warn("Error decoding booking: ", err)
+		}
+	}
 
-    return bookings, nil
+	return bookings, nil
 }

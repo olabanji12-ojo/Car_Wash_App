@@ -90,15 +90,40 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		return nil, errors.New("booking time is outside of open hours")
 	}
 
-	// Step 4: Check for existing bookings on same date
+	// Step 4: Check for existing bookings on same date/time
 	bookingsForDay, err := bs.bookingRepository.GetBookingsByDate(input.CarwashID, input.BookingTime)
 	if err != nil {
 		return nil, errors.New("could not fetch bookings for that time")
 	}
+
+	maxCars := carwash.MaxCarsPerSlot
+	if maxCars <= 0 {
+		maxCars = 1
+	}
+
+	currentCarsInSlot := 0
+	inputTimeStr := input.BookingTime.UTC().Truncate(time.Minute).Format("2006-01-02 15:04")
+	logrus.Infof("[CreateDebug] User: %s, Slot: %s, Max: %d", userID, inputTimeStr, maxCars)
+
 	for _, b := range bookingsForDay {
-		if b.BookingTime.Equal(input.BookingTime) {
-			return nil, errors.New("selected time slot is already taken")
+		bTimeStr := b.BookingTime.UTC().Truncate(time.Minute).Format("2006-01-02 15:04")
+
+		// If same user already has a pending/confirmed booking for this slot, block them
+		if b.UserID.Hex() == userID && bTimeStr == inputTimeStr && b.Status != "cancelled" && b.Status != "completed" {
+			return nil, errors.New("you already have a booking for this time slot")
 		}
+
+		if b.Status != "confirmed" {
+			continue
+		}
+
+		if bTimeStr == inputTimeStr {
+			currentCarsInSlot++
+		}
+	}
+
+	if currentCarsInSlot >= maxCars {
+		return nil, errors.New("selected time slot is already fully booked")
 	}
 
 	// Step 5: Create new booking

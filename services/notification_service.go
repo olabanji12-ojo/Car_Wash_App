@@ -55,14 +55,14 @@ func (ns *NotificationService) sendEmailAsync(notificationID, userID primitive.O
 	// Get user email
 	user, err := ns.userRepo.FindUserByID(userID)
 	if err != nil {
-		log.Printf("Failed to get user for email notification: %v", err)
+		log.Printf("[NotificationDebug] Failed to get user %s for email notification: %v", userID.Hex(), err)
 		return
 	}
 
 	// Send email
 	err = utils.SendEmail(user.Email, title, message)
 	if err != nil {
-		log.Printf("Failed to send email notification: %v", err)
+		log.Printf("[NotificationDebug] Failed to send email to %s: %v", user.Email, err)
 		return
 	}
 
