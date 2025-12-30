@@ -14,36 +14,31 @@ func NewCarWashRouter(carwashController controllers.CarWashController) *CarWashR
 	return &CarWashRouter{carwashController: carwashController}
 }
 
-func (cwr *CarWashRouter) CarwashRoutes(router *mux.Router) {
-	// Public routes (no auth)
-	publicCarwash := router.PathPrefix("/api/carwashes").Subrouter()
-	publicCarwash.HandleFunc("", cwr.carwashController.GetAllActiveCarwashesHandler).Methods("GET")
-	publicCarwash.HandleFunc("/nearby/", cwr.carwashController.GetNearbyCarwashesHandler).Methods("GET")
-	publicCarwash.HandleFunc("/services/carwash/{carwashid}", cwr.carwashController.GetServicesHandler).Methods("GET")
-	publicCarwash.HandleFunc("/services/{carwashid}/{serviceid}", cwr.carwashController.GetServiceByIDHandler).Methods("GET")
+func (cwr *CarWashRouter) CarwashRoutes(parentRouter *mux.Router) {
+	carWashController := cwr.carwashController
 
-	// Protected routes (require auth)
-	protectedCarwash := router.PathPrefix("/api/carwashes").Subrouter()
-	protectedCarwash.Use(middleware.AuthMiddleware)
+	// Create a subrouter for /api/carwashes
+	router := parentRouter.PathPrefix("/api/carwashes").Subrouter()
 
-	// ✅ IMPORTANT: Register SPECIFIC routes BEFORE generic ones!
-	// Gorilla Mux matches routes in order, so /{id}/photos must come before /{id}
+	// Public Routes (No Auth Required) - Allow Guest Browsing
+	router.HandleFunc("/nearby", carWashController.GetNearbyCarwashesHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("", carWashController.GetAllActiveCarwashesHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/{carwashid}/services", carWashController.GetServicesHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/{carwashid}/services/{serviceid}", carWashController.GetServiceByIDHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/{id}", carWashController.GetCarwashByIDHandler).Methods("GET", "OPTIONS")
 
-	// Specific routes (with more path segments)
-	protectedCarwash.HandleFunc("/{id}/photos", cwr.carwashController.UploadCarwashPhotoHandler).Methods("POST")
-	protectedCarwash.HandleFunc("/{id}/status", cwr.carwashController.SetCarwashStatusHandler).Methods("PATCH")
-	protectedCarwash.HandleFunc("/{id}/location", cwr.carwashController.UpdateCarwashLocationHandler).Methods("PUT")
-	protectedCarwash.HandleFunc("/owner/{owner_id}", cwr.carwashController.GetCarwashesByOwnerIDHandler).Methods("GET")
-	protectedCarwash.HandleFunc("/carwash/{id}/onboarding", cwr.carwashController.CompleteOnboarding).Methods("PUT")
-	protectedCarwash.HandleFunc("/services/{carwashid}", cwr.carwashController.CreateServiceHandler).Methods("POST")
-	protectedCarwash.HandleFunc("/services/{carwashid}/{serviceid}", cwr.carwashController.UpdateServiceHandler).Methods("PUT")
-	protectedCarwash.HandleFunc("/services/{carwashid}/{serviceid}", cwr.carwashController.DeleteServiceHandler).Methods("DELETE")
+	// Protected Routes (Auth Required)
+	protected := router.PathPrefix("/api/carwashes").Subrouter()
+	protected.Use(middleware.AuthMiddleware)
 
-	// Generic routes (less specific - MUST be last!)
-	protectedCarwash.HandleFunc("", cwr.carwashController.CreateCarwashHandler).Methods("POST")
-	protectedCarwash.HandleFunc("/{id}", cwr.carwashController.UpdateCarwashHandler).Methods("PUT")
-
-	// Public GET /{id} - MUST be registered last to avoid conflicts!
-	publicCarwash.HandleFunc("/{id}", cwr.carwashController.GetCarwashByIDHandler).Methods("GET")
-
+	protected.HandleFunc("", carWashController.CreateCarwashHandler).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/{id}", carWashController.UpdateCarwashHandler).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/{id}/status", carWashController.SetCarwashStatusHandler).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/{id}/complete-onboarding", carWashController.CompleteOnboarding).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/{id}/photos", carWashController.UploadCarwashPhotoHandler).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/{carwashid}/services", carWashController.CreateServiceHandler).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/{carwashid}/services/{serviceid}", carWashController.UpdateServiceHandler).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/{carwashid}/services/{serviceid}", carWashController.DeleteServiceHandler).Methods("DELETE", "OPTIONS")
+	protected.HandleFunc("/owner/{owner_id}", carWashController.GetCarwashesByOwnerIDHandler).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/{id}/location", carWashController.UpdateCarwashLocationHandler).Methods("PUT", "OPTIONS")
 }
