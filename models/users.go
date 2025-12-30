@@ -57,8 +57,10 @@ type User struct {
 	Status              string               `bson:"status,omitempty" json:"status,omitempty"`             // active, pending, suspended
 	AccountType         string               `bson:"account_type,omitempty" json:"account_type,omitempty"` //   car_owner, car_wash
 	Verified            bool                 `bson:"verified,omitempty" json:"verified,omitempty"`
-	VerificationToken   string               `bson:"verification_token,omitempty" json:"-"`
-	VerificationExpires time.Time            `bson:"verification_expires,omitempty" json:"-"`
+	VerificationCode    string               `bson:"verification_code,omitempty" json:"verification_code,omitempty"`
+	VerificationExpiry  time.Time            `bson:"verification_expiry,omitempty" json:"verification_expiry,omitempty"`
+	PasswordResetToken  string               `bson:"password_reset_token,omitempty" json:"password_reset_token,omitempty"`
+	PasswordResetExpiry time.Time            `bson:"password_reset_expiry,omitempty" json:"password_reset_expiry,omitempty"`
 	ProfilePhoto        string               `bson:"profile_photo,omitempty" json:"profile_photo,omitempty"`
 	LoyaltyPoints       int                  `bson:"loyalty_points,omitempty" json:"loyalty_points,omitempty"`
 	LastSeen            *time.Time           `bson:"last_seen,omitempty" json:"last_seen,omitempty"`

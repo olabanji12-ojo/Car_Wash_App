@@ -432,6 +432,130 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
+// ForgotPasswordHandler - Send password reset email
+func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		Email string `json:"email"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate email
+	if payload.Email == "" {
+		utils.Error(w, http.StatusBadRequest, "Email is required")
+		return
+	}
+
+	userRepo := repositories.NewUserRepository(database.DB)
+	user, err := userRepo.FindUserByEmail(payload.Email)
+
+	// Don't reveal if email exists (security best practice)
+	if err != nil {
+		logrus.Infof("Password reset requested for non-existent email: %s", payload.Email)
+		utils.JSON(w, http.StatusOK, map[string]string{
+			"message": "If the email exists, a reset link has been sent",
+		})
+		return
+	}
+
+	// Generate 6-digit reset token
+	resetToken, err := utils.GenerateNumericCode(6)
+	if err != nil {
+		logrus.Error("Failed to generate reset token: ", err)
+		utils.Error(w, http.StatusInternalServerError, "Failed to process reset request")
+		return
+	}
+	expiry := time.Now().Add(1 * time.Hour)
+
+	// Save token to database
+	err = userRepo.UpdateUserByID(user.ID, bson.M{
+		"password_reset_token":  resetToken,
+		"password_reset_expiry": expiry,
+	})
+
+	if err != nil {
+		logrus.Error("Failed to save reset token: ", err)
+		utils.Error(w, http.StatusInternalServerError, "Failed to process reset request")
+		return
+	}
+
+	// Send reset email
+	err = utils.SendPasswordResetEmail(user.Email, user.Name, resetToken)
+	if err != nil {
+		logrus.Error("Failed to send reset email: ", err)
+		// Don't fail the request if email fails, token is still saved
+	}
+
+	logrus.Infof("Password reset token generated for user: %s", user.Email)
+	utils.JSON(w, http.StatusOK, map[string]string{
+		"message": "If the email exists, a reset link has been sent",
+	})
+}
+
+// ResetPasswordHandler - Reset password with token
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate inputs
+	if payload.Token == "" || payload.NewPassword == "" {
+		utils.Error(w, http.StatusBadRequest, "Token and new password are required")
+		return
+	}
+
+	// Validate password length
+	if len(payload.NewPassword) < 6 {
+		utils.Error(w, http.StatusBadRequest, "Password must be at least 6 characters")
+		return
+	}
+
+	userRepo := repositories.NewUserRepository(database.DB)
+	user, err := userRepo.FindUserByResetToken(payload.Token)
+
+	if err != nil {
+		logrus.Warn("Invalid or expired reset token")
+		utils.Error(w, http.StatusBadRequest, "Invalid or expired reset token")
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(payload.NewPassword)
+	if err != nil {
+		logrus.Error("Failed to hash password: ", err)
+		utils.Error(w, http.StatusInternalServerError, "Failed to reset password")
+		return
+	}
+
+	// Update password and clear reset token
+	err = userRepo.UpdateUserByID(user.ID, bson.M{
+		"password":              hashedPassword,
+		"password_reset_token":  "",
+		"password_reset_expiry": time.Time{},
+		"updated_at":            time.Now(),
+	})
+
+	if err != nil {
+		logrus.Error("Failed to update password: ", err)
+		utils.Error(w, http.StatusInternalServerError, "Failed to reset password")
+		return
+	}
+
+	logrus.Infof("Password successfully reset for user: %s", user.Email)
+	utils.JSON(w, http.StatusOK, map[string]string{
+		"message": "Password reset successful",
+	})
+}
+
 func (ac *AuthController) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "jwt",

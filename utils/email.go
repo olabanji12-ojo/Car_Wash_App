@@ -219,3 +219,30 @@ func getEnvOrDefault(key, defaultValue string) string {
 	}
 	return defaultValue
 }
+
+// SendPasswordResetEmail sends a password reset email with token
+func SendPasswordResetEmail(userEmail, userName, resetToken string) error {
+	frontendURL := getEnvOrDefault("FRONTEND_URL", "http://localhost:5173")
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", frontendURL, resetToken)
+
+	subject := "Reset Your Password - CarWash App"
+	body := fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+			<h2 style="color: #2563EB;">Password Reset Request</h2>
+			<p>Hi %s,</p>
+			<p>You requested to reset your password. Use the code below or click the button:</p>
+			<div style="background: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+				<h1 style="color: #2563EB; letter-spacing: 5px; margin: 0;">%s</h1>
+			</div>
+			<div style="text-align: center; margin: 30px 0;">
+				<a href="%s" style="background: #2563EB; color: white; padding: 12px 32px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+			</div>
+			<p style="color: #6B7280; font-size: 14px;">This link expires in 1 hour.</p>
+			<p style="color: #6B7280; font-size: 14px;">If you didn't request this, please ignore this email.</p>
+		</body>
+		</html>
+	`, userName, resetToken, resetLink)
+
+	return SendEmail(userEmail, subject, body)
+}

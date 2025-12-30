@@ -309,3 +309,22 @@ func (ur *UserRepository) GetUsersByIDs(userIDs []primitive.ObjectID) ([]models.
 	}
 	return users, nil
 }
+
+// FindUserByResetToken finds a user by their password reset token
+func (ur *UserRepository) FindUserByResetToken(token string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := ur.db.Collection("users").FindOne(ctx, bson.M{
+		"password_reset_token":  token,
+		"password_reset_expiry": bson.M{"$gt": time.Now()}, // Token must not be expired
+	}).Decode(&user)
+
+	if err != nil {
+		logrus.Warn("User not found with reset token or token expired")
+		return nil, err
+	}
+
+	return &user, nil
+}

@@ -59,20 +59,20 @@ func (as *AuthService) RegisterUser(input models.User) (*models.User, error) {
 
 	// 4. Build new user object
 	newUser := models.User{
-		ID:                  primitive.NewObjectID(),
-		Name:                input.Name,
-		Email:               input.Email,
-		Password:            hashedPassword,
-		Phone:               input.Phone,
-		Role:                input.Role,
-		AccountType:         input.AccountType,
-		Status:              "active",
-		Verified:            false,
-		VerificationToken:   verificationToken,
-		VerificationExpires: time.Now().Add(24 * time.Hour),
-		ProfilePhoto:        input.ProfilePhoto,
-		CreatedAt:           time.Now(),
-		UpdatedAt:           time.Now(),
+		ID:                 primitive.NewObjectID(),
+		Name:               input.Name,
+		Email:              input.Email,
+		Password:           hashedPassword,
+		Phone:              input.Phone,
+		Role:               input.Role,
+		AccountType:        input.AccountType,
+		Status:             "active",
+		Verified:           false,
+		VerificationCode:   verificationToken,
+		VerificationExpiry: time.Now().Add(24 * time.Hour),
+		ProfilePhoto:       input.ProfilePhoto,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	// Optional: Add role-specific sub-structs
@@ -149,20 +149,20 @@ func (as *AuthService) VerifyEmail(email, token string) error {
 	}
 
 	// 3. Check token
-	if user.VerificationToken != token {
+	if user.VerificationCode != token {
 		return errors.New("invalid verification code")
 	}
 
 	// 4. Check expiration
-	if time.Now().After(user.VerificationExpires) {
+	if time.Now().After(user.VerificationExpiry) {
 		return errors.New("verification code expired")
 	}
 
 	// 5. Update user status
 	update := primitive.M{
 		"$set": primitive.M{
-			"verified":           true,
-			"verification_token": "", // Clear token
+			"verified":          true,
+			"verification_code": "", // Clear token
 		},
 	}
 
@@ -196,9 +196,9 @@ func (as *AuthService) ResendVerificationEmail(email string) error {
 	// 4. Update user with new token and expiration
 	update := primitive.M{
 		"$set": primitive.M{
-			"verification_token":   verificationToken,
-			"verification_expires": time.Now().Add(24 * time.Hour),
-			"updated_at":           time.Now(),
+			"verification_code":   verificationToken,
+			"verification_expiry": time.Now().Add(24 * time.Hour),
+			"updated_at":          time.Now(),
 		},
 	}
 

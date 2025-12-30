@@ -42,4 +42,10 @@ func AuthRoutes(router *mux.Router, authService *controllers.AuthController) {
 	// POST /api/auth/resend-verification
 	auth.HandleFunc("/resend-verification", authService.ResendVerificationEmailHandler).Methods("POST")
 
+	// POST /api/auth/forgot-password
+	auth.HandleFunc("/forgot-password", controllers.ForgotPasswordHandler).Methods("POST")
+
+	// POST /api/auth/reset-password
+	auth.HandleFunc("/reset-password", controllers.ResetPasswordHandler).Methods("POST")
+
 }
