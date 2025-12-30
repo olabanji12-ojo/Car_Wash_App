@@ -421,13 +421,13 @@ func (ac *AuthController) GoogleCallbackHandler(w http.ResponseWriter, r *http.R
 		Path:     "/",
 		Expires:  time.Now().Add(72 * time.Hour),
 		HttpOnly: true,
-		Secure:   os.Getenv("ENVIRONMENT") == "production",
-		SameSite: http.SameSiteStrictMode,
+		Secure:   true, // Always true for SameSite=None
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	// Redirect to frontend callback
 	frontendURL := os.Getenv("FRONTEND_URL")
-	callbackPath := "/CallbackPage"
+	callbackPath := "/CallbackPage?token=" + signedToken // Pass token in URL as fallback/initial
 	redirectURL := fmt.Sprintf("%s%s", frontendURL, callbackPath)
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
