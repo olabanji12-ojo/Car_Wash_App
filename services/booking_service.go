@@ -169,21 +169,24 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		return nil, err
 	}
 
-	// Step 7: Trigger notification (Owner Notification)
-	// Alert the Business Owner about the new Pending Booking
-	// We need the customer name.
+	// Step 7: Trigger notifications (Both Business Owner & Customer)
 	go func() {
 		user, err := bs.userRepository.FindUserByID(ownerID)
 		if err == nil && bs.notificationService != nil {
-			// Find Business Owner ID from Carwash (Assuming carwash has OwnerID)
-			// Wait, carwash model needs checking. models.Carwash usually has OwnerID.
-			// Re-fetching carwash to be sure or using cached 'carwash' variable if safe (it is local)
-
-			// Check if OwnerID exists (handle legacy data)
+			// Notify Business Owner (In-app + Email)
 			if !carwash.OwnerID.IsZero() {
 				bs.notificationService.SendNewBookingToBusiness(carwash.OwnerID, user.Name, "New Booking")
 			} else {
 				logrus.Warnf("Carwash %s has no OwnerID, cannot send notification", carwash.Name)
+			}
+
+			// Notify Customer (Email)
+			bookingTimeStr := newBooking.BookingTime.Format("Jan 2, 2006 at 3:04 PM")
+			err = utils.SendBookingConfirmationEmail(user.Email, user.Name, carwash.Name, bookingTimeStr)
+			if err != nil {
+				logrus.Errorf("Failed to send booking confirmation email to customer: %v", err)
+			} else {
+				logrus.Infof("Booking confirmation email sent to customer: %s", user.Email)
 			}
 		}
 	}()

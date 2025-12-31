@@ -25,6 +25,7 @@ import (
 // proceeds to post onboarding where he is presented another form to update business information
 // then a virtual account is created for the business
 
+
 type AuthService struct {
 	userRepository repositories.UserRepository
 }
