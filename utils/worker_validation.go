@@ -1,6 +1,5 @@
 package utils
 
-
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -15,6 +14,3 @@ func ValidateWorkerStatus(status string) error {
 		validation.In(allowedStatuses),
 	)
 }
-
-
-

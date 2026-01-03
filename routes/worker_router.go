@@ -26,13 +26,17 @@ func (wr *WorkerRouter) WorkerRoutes(router *mux.Router) {
 	// Worker CRUD operations
 	subRouter.HandleFunc("/create", wr.workerController.CreateWorkersForBusiness).Methods("POST")
 	subRouter.HandleFunc("/business/{id}", wr.workerController.GetWorkersForBusiness).Methods("GET")
-	
+
 	// Worker status management
 	subRouter.HandleFunc("/status/{id}", wr.workerController.UpdateWorkerStatus).Methods("PATCH")
 	subRouter.HandleFunc("/work-status/{id}", wr.workerController.UpdateWorkerWorkStatus).Methods("PATCH")
-	
+
 	// Worker assignment functionality
 	subRouter.HandleFunc("/available/{id}", wr.workerController.GetAvailableWorkersForBusiness).Methods("GET")
 	subRouter.HandleFunc("/assign", wr.workerController.AssignWorkerToOrder).Methods("POST")
 	subRouter.HandleFunc("/remove", wr.workerController.RemoveWorkerFromOrder).Methods("POST")
+
+	// Worker profile management
+	subRouter.HandleFunc("/{id}", wr.workerController.UpdateWorkerHandler).Methods("PUT", "OPTIONS")
+	subRouter.HandleFunc("/{id}/photo", wr.workerController.UploadWorkerPhotoHandler).Methods("POST", "OPTIONS")
 }

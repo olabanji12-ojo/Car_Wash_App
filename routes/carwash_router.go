@@ -28,7 +28,7 @@ func (cwr *CarWashRouter) CarwashRoutes(parentRouter *mux.Router) {
 	router.HandleFunc("/{id}", carWashController.GetCarwashByIDHandler).Methods("GET", "OPTIONS")
 
 	// Protected Routes (Auth Required)
-	protected := router.PathPrefix("/api/carwashes").Subrouter()
+	protected := router.PathPrefix("").Subrouter()
 	protected.Use(middleware.AuthMiddleware)
 
 	protected.HandleFunc("", carWashController.CreateCarwashHandler).Methods("POST", "OPTIONS")

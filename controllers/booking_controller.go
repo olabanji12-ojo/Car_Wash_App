@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"strings"
+
 	"github.com/gorilla/mux"
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/models"
@@ -11,10 +13,10 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/utils"
 	"github.com/sirupsen/logrus"
 
-	"time"
 	"fmt"
-	 "go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type BookingController struct {
@@ -29,14 +31,12 @@ func NewBookingController(bookingService *services.BookingService, carWashServic
 	}
 }
 
-
-
 // 1. CreateBookingHandler
-func(bc *BookingController) CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
 
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	userID  := authCtx.UserID
-	role := authCtx.Role 
+	userID := authCtx.UserID
+	role := authCtx.Role
 	accountType := authCtx.AccountType
 
 	var input models.Booking
@@ -77,16 +77,30 @@ func(bc *BookingController) CreateBookingHandler(w http.ResponseWriter, r *http.
 
 	newBooking, err := bc.BookingService.CreateBooking(userID, input)
 	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, err.Error())
+		// Log the actual error for server-side debugging
+		logrus.Errorf("[CreateBooking] Failed to create booking: %v", err)
+
+		// Map specific business logic errors to 400 Bad Request
+		errorMessage := err.Error()
+		if strings.Contains(errorMessage, "outside the delivery radius") ||
+			strings.Contains(errorMessage, "busy") ||
+			strings.Contains(errorMessage, "already have a booking") ||
+			strings.Contains(errorMessage, "outside of open hours") ||
+			strings.Contains(errorMessage, "fully booked") ||
+			strings.Contains(errorMessage, "location coordinates are required") {
+			utils.Error(w, http.StatusBadRequest, errorMessage)
+			return
+		}
+
+		utils.Error(w, http.StatusInternalServerError, "An unexpected server error occurred: "+errorMessage)
 		return
 	}
 
 	utils.JSON(w, http.StatusCreated, newBooking)
 }
 
-
 // 2. GetBookingByIDHandler
-func(bc *BookingController) GetBookingByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) GetBookingByIDHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	booking, err := bc.BookingService.GetBookingByID(id)
@@ -99,9 +113,9 @@ func(bc *BookingController) GetBookingByIDHandler(w http.ResponseWriter, r *http
 }
 
 // 3. GetMyBookingsHandler
-func(bc *BookingController) GetMyBookingsHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) GetMyBookingsHandler(w http.ResponseWriter, r *http.Request) {
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	userID  := authCtx.UserID
+	userID := authCtx.UserID
 
 	bookings, err := bc.BookingService.GetBookingsByUserID(userID)
 	if err != nil {
@@ -113,7 +127,7 @@ func(bc *BookingController) GetMyBookingsHandler(w http.ResponseWriter, r *http.
 }
 
 // 4. GetBookingsByCarwashHandler
-func(bc *BookingController) GetBookingsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) GetBookingsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
 	carwashID := mux.Vars(r)["carwash_id"]
 
 	bookings, err := bc.BookingService.GetBookingsByCarwashID(carwashID)
@@ -126,18 +140,19 @@ func(bc *BookingController) GetBookingsByCarwashHandler(w http.ResponseWriter, r
 }
 
 // 5. UpdateBookingStatusHandler
-func(bc *BookingController) UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
 	bookingID := mux.Vars(r)["id"]
 
 	var payload struct {
-		Status string `json:"status"`
+		Status           string `json:"status"`
+		VerificationCode string `json:"verification_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || payload.Status == "" {
 		utils.Error(w, http.StatusBadRequest, "Invalid status input")
 		return
 	}
 
-	if err := bc.BookingService.UpdateBookingStatus(bookingID, payload.Status); err != nil {
+	if err := bc.BookingService.UpdateBookingStatus(bookingID, payload.Status, payload.VerificationCode); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -146,7 +161,7 @@ func(bc *BookingController) UpdateBookingStatusHandler(w http.ResponseWriter, r 
 }
 
 // 6. CancelBookingHandler
-func(bc *BookingController) CancelBookingHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) CancelBookingHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 
@@ -160,10 +175,10 @@ func(bc *BookingController) CancelBookingHandler(w http.ResponseWriter, r *http.
 }
 
 // 7. GetBookingsByDateHandler (Optional)
-func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *http.Request) {
 	carwashIDStr := mux.Vars(r)["carwash_id"]
 	dateStr := r.URL.Query().Get("date")
-	
+
 	// COMPREHENSIVE DEBUG LOGGING
 	logrus.Info("🔍 INCOMING REQUEST DEBUG:")
 	logrus.Info("Raw carwashID from URL:", carwashIDStr)
@@ -186,7 +201,7 @@ func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *h
 	// Parse carwash_id to ObjectID
 	logrus.Info("🔄 CONVERTING CARWASH_ID:")
 	logrus.Info("Attempting to convert carwashIDStr to ObjectID:", carwashIDStr)
-	
+
 	carwashID, err := primitive.ObjectIDFromHex(carwashIDStr)
 	if err != nil {
 		logrus.Error("❌ Invalid carwash_id format - cannot convert to ObjectID:", err)
@@ -194,20 +209,20 @@ func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *h
 		utils.Error(w, http.StatusBadRequest, "Invalid carwash_id format")
 		return
 	}
-	
+
 	logrus.Info("✅ Successfully converted to ObjectID:", carwashID)
 	logrus.Info("ObjectID hex representation:", carwashID.Hex())
 
 	// Parse date
 	logrus.Info("🔄 PARSING DATE:")
 	logrus.Info("Attempting to parse dateStr:", dateStr)
-	
-	// Try full datetime first 
+
+	// Try full datetime first
 	date, err = time.Parse(time.RFC3339, dateStr)
 	if err != nil {
 		logrus.Info("⚠️ RFC3339 parse failed, trying YYYY-MM-DD format")
 		logrus.Info("RFC3339 error:", err)
-		
+
 		// If that fails, try just YYYY-MM-DD
 		date, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
@@ -227,7 +242,7 @@ func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *h
 	// Call the service
 	logrus.Info("🚀 CALLING BookingService.GetBookingsByDate")
 	logrus.Info("Parameters - carwashID:", carwashID, "date:", date)
-	
+
 	bookings, err := bc.BookingService.GetBookingsByDate(carwashIDStr, date)
 	if err != nil {
 		logrus.Error("❌ BookingService.GetBookingsByDate error:", err)
@@ -238,7 +253,7 @@ func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *h
 	logrus.Info("✅ BOOKINGS RESULT:")
 	logrus.Info("Bookings found count:", len(bookings))
 	logrus.Info("Bookings data:", bookings)
-	
+
 	// Log each booking individually for detailed inspection
 	for i, booking := range bookings {
 		logrus.Info(fmt.Sprintf("📋 BOOKING %d:", i))
@@ -251,14 +266,13 @@ func(bc *BookingController) GetBookingsByDateHandler(w http.ResponseWriter, r *h
 
 	logrus.Info("📤 SENDING RESPONSE:")
 	logrus.Info("Response will contain", len(bookings), "bookings")
-	
+
 	utils.JSON(w, http.StatusOK, bookings)
 }
 
-
-func(bc *BookingController) UpdateBookingHandler(w http.ResponseWriter, r *http.Request) {
+func (bc *BookingController) UpdateBookingHandler(w http.ResponseWriter, r *http.Request) {
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	userID  := authCtx.UserID
+	userID := authCtx.UserID
 	bookingID := mux.Vars(r)["bookingID"]
 	logrus.Info("Vars:", bookingID)
 
@@ -280,30 +294,29 @@ func(bc *BookingController) UpdateBookingHandler(w http.ResponseWriter, r *http.
 // Get Bookings with filter from the controller
 
 func (bc *BookingController) GetBookingsByCarwashWithFiltersHandler(w http.ResponseWriter, r *http.Request) {
-    carwashID := mux.Vars(r)["carwash_id"]
-    status := r.URL.Query().Get("status")
-    from := r.URL.Query().Get("from")
-    to := r.URL.Query().Get("to")
+	carwashID := mux.Vars(r)["carwash_id"]
+	status := r.URL.Query().Get("status")
+	from := r.URL.Query().Get("from")
+	to := r.URL.Query().Get("to")
 
-    logrus.Info("🔍 INCOMING REQUEST DEBUG:")
-    logrus.Info("carwash_id:", carwashID)
-    logrus.Info("status:", status)
-    logrus.Info("from:", from)
-    logrus.Info("to:", to)
+	logrus.Info("🔍 INCOMING REQUEST DEBUG:")
+	logrus.Info("carwash_id:", carwashID)
+	logrus.Info("status:", status)
+	logrus.Info("from:", from)
+	logrus.Info("to:", to)
 
-    bookings, err := bc.BookingService.GetBookingsByCarwashWithFilters(carwashID, status, from, to)
-    if err != nil {
-        logrus.Error("❌ Failed to fetch bookings: ", err)
-        utils.Error(w, http.StatusBadRequest, err.Error())
-        return
-    }
+	bookings, err := bc.BookingService.GetBookingsByCarwashWithFilters(carwashID, status, from, to)
+	if err != nil {
+		logrus.Error("❌ Failed to fetch bookings: ", err)
+		utils.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-    logrus.Info("✅ BOOKINGS RESULT:")
-    logrus.Info("Bookings found count:", len(bookings))
+	logrus.Info("✅ BOOKINGS RESULT:")
+	logrus.Info("Bookings found count:", len(bookings))
 
-    utils.JSON(w, http.StatusOK, map[string]interface{}{"data": bookings})
+	utils.JSON(w, http.StatusOK, map[string]interface{}{"data": bookings})
 }
-
 
 func (bc *BookingController) GetAvailableSlotsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -345,3 +358,46 @@ func (bc *BookingController) GetAvailableSlotsHandler(w http.ResponseWriter, r *
 	utils.JSON(w, http.StatusOK, slots)
 }
 
+// UpdateWorkerLocationHandler handles PATCH /api/bookings/:id/location
+func (bc *BookingController) UpdateWorkerLocationHandler(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	var input struct {
+		Lat float64 `json:"lat"`
+		Lng float64 `json:"lng"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid location data")
+		return
+	}
+
+	if err := bc.BookingService.UpdateWorkerLocation(id, input.Lat, input.Lng); err != nil {
+		utils.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, map[string]string{"message": "Location updated"})
+}
+
+// GetPublicBookingHandler handles GET /api/bookings/track/:id
+func (bc *BookingController) GetPublicBookingHandler(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	booking, err := bc.BookingService.GetBookingByID(id)
+	if err != nil {
+		utils.Error(w, http.StatusNotFound, "Booking not found")
+		return
+	}
+
+	// Scrub sensitive data for public view
+	publicInfo := map[string]interface{}{
+		"id":            booking.ID,
+		"status":        booking.Status,
+		"booking_type":  booking.BookingType,
+		"customer_name": booking.CustomerName,
+		"notes":         booking.Notes,
+		"address_note":  booking.AddressNote,
+	}
+
+	utils.JSON(w, http.StatusOK, publicInfo)
+}

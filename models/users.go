@@ -76,6 +76,8 @@ type User struct {
 	DefaultAddressID *string `bson:"default_address_id,omitempty" json:"default_address_id,omitempty"`
 	// Last known location of the user (for nearby searches)
 	LastLocation *GeoPoint `bson:"last_location,omitempty" json:"-"`
+	// Base location for workers (e.g., home or office for trip calculations)
+	BaseLocation *GeoPoint `bson:"base_location,omitempty" json:"base_location,omitempty"`
 }
 
 func (u User) Validate() error {

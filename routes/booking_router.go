@@ -18,6 +18,9 @@ func (br *BookingRouter) BookingRoutes(router *mux.Router) {
 	// Public routes (no auth)
 	publicBooking := router.PathPrefix("/api/bookings").Subrouter()
 	publicBooking.HandleFunc("/carwash/{carwash_id}/slots", br.bookingController.GetAvailableSlotsHandler).Methods("GET")
+	publicBooking.HandleFunc("/track/{id}", br.bookingController.GetPublicBookingHandler).Methods("GET")
+	publicBooking.HandleFunc("/track/{id}/location", br.bookingController.UpdateWorkerLocationHandler).Methods("PATCH")
+	publicBooking.HandleFunc("/track/{id}/status", br.bookingController.UpdateBookingStatusHandler).Methods("PATCH")
 
 	// Protected routes (require auth)
 	protectedBooking := router.PathPrefix("/api/bookings").Subrouter()
@@ -40,6 +43,9 @@ func (br *BookingRouter) BookingRoutes(router *mux.Router) {
 
 	// PATCH /api/bookings/{id}/status
 	protectedBooking.HandleFunc("/{id}/status", br.bookingController.UpdateBookingStatusHandler).Methods("PATCH")
+
+	// PATCH /api/bookings/{id}/location
+	protectedBooking.HandleFunc("/{id}/location", br.bookingController.UpdateWorkerLocationHandler).Methods("PATCH")
 
 	// DELETE /api/bookings/{id}
 	protectedBooking.HandleFunc("/{id}", br.bookingController.CancelBookingHandler).Methods("DELETE")

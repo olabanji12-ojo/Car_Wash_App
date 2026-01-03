@@ -14,19 +14,24 @@ type Booking struct {
 	CarID     primitive.ObjectID `bson:"car_id" json:"car_id"`
 	CarwashID primitive.ObjectID `bson:"carwash_id" json:"carwash_id"`
 
-	BookingTime  time.Time    `bson:"booking_time" json:"booking_time"`
-	BookingType  string       `bson:"booking_type" json:"booking_type"`                       // slot_booking / home_service
-	UserLocation *GeoLocation `bson:"user_location,omitempty" json:"user_location,omitempty"` // Only for home service
-	AddressNote  string       `bson:"address_note,omitempty" json:"address_note,omitempty"`   // Optional directions
-	Status       string       `bson:"status" json:"status"`                                   // pending, confirmed, etc
-	Notes        string       `bson:"notes,omitempty" json:"notes,omitempty"`
-	QueueNumber  int          `bson:"queue_number" json:"queue_number"`
-	CreatedAt    time.Time    `bson:"created_at" json:"created_at"`
-	UpdatedAt    time.Time    `bson:"updated_at" json:"updated_at"`
+	BookingTime      time.Time          `bson:"booking_time" json:"booking_time"`
+	BookingType      string             `bson:"booking_type" json:"booking_type"`                       // slot_booking / home_service
+	UserLocation     *GeoLocation       `bson:"user_location,omitempty" json:"user_location,omitempty"` // Only for home service
+	AddressNote      string             `bson:"address_note,omitempty" json:"address_note,omitempty"`   // Optional directions
+	Status           string             `bson:"status" json:"status"`                                   // pending, confirmed, etc
+	Notes            string             `bson:"notes,omitempty" json:"notes,omitempty"`
+	QueueNumber      int                `bson:"queue_number" json:"queue_number"`
+	VerificationCode string             `bson:"verification_code" json:"verification_code"` // 4-digit handshake code
+	WorkerID         primitive.ObjectID `bson:"worker_id,omitempty" json:"worker_id,omitempty"`
+	WorkerLocation   *GeoLocation       `bson:"worker_location,omitempty" json:"worker_location,omitempty"`
+	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
 
 	// Enriched fields (not stored in DB, populated by service)
 	CustomerName  string `bson:"-" json:"customer_name,omitempty"`
 	CustomerPhoto string `bson:"-" json:"customer_photo,omitempty"`
+	WorkerName    string `bson:"-" json:"worker_name,omitempty"`
+	WorkerPhoto   string `bson:"-" json:"worker_photo,omitempty"`
 }
 
 func (b Booking) Validate() error {

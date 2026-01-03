@@ -34,10 +34,7 @@ func GetUserNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSON(w, http.StatusOK, map[string]interface{}{
-		"notifications": notifications,
-		"count":         len(notifications),
-	})
+	utils.JSON(w, http.StatusOK, notifications)
 }
 
 // MarkNotificationAsRead marks a specific notification as read
@@ -67,9 +64,7 @@ func GetUnreadNotificationCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSON(w, http.StatusOK, map[string]interface{}{
-		"unread_count": count,
-	})
+	utils.JSON(w, http.StatusOK, count)
 }
 
 // MarkAllNotificationsAsRead marks all notifications as read for user

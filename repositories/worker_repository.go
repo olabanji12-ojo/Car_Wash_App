@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/olabanji12-ojo/CarWashApp/models"
@@ -21,14 +22,14 @@ func NewWorkerRepository(db *mongo.Database) *WorkerRepository {
 	return &WorkerRepository{db: db}
 }
 
-// FindWorkersByBusinessID gets all workers for a business
-func (wr *WorkerRepository) FindWorkersByBusinessID(businessID primitive.ObjectID) ([]*models.User, error) {
+// FindWorkersByCarwashID gets all workers for a carwash
+func (wr *WorkerRepository) FindWorkersByCarwashID(carwashID primitive.ObjectID) ([]*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	filter := bson.M{
-		"role":                    "worker",
-		"worker_data.business_id": businessID.Hex(),
+		"role":       "worker",
+		"carwash_id": carwashID,
 	}
 
 	cursor, err := wr.db.Collection("users").Find(ctx, filter)
@@ -45,7 +46,7 @@ func (wr *WorkerRepository) FindWorkersByBusinessID(businessID primitive.ObjectI
 		}
 		workers = append(workers, &user)
 	}
-	
+
 	logrus.Infof("Found %d workers for business", len(workers))
 	return workers, nil
 }
@@ -75,11 +76,11 @@ func (wr *WorkerRepository) FindAvailableWorkersByBusinessID(businessID primitiv
 	defer cancel()
 
 	filter := bson.M{
-		"role":                      "worker",
-		"status":                    "active",               // Account is active
-		"worker_data.business_id":   businessID.Hex(),
-		"worker_data.status":        "online",              // Worker is online
-		"worker_data.active_orders": bson.M{"$size": 0},    // No active orders
+		"role":          "worker",
+		"status":        "active", // Account is active
+		"carwash_id":    businessID,
+		"worker_status": "online",           // Worker is online
+		"active_orders": bson.M{"$size": 0}, // No active orders
 	}
 
 	cursor, err := wr.db.Collection("users").Find(ctx, filter)
@@ -96,7 +97,7 @@ func (wr *WorkerRepository) FindAvailableWorkersByBusinessID(businessID primitiv
 		}
 		workers = append(workers, &user)
 	}
-	
+
 	logrus.Infof("Found %d available workers for business", len(workers))
 	return workers, nil
 }
@@ -126,14 +127,37 @@ func (wr *WorkerRepository) UpdateWorkerWorkStatus(workerID primitive.ObjectID, 
 	filter := bson.M{"_id": workerID}
 	update := bson.M{
 		"$set": bson.M{
-			"worker_data.status":    workStatus,
-			"worker_data.last_seen": time.Now(),
-			"updated_at":            time.Now(),
+			"worker_status": workStatus,
+			"last_seen":     time.Now(),
+			"updated_at":    time.Now(),
 		},
 	}
 
 	_, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
 	return err
+}
+
+// AssignWorkerToBooking assigns a worker to a booking
+func (wr *WorkerRepository) AssignWorkerToBooking(bookingID primitive.ObjectID, workerID primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": bookingID}
+	update := bson.M{
+		"$set": bson.M{
+			"worker_id":  workerID,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := wr.db.Collection("bookings").UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("booking not found in database")
+	}
+	return nil
 }
 
 // AssignWorkerToOrder assigns a worker to an order
@@ -161,17 +185,23 @@ func (wr *WorkerRepository) AddActiveOrderToWorker(workerID primitive.ObjectID, 
 	filter := bson.M{"_id": workerID}
 	update := bson.M{
 		"$set": bson.M{
-			"worker_data.status":    "busy",
-			"worker_data.last_seen": time.Now(),
-			"updated_at":            time.Now(),
+			"worker_status": "busy",
+			"last_seen":     time.Now(),
+			"updated_at":    time.Now(),
 		},
 		"$push": bson.M{
-			"worker_data.active_orders": orderID,
+			"active_orders": orderID,
 		},
 	}
 
-	_, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
-	return err
+	result, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("worker not found in database during status update")
+	}
+	return nil
 }
 
 // RemoveWorkerFromOrder removes a worker from an order (rollback function)
@@ -201,12 +231,12 @@ func (wr *WorkerRepository) RemoveActiveOrderFromWorker(workerID primitive.Objec
 	filter := bson.M{"_id": workerID}
 	update := bson.M{
 		"$set": bson.M{
-			"worker_data.status":    "online",
-			"worker_data.last_seen": time.Now(),
-			"updated_at":            time.Now(),
+			"worker_status": "online",
+			"last_seen":     time.Now(),
+			"updated_at":    time.Now(),
 		},
 		"$pull": bson.M{
-			"worker_data.active_orders": orderID,
+			"active_orders": orderID,
 		},
 	}
 

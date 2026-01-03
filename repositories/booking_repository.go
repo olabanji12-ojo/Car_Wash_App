@@ -55,7 +55,7 @@ func (br *BookingRepository) GetBookingsByUserID(userID primitive.ObjectID) ([]m
 	defer cancel()
 
 	options := options.Find()
-	options.SetSort(bson.D{{"created_at", -1}})
+	options.SetSort(bson.D{primitive.E{Key: "created_at", Value: -1}})
 
 	cursor, err := database.BookingCollection.Find(ctx, bson.M{"user_id": userID}, options)
 	if err != nil {

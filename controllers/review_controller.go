@@ -9,6 +9,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -121,6 +122,7 @@ func (rc *ReviewController) GetReviewsByBusinessIDHandler(w http.ResponseWriter,
 		return
 	}
 
+	logrus.Infof("Fetching reviews for business: %s (Found: %d)", carwashID, len(reviews))
 	utils.JSON(w, http.StatusOK, reviews)
 }
 

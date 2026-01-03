@@ -128,39 +128,58 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 
 	// Step 5: Create new booking
 	queueNumber := len(bookingsForDay) + 1
+	verificationCode, _ := utils.GenerateNumericCode(4)
+
 	newBooking := models.Booking{
 
-		ID:           primitive.NewObjectID(),
-		UserID:       ownerID,
-		CarID:        input.CarID,
-		CarwashID:    input.CarwashID,
-		BookingTime:  input.BookingTime,
-		BookingType:  input.BookingType,
-		UserLocation: input.UserLocation,
-		AddressNote:  input.AddressNote,
-		Notes:        input.Notes,
-		Status:       "pending",
-		QueueNumber:  queueNumber,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:               primitive.NewObjectID(),
+		UserID:           ownerID,
+		CarID:            input.CarID,
+		CarwashID:        input.CarwashID,
+		BookingTime:      input.BookingTime,
+		BookingType:      input.BookingType,
+		UserLocation:     input.UserLocation,
+		AddressNote:      input.AddressNote,
+		Notes:            input.Notes,
+		Status:           "pending",
+		QueueNumber:      queueNumber,
+		VerificationCode: verificationCode,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
 	// Check distance if it's a home service
+	// Step 5.5: Distance check for home service
 	if input.BookingType == "home_service" {
-		if input.UserLocation == nil {
-			return nil, errors.New("user location is required for home service")
+		if input.UserLocation == nil || len(input.UserLocation.Coordinates) < 2 {
+			logrus.Warnf("[BookingError] Missing or invalid user coordinates for home service. UserID: %s", userID)
+			return nil, errors.New("precise user location coordinates are required for home service")
 		}
 
-		userLat := input.UserLocation.Coordinates[1]
-		userLng := input.UserLocation.Coordinates[0]
+		if len(carwash.Location.Coordinates) < 2 {
+			logrus.Errorf("[BookingError] Carwash %s has invalid location coordinates", input.CarwashID)
+			return nil, errors.New("carwash location is improperly configured on the server")
+		}
 
-		carwashLat := carwash.Location.Coordinates[1]
+		userLng := input.UserLocation.Coordinates[0]
+		userLat := input.UserLocation.Coordinates[1]
+
 		carwashLng := carwash.Location.Coordinates[0]
+		carwashLat := carwash.Location.Coordinates[1]
 
 		distance := utils.CalculateDistance(userLat, userLng, carwashLat, carwashLng)
 
-		if float64(distance) > float64(carwash.DeliveryRadiusKM) {
-			return nil, errors.New("user is outside the delivery radius for this carwash")
+		// Fallback for DeliveryRadiusKM if it's 0 (uninitialized)
+		effectiveRadius := carwash.DeliveryRadiusKM
+		if effectiveRadius <= 0 {
+			effectiveRadius = 10 // Match the frontend fallback
+		}
+
+		logrus.Infof("[BookingService] Distance check: User(%.6f, %.6f) to Carwash(%.6f, %.6f). Distance: %.2f km. Radius: %d km (Effective: %d)",
+			userLat, userLng, carwashLat, carwashLng, distance, carwash.DeliveryRadiusKM, effectiveRadius)
+
+		if float64(distance) > float64(effectiveRadius) {
+			return nil, fmt.Errorf("your location is %.1f km away, which is outside our %d km delivery radius", distance, effectiveRadius)
 		}
 	}
 
@@ -237,7 +256,7 @@ func (bs *BookingService) GetBookingsByCarwashID(carwashID string) ([]models.Boo
 	return bs.enrichBookingsWithCustomerDetails(bookings)
 }
 
-func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string) error {
+func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string, verificationCode string) error {
 	objID, err := primitive.ObjectIDFromHex(bookingID)
 	if err != nil {
 		return errors.New("invalid booking ID")
@@ -249,8 +268,28 @@ func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string
 		return errors.New("booking not found")
 	}
 
+	// VALIDATION: Enforce Handshake for Completion (ONLY for Home Service)
+	if newStatus == "completed" && booking.BookingType == "home_service" {
+		// Only validate if it's NOT already completed (idempotency)
+		if booking.Status != "completed" {
+			if booking.VerificationCode == "" {
+				return errors.New("cannot complete: booking has no verification code")
+			}
+			if booking.VerificationCode != verificationCode {
+				return errors.New("invalid verification code. Please request the 4-digit code from the customer")
+			}
+		}
+	}
+
 	if err := bs.bookingRepository.UpdateBookingStatus(objID, newStatus); err != nil {
 		return err
+	}
+
+	// Step 2: Generate Verification Code if confirmed and missing
+	if newStatus == "confirmed" && booking.VerificationCode == "" {
+		code, _ := utils.GenerateNumericCode(4)
+		updates := bson.M{"verification_code": code}
+		bs.bookingRepository.UpdateBooking(objID, updates)
 	}
 
 	// Trigger Notifications (Async)
@@ -403,13 +442,51 @@ func (bs *BookingService) enrichBookingsWithCustomerDetails(bookings []models.Bo
 		userMap[u.ID] = u
 	}
 
-	// Enrich Bookings
-	for i := range bookings {
-		if user, ok := userMap[bookings[i].UserID]; ok {
-			bookings[i].CustomerName = user.Name
-			bookings[i].CustomerPhoto = user.ProfilePhoto
+	// Step 3: Enrich with Worker Details
+	workerIDs := make([]primitive.ObjectID, 0)
+	workerSeen := make(map[primitive.ObjectID]bool)
+	for _, b := range bookings {
+		if !b.WorkerID.IsZero() && !workerSeen[b.WorkerID] {
+			workerIDs = append(workerIDs, b.WorkerID)
+			workerSeen[b.WorkerID] = true
+		}
+	}
+
+	if len(workerIDs) > 0 {
+		workers, err := bs.userRepository.GetUsersByIDs(workerIDs)
+		if err == nil {
+			workerMap := make(map[primitive.ObjectID]models.User)
+			for _, w := range workers {
+				workerMap[w.ID] = w
+			}
+			for i := range bookings {
+				if worker, ok := workerMap[bookings[i].WorkerID]; ok {
+					bookings[i].WorkerName = worker.Name
+					bookings[i].WorkerPhoto = worker.ProfilePhoto
+				}
+			}
 		}
 	}
 
 	return bookings, nil
+}
+
+// UpdateWorkerLocation updates the moving coordinates of the service provider
+func (bs *BookingService) UpdateWorkerLocation(id string, lat, lng float64) error {
+	bookingID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid booking ID format")
+	}
+
+	location := models.GeoLocation{
+		Type:        "Point",
+		Coordinates: []float64{lng, lat}, // MongoDB uses [longitude, latitude]
+	}
+
+	updates := bson.M{
+		"worker_location": location,
+		"updated_at":      time.Now(),
+	}
+
+	return bs.bookingRepository.UpdateBooking(bookingID, updates)
 }

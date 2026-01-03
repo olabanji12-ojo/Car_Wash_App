@@ -45,7 +45,7 @@ func GetNotificationsByUserID(userID string, limit int) ([]models.Notification, 
 		limit = 50
 	}
 
-	opts := options.Find().SetSort(bson.D{{"created_at", -1}}).SetLimit(int64(limit))
+	opts := options.Find().SetSort(bson.D{primitive.E{Key: "created_at", Value: -1}}).SetLimit(int64(limit))
 	cursor, err := database.NotificationCollection.Find(ctx, bson.M{"user_id": objID}, opts)
 	if err != nil {
 		return nil, err
