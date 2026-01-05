@@ -29,29 +29,33 @@ type Service struct {
 }
 
 type Carwash struct {
-	ID                  primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
-	OwnerID             primitive.ObjectID   `bson:"owner_id" json:"owner_id"` // Link to User who owns this
-	Name                string               `bson:"name" json:"name"`
-	Description         string               `bson:"description,omitempty" json:"description,omitempty"`
-	Address             string               `bson:"address" json:"address"`
-	Location            GeoLocation          `bson:"location" json:"location"`
-	PhotoGallery        []string             `bson:"photo_gallery,omitempty" json:"photo_gallery,omitempty"`
-	Services            []Service            `bson:"services" json:"services"`
-	IsActive            bool                 `bson:"is_active" json:"is_active"`
-	Rating              float64              `bson:"rating" json:"rating"`
-	QueueCount          int                  `bson:"queue_count" json:"queue_count"`
-	OpenHours           map[string]TimeRange `bson:"open_hours" json:"open_hours"`
-	HomeService         bool                 `bson:"home_service,omitempty" json:"home_service,omitempty"`
-	DeliveryRadiusKM    int                  `bson:"delivery_radius_km,omitempty" json:"delivery_radius_km,omitempty"`
-	MaxCarsPerSlot      int                  `bson:"max_cars_per_slot" json:"max_cars_per_slot"`
-	CreatedAt           time.Time            `bson:"created_at" json:"created_at"`
-	UpdatedAt           time.Time            `bson:"updated_at" json:"updated_at"`
-	State               string               `bson:"state,omitempty" json:"state,omitempty"`
-	Country             string               `bson:"country,omitempty" json:"country,omitempty"`
-	LGA                 string               `bson:"lga,omitempty" json:"lga,omitempty"`
-	HasLocation         bool                 `bson:"has_location" json:"has_location"`
-	ServiceRangeMinutes int                  `bson:"service_range_minutes,omitempty" json:"service_range_minutes,omitempty"`
-	HasOnboarded        bool                 `bson:"has_onboarded" json:"has_onboarded"`
+	ID                  primitive.ObjectID       `bson:"_id,omitempty" json:"id,omitempty"`
+	OwnerID             primitive.ObjectID       `bson:"owner_id" json:"owner_id"` // Link to User who owns this
+	Name                string                   `bson:"name" json:"name"`
+	Description         string                   `bson:"description,omitempty" json:"description,omitempty"`
+	Address             string                   `bson:"address" json:"address"`
+	Location            GeoLocation              `bson:"location" json:"location"`
+	PhotoGallery        []string                 `bson:"photo_gallery,omitempty" json:"photo_gallery,omitempty"`
+	Services            []Service                `bson:"services" json:"services"`
+	IsActive            bool                     `bson:"is_active" json:"is_active"`
+	Rating              float64                  `bson:"rating" json:"rating"`
+	QueueCount          int                      `bson:"queue_count" json:"queue_count"`
+	OpenHours           map[string]TimeRange     `bson:"open_hours" json:"open_hours"`
+	HomeService         bool                     `bson:"home_service,omitempty" json:"home_service,omitempty"`
+	DeliveryRadiusKM    int                      `bson:"delivery_radius_km,omitempty" json:"delivery_radius_km,omitempty"`
+	MaxCarsPerSlot      int                      `bson:"max_cars_per_slot" json:"max_cars_per_slot"`
+	CreatedAt           time.Time                `bson:"created_at" json:"created_at"`
+	UpdatedAt           time.Time                `bson:"updated_at" json:"updated_at"`
+	State               string                   `bson:"state,omitempty" json:"state,omitempty"`
+	Country             string                   `bson:"country,omitempty" json:"country,omitempty"`
+	LGA                 string                   `bson:"lga,omitempty" json:"lga,omitempty"`
+	HasLocation         bool                     `bson:"has_location" json:"has_location"`
+	ServiceRangeMinutes int                      `bson:"service_range_minutes,omitempty" json:"service_range_minutes,omitempty"`
+	HasOnboarded        bool                     `bson:"has_onboarded" json:"has_onboarded"`
+	About               string                   `bson:"about,omitempty" json:"about,omitempty"`
+	Features            []string                 `bson:"features,omitempty" json:"features,omitempty"`
+	Addons              []map[string]interface{} `bson:"addons,omitempty" json:"addons,omitempty"`
+	BasePrice           float64                  `bson:"base_price" json:"base_price"`
 }
 
 func (c *Carwash) SetDefaults() {
@@ -61,6 +65,9 @@ func (c *Carwash) SetDefaults() {
 	c.QueueCount = 0
 	c.IsActive = true
 	c.Services = []Service{} // initialize Services as empty slice
+	if c.BasePrice == 0 {
+		c.BasePrice = 5000 // Default base price if not set
+	}
 }
 
 func (s Service) Validate() error {
@@ -154,6 +161,12 @@ func (c *Carwash) WithDistance(userLat, userLng float64) map[string]interface{} 
 		"state":              c.State,
 		"lga":                c.LGA,
 		"country":            c.Country,
+		"services":           c.Services,
+		"about":              c.About,
+		"features":           c.Features,
+		"addons":             c.Addons,
+		"operating_hours":    c.OpenHours,
+		"base_price":         c.BasePrice,
 	}
 }
 
