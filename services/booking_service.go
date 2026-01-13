@@ -442,6 +442,14 @@ func (bs *BookingService) enrichBookingsWithCustomerDetails(bookings []models.Bo
 		userMap[u.ID] = u
 	}
 
+	// Assign Customer Details to Bookings
+	for i := range bookings {
+		if user, ok := userMap[bookings[i].UserID]; ok {
+			bookings[i].CustomerName = user.Name
+			bookings[i].CustomerPhoto = user.ProfilePhoto
+		}
+	}
+
 	// Step 3: Enrich with Worker Details
 	workerIDs := make([]primitive.ObjectID, 0)
 	workerSeen := make(map[primitive.ObjectID]bool)
