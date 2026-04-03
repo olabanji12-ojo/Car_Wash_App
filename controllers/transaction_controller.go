@@ -1,84 +1,82 @@
-
 package controllers
 
 import (
-	
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/olabanji12-ojo/CarWashApp/middleware"
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/utils"
-	"github.com/olabanji12-ojo/CarWashApp/middleware"
-
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-//  POST /api/payments → Create a new payment
-func CreatePaymentHandler(w http.ResponseWriter, r *http.Request) {
+type TransactionController struct {
+	TransactionService *services.TransactionService
+}
+
+func NewTransactionController(ts *services.TransactionService) *TransactionController {
+	return &TransactionController{
+		TransactionService: ts,
+	}
+}
+
+// GetEarningsSummaryHandler handles GET /api/transactions/summary/{carwash_id}
+func (tc *TransactionController) GetEarningsSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	carwashID := mux.Vars(r)["carwash_id"]
+	if carwashID == "" {
+		utils.Error(w, http.StatusBadRequest, "Missing carwash ID")
+		return
+	}
+
+	summary, err := tc.TransactionService.GetEarningsSummary(carwashID)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Failed to retrieve earnings summary")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, summary)
+}
+
+// GetTransactionHistoryHandler handles GET /api/transactions/history/{carwash_id}
+func (tc *TransactionController) GetTransactionHistoryHandler(w http.ResponseWriter, r *http.Request) {
+	carwashID := mux.Vars(r)["carwash_id"]
+	if carwashID == "" {
+		utils.Error(w, http.StatusBadRequest, "Missing carwash ID")
+		return
+	}
+
+	history, err := tc.TransactionService.GetTransactionHistory(carwashID)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Failed to retrieve transaction history")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, history)
+}
+
+// GetPaymentsByUserHandler handles GET /api/payments/user
+func (tc *TransactionController) GetPaymentsByUserHandler(w http.ResponseWriter, r *http.Request) {
 	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	userID  := authCtx.UserID
+	userID := authCtx.UserID
 
-	var input models.Payment
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		utils.Error(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	if err := input.Validate(); err != nil {
-	utils.Error(w, http.StatusBadRequest, err.Error())
-	return
-   }
-
-	created, err := services.CreatePayment(userID, input)
+	objID, _ := primitive.ObjectIDFromHex(userID)
+	history, err := tc.TransactionService.GetTransactionHistoryByUserID(objID)
 	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, err.Error())
+		utils.Error(w, http.StatusInternalServerError, "Failed to retrieve your payment history")
 		return
 	}
 
-	utils.JSON(w, http.StatusCreated, created)
+	utils.JSON(w, http.StatusOK, history)
 }
 
-//  GET /api/payments/{id} → Get payment by ID
-func GetPaymentByIDHandler(w http.ResponseWriter, r *http.Request) {
-	paymentID := mux.Vars(r)["id"]
-
-	payment, err := services.GetPaymentByOrderID(paymentID)
-	if err != nil {
-		utils.Error(w, http.StatusNotFound, err.Error())
-		return
-	}
-    
-	utils.JSON(w, http.StatusOK, payment)
-	
-}
-
-// GET /api/payments/user → Get all user payments
-func GetPaymentsByUserHandler(w http.ResponseWriter, r *http.Request) {
-
-	authCtx := r.Context().Value("auth").(middleware.AuthContext)
-	userID  := authCtx.UserID
-
-	payments, err := services.GetPaymentsByUserID(userID)
-	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.JSON(w, http.StatusOK, payments)
-}
-
-//  GET /api/payments/carwash/{id} → All for a carwash
-func GetPaymentsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
+// GetPaymentsByCarwashHandler handles GET /api/payments/carwash/{id}
+func (tc *TransactionController) GetPaymentsByCarwashHandler(w http.ResponseWriter, r *http.Request) {
 	carwashID := mux.Vars(r)["id"]
-
-	payments, err := services.GetPaymentsByCarwashID(carwashID)
+	history, err := tc.TransactionService.GetTransactionHistory(carwashID)
 	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, err.Error())
+		utils.Error(w, http.StatusInternalServerError, "Failed to retrieve carwash payment history")
 		return
 	}
 
-	utils.JSON(w, http.StatusOK, payments)
+	utils.JSON(w, http.StatusOK, history)
 }
-
-

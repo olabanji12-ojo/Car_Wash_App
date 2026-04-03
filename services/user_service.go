@@ -308,8 +308,8 @@ func (s *UserService) GetUserRole(userID string) (string, error) {
 	return user.Role, nil
 }
 
-// GetLoyaltyPoints retrieves loyalty points for a car owner
-func (s *UserService) GetLoyaltyPoints(userID string) (int, error) {
+// GetCompletedWashesCount retrieves the number of completed washes for a car owner
+func (s *UserService) GetCompletedWashesCount(userID string) (int, error) {
 	// 1. Convert to ObjectID
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -324,11 +324,11 @@ func (s *UserService) GetLoyaltyPoints(userID string) (int, error) {
 
 	// 3. Confirm they are a car owner
 	if user.Role != "car_owner" && user.AccountType != "car_owner" {
-		return 0, errors.New("loyalty points not available for this user")
+		return 0, errors.New("completed wash count not available for this user")
 	}
 
-	// 4. Return the loyalty points
-	return user.LoyaltyPoints, nil
+	// 4. Return the completed washes count
+	return user.CompletedWashesCount, nil
 }
 
 // GetPublicProfile retrieves public profile information

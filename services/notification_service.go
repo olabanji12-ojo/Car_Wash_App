@@ -22,6 +22,25 @@ func NewNotificationService(userRepo *repositories.UserRepository) *Notification
 	}
 }
 
+// SendPushPing is the "Magic Mailman" hook for Firebase (FCM)
+func (ns *NotificationService) SendPushPing(userID primitive.ObjectID, title, message string) {
+	// 4-Step Process for Zero Ambiguity:
+	// 1. Get user's device token from Database
+	// 2. Initialize Firebase App (using service-account.json)
+	// 3. Create the FCM Message object
+	// 4. Send it!
+
+	user, err := ns.userRepo.FindUserByID(userID)
+	if err != nil || user.DeviceToken == "" {
+		return // No token, no ping
+	}
+
+	log.Printf("[FCM-PREP] Sending Ping to User %s: %s - %s", user.Email, title, message)
+	
+	// Real Firebase code will be plugged in here during mobile app phase:
+	// client.Send(ctx, &messaging.Message{ Token: user.DeviceToken, Notification: ... })
+}
+
 // CreateNotification creates a notification and optionally sends email
 func (ns *NotificationService) CreateNotification(userID primitive.ObjectID, title, message, notificationType string, sendEmail bool) error {
 	notification := models.Notification{
@@ -46,6 +65,9 @@ func (ns *NotificationService) CreateNotification(userID primitive.ObjectID, tit
 	if sendEmail {
 		go ns.sendEmailAsync(savedNotification.ID, userID, title, message)
 	}
+
+	// ALWAYS send a Push Ping for mobile readiness
+	go ns.SendPushPing(userID, title, message)
 
 	return nil
 }

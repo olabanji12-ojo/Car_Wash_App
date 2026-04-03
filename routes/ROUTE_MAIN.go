@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/olabanji12-ojo/CarWashApp/controllers"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
@@ -54,7 +56,18 @@ func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 		*repositories.NewCarWashRepository(db),
 		*userRepo,
 		notificationService,
+		services.NewDefaultMapService(),
+		services.NewLoyaltyService(*repositories.NewOrderRepository(db)),
+		services.NewRedisLockService(),
 	)
+
+	// Start Background Worker for Auto-Cancellation (Runs once every minute)
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		for range ticker.C {
+			bookingService.CancelExpiredBookings()
+		}
+	}()
 
 	// We also need CarWashService for GetAvailableSlots
 	carwashRepo := repositories.NewCarWashRepository(db)
@@ -65,13 +78,26 @@ func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 }
 
 func InitOrderService(db *mongo.Database) *controllers.OrderController {
-	orderService := services.NewOrderService(*repositories.NewOrderRepository(db))
+	orderService := services.NewOrderService(
+		*repositories.NewOrderRepository(db),
+		*repositories.NewBookingRepository(db),
+		*repositories.NewCarWashRepository(db),
+		services.NewFinanceService(),
+	)
 	return &controllers.OrderController{OrderService: orderService}
 }
 
 func InitReviewService(db *mongo.Database) *controllers.ReviewController {
-	reviewService := services.NewReviewService(*repositories.NewReviewRepository(db))
+	reviewService := services.NewReviewService(
+		*repositories.NewReviewRepository(db),
+		*repositories.NewCarWashRepository(db),
+	)
 	return controllers.NewReviewController(reviewService)
+}
+
+func InitTransactionService(db *mongo.Database) *controllers.TransactionController {
+	ts := services.NewTransactionService()
+	return controllers.NewTransactionController(ts)
 }
 
 func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geocoder) {
@@ -112,6 +138,10 @@ func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geoco
 	workerRouter := NewWorkerRouter(workerController)
 	workerRouter.WorkerRoutes(router)
 
-	PaymentRoutes(router)
+	// Initialize TransactionRouter and set up transaction routes
+	transactionController := InitTransactionService(db)
+	transactionRouter := NewTransactionRouter(*transactionController)
+	transactionRouter.TransactionRoutes(router)
+
 	NotificationRoutes(router) // Notification system
 }

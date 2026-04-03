@@ -106,6 +106,37 @@ func CalculateEarningsByCarwash(carwashID primitive.ObjectID) (float64, error) {
 	return total, nil
 }
 
+// 5.5 CalculateEarningsByPeriod
+func GetEarningsByPeriod(carwashID primitive.ObjectID, startTime time.Time) (float64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	matchStage := bson.M{"$match": bson.M{
+		"carwash_id": carwashID,
+		"status":     "paid",
+		"paid_at":    bson.M{"$gte": startTime},
+	}}
+
+	groupStage := bson.M{"$group": bson.M{
+		"_id":   nil,
+		"total": bson.M{"$sum": "$amount"},
+	}}
+
+	cursor, err := database.PaymentCollection.Aggregate(ctx, []bson.M{matchStage, groupStage})
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var result []bson.M
+	if err := cursor.All(ctx, &result); err != nil || len(result) == 0 {
+		return 0, nil
+	}
+
+	total := result[0]["total"].(float64)
+	return total, nil
+}
+
 //  6. GetPaymentByReference
 func GetPaymentByReference(reference string) (*models.Payment, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

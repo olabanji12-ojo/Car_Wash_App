@@ -55,7 +55,8 @@ type Carwash struct {
 	About               string                   `bson:"about,omitempty" json:"about,omitempty"`
 	Features            []string                 `bson:"features,omitempty" json:"features,omitempty"`
 	Addons              []map[string]interface{} `bson:"addons,omitempty" json:"addons,omitempty"`
-	BasePrice           float64                  `bson:"base_price" json:"base_price"`
+	PricingMatrix       map[string]float64       `bson:"pricing_matrix" json:"pricing_matrix"` // map car size to base price
+	AverageWashTime     int                      `bson:"average_wash_time" json:"average_wash_time"`
 }
 
 func (c *Carwash) SetDefaults() {
@@ -65,8 +66,15 @@ func (c *Carwash) SetDefaults() {
 	c.QueueCount = 0
 	c.IsActive = true
 	c.Services = []Service{} // initialize Services as empty slice
-	if c.BasePrice == 0 {
-		c.BasePrice = 5000 // Default base price if not set
+	if c.AverageWashTime == 0 {
+		c.AverageWashTime = 30 // Default to 30 minutes
+	}
+	if c.PricingMatrix == nil {
+		c.PricingMatrix = map[string]float64{
+			"small":  3000,
+			"medium": 5000,
+			"large":  7000,
+		}
 	}
 }
 
@@ -166,7 +174,8 @@ func (c *Carwash) WithDistance(userLat, userLng float64) map[string]interface{} 
 		"features":           c.Features,
 		"addons":             c.Addons,
 		"operating_hours":    c.OpenHours,
-		"base_price":         c.BasePrice,
+		"pricing_matrix":     c.PricingMatrix,
+		"average_wash_time":  c.AverageWashTime,
 	}
 }
 

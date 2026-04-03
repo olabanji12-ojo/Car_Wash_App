@@ -28,6 +28,7 @@ func (br *BookingRouter) BookingRoutes(router *mux.Router) {
 
 	// POST /api/bookings
 	protectedBooking.HandleFunc("", br.bookingController.CreateBookingHandler).Methods("POST")
+	protectedBooking.HandleFunc("/reserve", br.bookingController.ReserveSlotHandler).Methods("POST")
 
 	// GET /api/bookings/{id}
 	protectedBooking.HandleFunc("/{id}", br.bookingController.GetBookingByIDHandler).Methods("GET")

@@ -9,12 +9,15 @@ import (
 
 	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+const RedisGeoKey = "carwashes:geo"
 
 type CarWashRepository struct {
 	db *mongo.Database
@@ -33,6 +36,10 @@ func (cw *CarWashRepository) CreateCarwash(carwash models.Carwash) (*mongo.Inser
 	if err != nil {
 		return nil, err
 	}
+
+	// Sync to Redis (Fail-soft)
+	go cw.SyncCarwashToRedis(&carwash)
+
 	return result, nil
 }
 
@@ -88,6 +95,14 @@ func (cw *CarWashRepository) UpdateCarwash(id string, update bson.M) error {
 		bson.M{"_id": objID},
 		bson.M{"$set": update},
 	)
+
+	// If location was updated, sync to Redis
+	if _, ok := update["location"]; ok {
+		if carwash, err := cw.GetCarwashByID(objID); err == nil {
+			go cw.SyncCarwashToRedis(carwash)
+		}
+	}
+
 	return err
 }
 
@@ -156,9 +171,50 @@ func (cw *CarWashRepository) GetCarwashesByFilter(filter bson.M) ([]models.Carwa
 	return carwashes, nil
 }
 
-// 9. Update queue count
-func (cw *CarWashRepository) UpdateQueueCount(id string, count int) error {
-	return cw.UpdateCarwash(id, bson.M{"queue_count": count})
+// 9. RefreshQueueCount - recalculates queue count from active orders and updates the carwash record
+func (cw *CarWashRepository) RefreshQueueCount(id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid carwash ID format")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Count active orders for this carwash
+	count, err := database.OrderCollection.CountDocuments(ctx, bson.M{
+		"carwash_id": objID,
+		"status":     "active",
+	})
+	if err != nil {
+		return fmt.Errorf("failed to recalculate queue count: %w", err)
+	}
+
+	// Update the carwash document
+	_, err = database.CarwashCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": objID},
+		bson.M{"$set": bson.M{"queue_count": int(count), "updated_at": time.Now()}},
+	)
+	return err
+}
+
+// 10. UpdateCarwashRating - updates the average rating and review count for a carwash
+func (cw *CarWashRepository) UpdateCarwashRating(id primitive.ObjectID, averageRating float64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := database.CarwashCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{
+			"$set": bson.M{
+				"rating":     averageRating,
+				"updated_at": time.Now(),
+			},
+		},
+	)
+	return err
 }
 
 // 10. Find carwashes with intelligent fallback
@@ -193,8 +249,53 @@ func (cw *CarWashRepository) FindCarwashesWithFallback(userLat, userLng float64)
 	return result, "all", nil
 }
 
-// Helper function using your existing pattern
+// Helper function using your existing pattern (Optimized with Redis)
 func (cw *CarWashRepository) findCarwashesInRadius(userLat, userLng, radiusKm float64) ([]*models.Carwash, error) {
+	// Step 1: Try Redis first
+	if database.RedisClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Redis GeoSearch (v9)
+		ids, err := database.RedisClient.GeoSearch(ctx, RedisGeoKey, &redis.GeoSearchQuery{
+			Member:     "", // Not searching relative to another member
+			Longitude:  userLng,
+			Latitude:   userLat,
+			Radius:     radiusKm,
+			RadiusUnit: "km",
+			Sort:       "asc",
+		}).Result()
+
+		if err == nil && len(ids) > 0 {
+			logrus.Infof("🚀 Redis Geo-Hit: Found %d shops within %.1fkm", len(ids), radiusKm)
+
+			var objectIDs []primitive.ObjectID
+			for _, idStr := range ids {
+				if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
+					objectIDs = append(objectIDs, oid)
+				}
+			}
+
+			// Fetch full details from Mongo, ensuring we respect status
+			filter := bson.M{
+				"_id":       bson.M{"$in": objectIDs},
+				"is_active": true,
+			}
+			carwashes, err := cw.GetCarwashesByFilter(filter)
+			if err == nil && len(carwashes) > 0 {
+				var result []*models.Carwash
+				// Note: Mongo $in doesn't preserve order. 
+				// For the MVP, we'll let the frontend sort by distance or add distance later.
+				for i := range carwashes {
+					result = append(result, &carwashes[i])
+				}
+				return result, nil
+			}
+		}
+	}
+
+	// Step 2: Fallback to MongoDB $near
+	logrus.Info("⚠️ Redis Miss or Error: Falling back to MongoDB $near")
 	filter := bson.M{
 		"location": bson.M{
 			"$near": bson.M{
@@ -429,4 +530,28 @@ func (cw *CarWashRepository) AddPhotoToGallery(id primitive.ObjectID, photoURL s
 		bson.M{"$push": bson.M{"photo_gallery": photoURL}},
 	)
 	return err
+}
+
+// SyncCarwashToRedis - helper to sync a carwash's location to the Redis Geo Index
+func (cw *CarWashRepository) SyncCarwashToRedis(carwash *models.Carwash) {
+	if database.RedisClient == nil || carwash.Location.Coordinates == nil || len(carwash.Location.Coordinates) < 2 {
+		logrus.Warnf("Skipping Redis Sync for Carwash %s: Redis client or location is missing", carwash.ID.Hex())
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Redis GEOADD uses [longitude, latitude]
+	err := database.RedisClient.GeoAdd(ctx, RedisGeoKey, &redis.GeoLocation{
+		Name:      carwash.ID.Hex(),
+		Longitude: carwash.Location.Coordinates[0],
+		Latitude:  carwash.Location.Coordinates[1],
+	}).Err()
+
+	if err != nil {
+		logrus.Errorf("❌ Failed to sync carwash %s to Redis: %v", carwash.ID.Hex(), err)
+	} else {
+		logrus.Infof("✅ Carwash %s synced to Redis Geo Index", carwash.ID.Hex())
+	}
 }

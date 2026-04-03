@@ -36,6 +36,12 @@ func (cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	// 📸 CUSTOM VALIDATION: Ensure the Car Wash has at least one photo
+	if len(input.PhotoGallery) == 0 {
+		utils.Error(w, http.StatusBadRequest, "At least one photo is required")
+		return
+	}
+
 	authData := r.Context().Value("auth")
 	logrus.Info("Auth data from context:", authData)
 	authCtx, ok := authData.(middleware.AuthContext)
@@ -501,4 +507,8 @@ func (cwc *CarWashController) UploadCarwashPhotoHandler(w http.ResponseWriter, r
 		"message": "Photo uploaded successfully",
 		"url":     url,
 	})
+}
+
+func (cwc *CarWashController) DeleteProfile(w http.ResponseWriter, r *http.Request) {
+
 }

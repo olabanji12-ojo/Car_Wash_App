@@ -401,3 +401,31 @@ func (bc *BookingController) GetPublicBookingHandler(w http.ResponseWriter, r *h
 
 	utils.JSON(w, http.StatusOK, publicInfo)
 }
+// 8. ReserveSlotHandler handles POST /api/bookings/reserve
+func (bc *BookingController) ReserveSlotHandler(w http.ResponseWriter, r *http.Request) {
+	authCtx := r.Context().Value("auth").(middleware.AuthContext)
+	userID := authCtx.UserID
+
+	var input struct {
+		CarwashID string `json:"carwash_id"`
+		SlotTime  string `json:"slot_time"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Please provide a valid carwash and time slot to reserve.")
+		return
+	}
+
+	success, err := bc.BookingService.ReserveSlot(input.CarwashID, input.SlotTime, userID)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "We ran into a small problem while trying to save your spot. Please try again.")
+		return
+	}
+
+	if !success {
+		utils.Error(w, http.StatusConflict, "Someone else is currently finishing their booking for this slot 🍕. Please wait a moment or pick another time.")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, map[string]string{"message": "Slot reserved for 3 minutes! Finish your booking now."})
+}

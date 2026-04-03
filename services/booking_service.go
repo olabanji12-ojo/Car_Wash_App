@@ -21,14 +21,20 @@ type BookingService struct {
 	carWashRepository   repositories.CarWashRepository
 	userRepository      repositories.UserRepository
 	notificationService *NotificationService
+	mapService          MapService
+	loyaltyService      *LoyaltyService
+	lockService         LockService
 }
 
-func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository, notificationService *NotificationService) *BookingService {
+func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository, notificationService *NotificationService, mapService MapService, loyaltyService *LoyaltyService, lockService LockService) *BookingService {
 	return &BookingService{
 		bookingRepository:   bookingRepository,
 		carWashRepository:   carWashRepository,
 		userRepository:      userRepository,
 		notificationService: notificationService,
+		mapService:          mapService,
+		loyaltyService:      loyaltyService,
+		lockService:         lockService,
 	}
 }
 
@@ -126,6 +132,13 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		return nil, errors.New("selected time slot is already fully booked")
 	}
 
+	// Step 4.5: FINAL Lock Verification (Ensure it wasn't stolen at the last millisecond)
+	lockKey := GetLockKey(input.CarwashID.Hex(), inputTimeStr)
+	lockedByOther, _ := bs.lockService.IsLockedByOther(lockKey, ownerID.Hex())
+	if lockedByOther {
+		return nil, errors.New("someone else just grabbed this slot! Please try another time.")
+	}
+
 	// Step 5: Create new booking
 	queueNumber := len(bookingsForDay) + 1
 	verificationCode, _ := utils.GenerateNumericCode(4)
@@ -146,6 +159,14 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		VerificationCode: verificationCode,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
+		ExpiresAt:        time.Now().Add(5 * time.Minute),
+	}
+
+	// Step 6: Apply Loyalty Reward (100% discount)
+	isEligible, _, _ := bs.loyaltyService.IsEligibleForFreeWash(ownerID.Hex())
+	if isEligible {
+		newBooking.IsFree = true
+		logrus.Infof("🎁 User %s is eligible for a FREE wash (Loyalty Reward)", ownerID.Hex())
 	}
 
 	// Check distance if it's a home service
@@ -167,7 +188,7 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		carwashLng := carwash.Location.Coordinates[0]
 		carwashLat := carwash.Location.Coordinates[1]
 
-		distance := utils.CalculateDistance(userLat, userLng, carwashLat, carwashLng)
+		distance := bs.mapService.GetDistanceKm(userLat, userLng, carwashLat, carwashLng)
 
 		// Fallback for DeliveryRadiusKM if it's 0 (uninitialized)
 		effectiveRadius := carwash.DeliveryRadiusKM
@@ -268,16 +289,14 @@ func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string
 		return errors.New("booking not found")
 	}
 
-	// VALIDATION: Enforce Handshake for Completion (ONLY for Home Service)
-	if newStatus == "completed" && booking.BookingType == "home_service" {
-		// Only validate if it's NOT already completed (idempotency)
-		if booking.Status != "completed" {
-			if booking.VerificationCode == "" {
-				return errors.New("cannot complete: booking has no verification code")
-			}
-			if booking.VerificationCode != verificationCode {
-				return errors.New("invalid verification code. Please request the 4-digit code from the customer")
-			}
+	// VALIDATION: Enforce Handshake for Starting the Wash (ONLY for Home Service)
+	// We verify the code when moving to "in_progress"
+	if newStatus == "in_progress" && booking.BookingType == "home_service" {
+		if booking.VerificationCode == "" {
+			return errors.New("cannot start: booking has no verification code")
+		}
+		if booking.VerificationCode != verificationCode {
+			return errors.New("invalid verification code. Please request the 4-digit code from the customer to start the wash")
 		}
 	}
 
@@ -497,4 +516,29 @@ func (bs *BookingService) UpdateWorkerLocation(id string, lat, lng float64) erro
 	}
 
 	return bs.bookingRepository.UpdateBooking(bookingID, updates)
+}
+
+// CancelExpiredBookings - exposed method to trigger auto-cancellation of pending bookings
+func (bs *BookingService) CancelExpiredBookings() (int64, error) {
+	return bs.bookingRepository.CancelExpiredBookings()
+}
+
+// ReserveSlot attempts to lock a time slot for a user for a short period
+func (bs *BookingService) ReserveSlot(carwashID, slotTime, userID string) (bool, error) {
+	lockKey := GetLockKey(carwashID, slotTime)
+	
+	// Attempt to acquire the lock (using config-based 180s)
+	success, err := bs.lockService.AcquireLock(lockKey, userID)
+	if err != nil {
+		logrus.Errorf("❌ Failed to acquire lock for %s: %v", lockKey, err)
+		return false, err
+	}
+
+	if !success {
+		logrus.Warnf("⚠️ Slot %s is already locked by another user", lockKey)
+		return false, nil
+	}
+
+	logrus.Infof("✅ Slot %s reserved for User %s", lockKey, userID)
+	return true, nil
 }

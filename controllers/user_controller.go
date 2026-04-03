@@ -202,19 +202,19 @@ func (uc *UserController) GetUserRole(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetLoyaltyPoints handles GET /api/user/{id}/loyalty
-func (uc *UserController) GetLoyaltyPoints(w http.ResponseWriter, r *http.Request) {
+// GetCompletedWashesCount handles GET /api/user/{id}/washes
+func (uc *UserController) GetCompletedWashesCount(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userID := params["id"]
 
-	points, err := uc.userService.GetLoyaltyPoints(userID)
+	count, err := uc.userService.GetCompletedWashesCount(userID)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	utils.JSON(w, http.StatusOK, map[string]int{
-		"points": points,
+		"count": count,
 	})
 }
 

@@ -37,6 +37,7 @@ func main() {
 
 	db := database.ConnectDB()
 	database.InitCollections()
+	database.ConnectRedis()
 
 	// Initialize geocoder
 	googleMapsAPIKey := os.Getenv("GOOGLE_MAPS_API_KEY")
