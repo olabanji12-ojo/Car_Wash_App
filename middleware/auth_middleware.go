@@ -128,6 +128,7 @@ func Cors() *cors.Cors {
 			"http://localhost:5173",
 			"http://127.0.0.1:5173",
 			"https://car-wash-frontend-ten.vercel.app",
+			"https://www.queueless.online",
 		},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "Origin", "X-CSRF-Token"},
