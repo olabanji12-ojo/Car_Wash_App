@@ -12,12 +12,19 @@ import (
 )
 
 type OrderService struct {
-	orderRepository repositories.OrderRepository
+	orderRepository   repositories.OrderRepository
 	bookingRepository repositories.BookingRepository
+	carWashRepository repositories.CarWashRepository
+	financeService    *FinanceService
 }
 
-func NewOrderService(orderRepository repositories.OrderRepository) *OrderService {
-	return &OrderService{orderRepository: orderRepository}
+func NewOrderService(orderRepository repositories.OrderRepository, bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, financeService *FinanceService) *OrderService {
+	return &OrderService{
+		orderRepository:   orderRepository,
+		bookingRepository: bookingRepository,
+		carWashRepository: carWashRepository,
+		financeService:    financeService,
+	}
 }
 
 
@@ -45,7 +52,6 @@ func(os *OrderService) CreateOrderFromBooking(bookingID string) (*models.Order, 
 
 	// 4. Build the order
 	newOrder := models.Order{
-
 		ID:            primitive.NewObjectID(),
 		BookingID:     booking.ID,
 		UserID:        booking.UserID,
@@ -55,11 +61,39 @@ func(os *OrderService) CreateOrderFromBooking(bookingID string) (*models.Order, 
 		BookingType:   booking.BookingType,
 		UserLocation:  booking.UserLocation,
 		Status:        "active",
-		TotalAmount:   0, // optional: calculate later
 		PaymentStatus: "unpaid",
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
-		
+	}
+
+	// 5. Calculate Total Amount from Carwash Services
+	total := 0.0
+	carwash, err := os.carWashRepository.GetCarwashByID(booking.CarwashID)
+	if err == nil {
+		for _, sID := range booking.Services {
+			for _, s := range carwash.Services {
+				if s.ID == sID {
+					total += s.Price
+				}
+			}
+		}
+	} else {
+		logrus.Errorf("❌ Failed to fetch carwash %s for pricing: %v", booking.CarwashID.Hex(), err)
+	}
+
+	// 6. Handle FREE Wash logic (Loyalty Reward)
+	if booking.IsFree {
+		newOrder.TotalAmount = 0
+		newOrder.PlatformFee = 0
+		newOrder.MerchantNet = 0
+		newOrder.PaymentStatus = "paid" // It's free!
+		logrus.Infof("🎁 Order %s marked as FREE due to loyalty reward", newOrder.ID.Hex())
+	} else {
+		newOrder.TotalAmount = total
+		// 7. Calculate Splits using FinanceService (Loosely Coupled)
+		pFee, mNet := os.financeService.CalculateSplit(total)
+		newOrder.PlatformFee = pFee
+		newOrder.MerchantNet = mNet
 	}
 
 	// 5. Save the order
@@ -109,13 +143,65 @@ func(os *OrderService) GetOrdersByCarwash(carwashID string) ([]models.Order, err
 
 
 
-func(os *OrderService) UpdateOrderStatus(orderID string, newStatus string) error {
+func (os *OrderService) UpdateOrderStatus(orderID string, newStatus string, photoURL string) error {
 	objID, err := primitive.ObjectIDFromHex(orderID)
 	if err != nil {
 		return errors.New("invalid order ID")
 	}
 
-	return os.orderRepository.UpdateOrderStatus(objID, newStatus)
+	// Fetch order to check type
+	order, err := os.orderRepository.GetOrderByID(objID)
+	if err != nil {
+		return errors.New("order not found")
+	}
+
+	// VALIDATION: Proof of Work (Completion Photo)
+	if newStatus == "completed" && order.BookingType == "home_service" {
+		if photoURL == "" {
+			return errors.New("cannot complete: proof-of-work photo is required for home services")
+		}
+		// Save the photo URL
+		updates := primitive.M{
+			"completion_photo_url": photoURL,
+			"updated_at":           time.Now(),
+		}
+		os.orderRepository.UpdateOrder(objID, updates)
+	}
+
+	if err := os.orderRepository.UpdateOrderStatus(objID, newStatus); err != nil {
+		return err
+	}
+
+	// Step 4: AUTO-LEDGER (If completed, record the payment)
+	if newStatus == "completed" {
+		// Calculate the split using FinanceService (returns fee, net)
+		platformFee, merchantNet := os.financeService.CalculateSplit(order.TotalAmount)
+
+		payment := &models.Payment{
+			ID:             primitive.NewObjectID(),
+			UserID:         order.UserID,
+			CarwashID:      order.CarwashID,
+			OrderID:        order.ID,
+			Amount:         order.TotalAmount,
+			PlatformFee:    platformFee,
+			MerchantNet:    merchantNet,
+			Method:         "cash", // Default for now
+			Status:         "paid",
+			PaidAt:         time.Now(),
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}
+
+		if err := repositories.CreatePayment(payment); err != nil {
+			logrus.Errorf("❌ Failed to record payment for order %s: %v", orderID, err)
+			// We don't return error here because the order IS completed, 
+			// we just failed to log it (should be retried in a real world system).
+		} else {
+			logrus.Infof("✅ Payment ledger updated for order %s (Net: %.2f)", orderID, merchantNet)
+		}
+	}
+
+	return nil
 }
 
 

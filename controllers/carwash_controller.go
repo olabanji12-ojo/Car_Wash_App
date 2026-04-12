@@ -32,7 +32,7 @@ func (cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *htt
 	var input models.Carwash
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		utils.Error(w, http.StatusBadRequest, "Invalid JSON input")
+		utils.Error(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
 		return
 	}
 
@@ -501,4 +501,8 @@ func (cwc *CarWashController) UploadCarwashPhotoHandler(w http.ResponseWriter, r
 		"message": "Photo uploaded successfully",
 		"url":     url,
 	})
+}
+
+func (cwc *CarWashController) DeleteProfile(w http.ResponseWriter, r *http.Request) {
+
 }

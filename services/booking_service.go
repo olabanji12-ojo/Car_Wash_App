@@ -21,14 +21,24 @@ type BookingService struct {
 	carWashRepository   repositories.CarWashRepository
 	userRepository      repositories.UserRepository
 	notificationService *NotificationService
+	mapService          MapService
+	loyaltyService      *LoyaltyService
+	lockService         LockService
+	walletService       *WalletService
+	financeService      *FinanceService
 }
 
-func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository, notificationService *NotificationService) *BookingService {
+func NewBookingService(bookingRepository repositories.BookingRepository, carWashRepository repositories.CarWashRepository, userRepository repositories.UserRepository, notificationService *NotificationService, mapService MapService, loyaltyService *LoyaltyService, lockService LockService, walletService *WalletService, financeService *FinanceService) *BookingService {
 	return &BookingService{
 		bookingRepository:   bookingRepository,
 		carWashRepository:   carWashRepository,
 		userRepository:      userRepository,
 		notificationService: notificationService,
+		mapService:          mapService,
+		loyaltyService:      loyaltyService,
+		lockService:         lockService,
+		walletService:       walletService,
+		financeService:      financeService,
 	}
 }
 
@@ -126,6 +136,13 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		return nil, errors.New("selected time slot is already fully booked")
 	}
 
+	// Step 4.5: FINAL Lock Verification (Ensure it wasn't stolen at the last millisecond)
+	lockKey := GetLockKey(input.CarwashID.Hex(), inputTimeStr)
+	lockedByOther, _ := bs.lockService.IsLockedByOther(lockKey, ownerID.Hex())
+	if lockedByOther {
+		return nil, errors.New("someone else just grabbed this slot! Please try another time.")
+	}
+
 	// Step 5: Create new booking
 	queueNumber := len(bookingsForDay) + 1
 	verificationCode, _ := utils.GenerateNumericCode(4)
@@ -144,8 +161,18 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		Status:           "pending",
 		QueueNumber:      queueNumber,
 		VerificationCode: verificationCode,
+		Services:         input.Services,
+		TotalPrice:       input.TotalPrice,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
+		ExpiresAt:        time.Now().Add(5 * time.Minute),
+	}
+
+	// Step 6: Apply Loyalty Reward (100% discount)
+	isEligible, _, _ := bs.loyaltyService.IsEligibleForFreeWash(ownerID.Hex())
+	if isEligible {
+		newBooking.IsFree = true
+		logrus.Infof("🎁 User %s is eligible for a FREE wash (Loyalty Reward)", ownerID.Hex())
 	}
 
 	// Check distance if it's a home service
@@ -167,7 +194,7 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 		carwashLng := carwash.Location.Coordinates[0]
 		carwashLat := carwash.Location.Coordinates[1]
 
-		distance := utils.CalculateDistance(userLat, userLng, carwashLat, carwashLng)
+		distance := bs.mapService.GetDistanceKm(userLat, userLng, carwashLat, carwashLng)
 
 		// Fallback for DeliveryRadiusKM if it's 0 (uninitialized)
 		effectiveRadius := carwash.DeliveryRadiusKM
@@ -186,6 +213,19 @@ func (bs *BookingService) CreateBooking(userID string, input models.Booking) (*m
 	// Step 6: Save to database
 	if err := bs.bookingRepository.CreateBooking(&newBooking); err != nil {
 		return nil, err
+	}
+
+	// Step 6.5: AUTOMATED ESCROW HOLD
+	// Charge the customer now and hold in escrow
+	if newBooking.TotalPrice > 0 && !newBooking.IsFree {
+		err := bs.walletService.EscrowHold(context.Background(), userID, newBooking.ID.Hex(), newBooking.TotalPrice)
+		if err != nil {
+			// If hold fails (insufficient funds), we should ideally rollback the booking
+			// but for now we log it and return error
+			logrus.Errorf("❌ Failed to hold escrow for booking %s: %v", newBooking.ID.Hex(), err)
+			return nil, err
+		}
+		logrus.Infof("💰 Escrow hold of ₦%.2f successful for booking %s", newBooking.TotalPrice, newBooking.ID.Hex())
 	}
 
 	// Step 7: Trigger notifications (Both Business Owner & Customer)
@@ -253,7 +293,7 @@ func (bs *BookingService) GetBookingsByCarwashID(carwashID string) ([]models.Boo
 		return nil, err
 	}
 
-	return bs.enrichBookingsWithCustomerDetails(bookings)
+	return bs.enrichBookings(bookings)
 }
 
 func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string, verificationCode string) error {
@@ -268,21 +308,34 @@ func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string
 		return errors.New("booking not found")
 	}
 
-	// VALIDATION: Enforce Handshake for Completion (ONLY for Home Service)
-	if newStatus == "completed" && booking.BookingType == "home_service" {
-		// Only validate if it's NOT already completed (idempotency)
-		if booking.Status != "completed" {
-			if booking.VerificationCode == "" {
-				return errors.New("cannot complete: booking has no verification code")
-			}
-			if booking.VerificationCode != verificationCode {
-				return errors.New("invalid verification code. Please request the 4-digit code from the customer")
-			}
+	// VALIDATION: Enforce Handshake for Starting the Wash (ONLY for Home Service)
+	// We verify the code when moving to "in_progress"
+	if newStatus == "in_progress" && booking.BookingType == "home_service" {
+		if booking.VerificationCode == "" {
+			return errors.New("cannot start: booking has no verification code")
+		}
+		if booking.VerificationCode != verificationCode {
+			return errors.New("invalid verification code. Please request the 4-digit code from the customer to start the wash")
 		}
 	}
 
 	if err := bs.bookingRepository.UpdateBookingStatus(objID, newStatus); err != nil {
 		return err
+	}
+
+	// Step 1.5: AUTOMATED SETTLEMENT
+	// If the wash is completed, release funds to the carwash wallet
+	if newStatus == "completed" && booking.TotalPrice > 0 && !booking.IsFree {
+		carwash, err := bs.carWashRepository.GetCarwashByID(booking.CarwashID)
+		if err == nil && !carwash.OwnerID.IsZero() {
+			err = bs.walletService.EscrowRelease(context.Background(), booking.ID.Hex(), carwash.OwnerID.Hex())
+			if err != nil {
+				logrus.Errorf("❌ Failed to release escrow for booking %s: %v", booking.ID.Hex(), err)
+				// We don't block the status update, but this needs manual reconciliation
+			} else {
+				logrus.Infof("✅ Automated settlement successful for booking %s. Funds released to owner %s", booking.ID.Hex(), carwash.OwnerID.Hex())
+			}
+		}
 	}
 
 	// Step 2: Generate Verification Code if confirmed and missing
@@ -313,11 +366,8 @@ func (bs *BookingService) UpdateBookingStatus(bookingID string, newStatus string
 		} else if newStatus == "cancelled" {
 			bs.notificationService.SendBookingRejected(booking, "Cancelled by business")
 		} else if newStatus == "completed" {
-			// In-App Only (Hybrid Strategy)
-			title := "Wash Completed"
-			message := fmt.Sprintf("Your service at %s is marked as completed. Please rate your experience!", carwashName)
-			// false = No Email
-			bs.notificationService.CreateNotification(booking.UserID, title, message, "booking", false)
+			// Hybrid Strategy: In-App Notification + Detailed Email Receipt
+			bs.notificationService.SendPaymentReceipt(booking, carwashName)
 		}
 	}()
 
@@ -408,70 +458,82 @@ func (bs *BookingService) GetBookingsByCarwashWithFilters(carwashID string, stat
 		return nil, err
 	}
 
-	return bs.enrichBookingsWithCustomerDetails(bookings)
+	return bs.enrichBookings(bookings)
 }
 
 // Helper to enrich bookings with customer details
-func (bs *BookingService) enrichBookingsWithCustomerDetails(bookings []models.Booking) ([]models.Booking, error) {
+func (bs *BookingService) enrichBookings(bookings []models.Booking) ([]models.Booking, error) {
 	if len(bookings) == 0 {
 		return bookings, nil
 	}
 
-	// Collect User IDs
+	// 1. Collect IDs for Workers and Customers
 	userIDs := make([]primitive.ObjectID, 0)
-	seen := make(map[primitive.ObjectID]bool)
-	for _, b := range bookings {
-		if !seen[b.UserID] {
-			userIDs = append(userIDs, b.UserID)
-			seen[b.UserID] = true
-		}
-	}
-
-	// Fetch Users
-	users, err := bs.userRepository.GetUsersByIDs(userIDs)
-	if err != nil {
-		// Log error but return bookings without names rather than failing?
-		// Or fail? Let's fail for now or log.
-		// For now, return error.
-		return nil, err
-	}
-
-	// Map Users
-	userMap := make(map[primitive.ObjectID]models.User)
-	for _, u := range users {
-		userMap[u.ID] = u
-	}
-
-	// Assign Customer Details to Bookings
-	for i := range bookings {
-		if user, ok := userMap[bookings[i].UserID]; ok {
-			bookings[i].CustomerName = user.Name
-			bookings[i].CustomerPhoto = user.ProfilePhoto
-		}
-	}
-
-	// Step 3: Enrich with Worker Details
 	workerIDs := make([]primitive.ObjectID, 0)
+	carwashIDs := make([]primitive.ObjectID, 0)
+
+	userSeen := make(map[primitive.ObjectID]bool)
 	workerSeen := make(map[primitive.ObjectID]bool)
+	carwashSeen := make(map[primitive.ObjectID]bool)
+
 	for _, b := range bookings {
+		if !userSeen[b.UserID] {
+			userIDs = append(userIDs, b.UserID)
+			userSeen[b.UserID] = true
+		}
 		if !b.WorkerID.IsZero() && !workerSeen[b.WorkerID] {
 			workerIDs = append(workerIDs, b.WorkerID)
 			workerSeen[b.WorkerID] = true
 		}
+		if !carwashSeen[b.CarwashID] {
+			carwashIDs = append(carwashIDs, b.CarwashID)
+			carwashSeen[b.CarwashID] = true
+		}
 	}
 
-	if len(workerIDs) > 0 {
-		workers, err := bs.userRepository.GetUsersByIDs(workerIDs)
-		if err == nil {
-			workerMap := make(map[primitive.ObjectID]models.User)
-			for _, w := range workers {
-				workerMap[w.ID] = w
+	// 2. Fetch Users (Customers and Workers)
+	allUserIDs := append(userIDs, workerIDs...)
+	users, err := bs.userRepository.GetUsersByIDs(allUserIDs)
+	if err == nil {
+		userMap := make(map[primitive.ObjectID]models.User)
+		for _, u := range users {
+			userMap[u.ID] = u
+		}
+		for i := range bookings {
+			if user, ok := userMap[bookings[i].UserID]; ok {
+				bookings[i].CustomerName = user.Name
+				bookings[i].CustomerPhoto = user.ProfilePhoto
 			}
-			for i := range bookings {
-				if worker, ok := workerMap[bookings[i].WorkerID]; ok {
+			if !bookings[i].WorkerID.IsZero() {
+				if worker, ok := userMap[bookings[i].WorkerID]; ok {
 					bookings[i].WorkerName = worker.Name
 					bookings[i].WorkerPhoto = worker.ProfilePhoto
 				}
+			}
+		}
+	}
+
+	// 3. Fetch Carwashes to enrich Services
+	carwashes, err := bs.carWashRepository.GetCarwashesByFilter(bson.M{"_id": bson.M{"$in": carwashIDs}})
+	if err == nil {
+		carwashMap := make(map[primitive.ObjectID]models.Carwash)
+		for _, cw := range carwashes {
+			carwashMap[cw.ID] = cw
+		}
+
+		for i := range bookings {
+			if cw, ok := carwashMap[bookings[i].CarwashID]; ok {
+				// Map selected service IDs to full service objects
+				enrichedServices := make([]models.Service, 0)
+				for _, serviceID := range bookings[i].Services {
+					for _, s := range cw.Services {
+						if s.ID == serviceID {
+							enrichedServices = append(enrichedServices, s)
+							break
+						}
+					}
+				}
+				bookings[i].ServiceDetails = enrichedServices
 			}
 		}
 	}
@@ -497,4 +559,29 @@ func (bs *BookingService) UpdateWorkerLocation(id string, lat, lng float64) erro
 	}
 
 	return bs.bookingRepository.UpdateBooking(bookingID, updates)
+}
+
+// CancelExpiredBookings - exposed method to trigger auto-cancellation of pending bookings
+func (bs *BookingService) CancelExpiredBookings() (int64, error) {
+	return bs.bookingRepository.CancelExpiredBookings()
+}
+
+// ReserveSlot attempts to lock a time slot for a user for a short period
+func (bs *BookingService) ReserveSlot(carwashID, slotTime, userID string) (bool, error) {
+	lockKey := GetLockKey(carwashID, slotTime)
+	
+	// Attempt to acquire the lock (using config-based 180s)
+	success, err := bs.lockService.AcquireLock(lockKey, userID)
+	if err != nil {
+		logrus.Errorf("❌ Failed to acquire lock for %s: %v", lockKey, err)
+		return false, err
+	}
+
+	if !success {
+		logrus.Warnf("⚠️ Slot %s is already locked by another user", lockKey)
+		return false, nil
+	}
+
+	logrus.Infof("✅ Slot %s reserved for User %s", lockKey, userID)
+	return true, nil
 }

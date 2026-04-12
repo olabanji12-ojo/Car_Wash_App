@@ -58,17 +58,18 @@ type User struct {
 	AccountType         string               `bson:"account_type,omitempty" json:"account_type,omitempty"` //   car_owner, car_wash
 	Verified            bool                 `bson:"verified,omitempty" json:"verified,omitempty"`
 	VerificationCode    string               `bson:"verification_code,omitempty" json:"verification_code,omitempty"`
+	DeviceToken         string               `bson:"device_token,omitempty" json:"device_token,omitempty"`
 	VerificationExpiry  time.Time            `bson:"verification_expiry,omitempty" json:"verification_expiry,omitempty"`
 	PasswordResetToken  string               `bson:"password_reset_token,omitempty" json:"password_reset_token,omitempty"`
 	PasswordResetExpiry time.Time            `bson:"password_reset_expiry,omitempty" json:"password_reset_expiry,omitempty"`
 	ProfilePhoto        string               `bson:"profile_photo,omitempty" json:"profile_photo,omitempty"`
-	LoyaltyPoints       int                  `bson:"loyalty_points,omitempty" json:"loyalty_points,omitempty"`
+	CompletedWashesCount int               `bson:"completed_washes_count,omitempty" json:"completed_washes_count,omitempty"`
 	LastSeen            *time.Time           `bson:"last_seen,omitempty" json:"last_seen,omitempty"`
 	JobRole             string               `bson:"job_role,omitempty" json:"job_role,omitempty"`
 	WorkerStatus        string               `bson:"worker_status,omitempty" json:"worker_status,omitempty"` // active, inactive, on break etc
 	CreatedAt           time.Time            `bson:"created_at" json:"created_at"`
 	UpdatedAt           time.Time            `bson:"updated_at" json:"updated_at"`
-	ActiveOrders        []primitive.ObjectID `bson:"active_orders,omitempty" json:"active_orders,omitempty"`
+
 
 	// List of user's saved addresses
 	Addresses []UserAddress `bson:"addresses,omitempty" json:"addresses,omitempty"`
@@ -100,7 +101,7 @@ func (u User) Validate() error {
 		)),
 	)
 }
-
+ 
 // type UserUpdateInput struct {
 // 	Name         string `json:"name,omitempty"`
 // 	Phone        string `json:"phone,omitempty"`

@@ -80,7 +80,6 @@ func (wr *WorkerRepository) FindAvailableWorkersByBusinessID(businessID primitiv
 		"status":        "active", // Account is active
 		"carwash_id":    businessID,
 		"worker_status": "online",           // Worker is online
-		"active_orders": bson.M{"$size": 0}, // No active orders
 	}
 
 	cursor, err := wr.db.Collection("users").Find(ctx, filter)
@@ -189,9 +188,6 @@ func (wr *WorkerRepository) AddActiveOrderToWorker(workerID primitive.ObjectID, 
 			"last_seen":     time.Now(),
 			"updated_at":    time.Now(),
 		},
-		"$push": bson.M{
-			"active_orders": orderID,
-		},
 	}
 
 	result, err := wr.db.Collection("users").UpdateOne(ctx, filter, update)
@@ -234,9 +230,6 @@ func (wr *WorkerRepository) RemoveActiveOrderFromWorker(workerID primitive.Objec
 			"worker_status": "online",
 			"last_seen":     time.Now(),
 			"updated_at":    time.Now(),
-		},
-		"$pull": bson.M{
-			"active_orders": orderID,
 		},
 	}
 

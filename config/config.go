@@ -16,6 +16,9 @@ type Config struct {
 	OAuthRedirectURL    string
 	FrontendURL         string
 	SessionKey          string
+	PlatformFee         float64
+	BookingLockTime     int
+	PaystackSecretKey   string
 }
 
 var Cfg Config
@@ -51,6 +54,26 @@ func Init() {
 	Cfg.OAuthRedirectURL = mustGet("OAUTH_REDIRECT_URL")
 	Cfg.FrontendURL = mustGet("FRONTEND_URL")
 	Cfg.SessionKey = mustGet("SESSION_KEY")
+
+	// Platform Fee (Defaults to 0.05 if not set)
+	feeStr := os.Getenv("PLATFORM_FEE")
+	if feeStr == "" {
+		Cfg.PlatformFee = 0.0
+	} else {
+		// Simple conversion, assuming valid float in env
+		fmt.Sscanf(feeStr, "%f", &Cfg.PlatformFee)
+	}
+
+	// Booking Lock Time (Defaults to 180s if not set)
+	lockTimeStr := os.Getenv("BOOKING_LOCK_TIME")
+	if lockTimeStr == "" {
+		Cfg.BookingLockTime = 180
+	} else {
+		fmt.Sscanf(lockTimeStr, "%d", &Cfg.BookingLockTime)
+	}
+
+	// Paystack Key (optional for env, required to actually process payments)
+	Cfg.PaystackSecretKey = os.Getenv("PAYSTACK_SECRET_KEY")
 }
 
 func mustGet(key string) string {

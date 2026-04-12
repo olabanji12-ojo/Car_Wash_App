@@ -6,18 +6,33 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/middleware"
 )
 
-//  Register payment-related routes here
-func PaymentRoutes(router *mux.Router) {
+type TransactionRouter struct {
+	tc controllers.TransactionController
+}
 
+func NewTransactionRouter(tc controllers.TransactionController) *TransactionRouter {
+	return &TransactionRouter{tc: tc}
+}
 
-	payment := router.PathPrefix("/api/payments").Subrouter()
-	payment.Use(middleware.AuthMiddleware) // Protect all routes
+func (tr *TransactionRouter) TransactionRoutes(router *mux.Router) {
+	// Root namespaces (support both plural and singular for robustness)
+	payments := router.PathPrefix("/api/payments").Subrouter()
+	payment := router.PathPrefix("/api/payment").Subrouter()
 
-	payment.HandleFunc("", controllers.CreatePaymentHandler).Methods("POST") // tested
-	payment.HandleFunc("/payment/{id}", controllers.GetPaymentByIDHandler).Methods("GET") // testing
-	payment.HandleFunc("/user", controllers.GetPaymentsByUserHandler).Methods("GET") // tested
-	payment.HandleFunc("/carwash/{id}", controllers.GetPaymentsByCarwashHandler).Methods("GET") // tested
+	payments.Use(middleware.AuthMiddleware)
+	payment.Use(middleware.AuthMiddleware)
 
+	// Dashboard Endpoints
+	payments.HandleFunc("/summary/{carwash_id}", tr.tc.GetEarningsSummaryHandler).Methods("GET")
+	payments.HandleFunc("/history/{carwash_id}", tr.tc.GetTransactionHistoryHandler).Methods("GET")
+	
+	// Alias support
+	payment.HandleFunc("/summary/{carwash_id}", tr.tc.GetEarningsSummaryHandler).Methods("GET")
+	payment.HandleFunc("/history/{carwash_id}", tr.tc.GetTransactionHistoryHandler).Methods("GET")
+
+	// Legacy/Other Endpoints
+	payments.HandleFunc("/user", tr.tc.GetPaymentsByUserHandler).Methods("GET")
+	payments.HandleFunc("/carwash/{id}", tr.tc.GetPaymentsByCarwashHandler).Methods("GET")
 }
 
 

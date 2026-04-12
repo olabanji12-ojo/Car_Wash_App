@@ -22,6 +22,25 @@ func NewNotificationService(userRepo *repositories.UserRepository) *Notification
 	}
 }
 
+// SendPushPing is the "Magic Mailman" hook for Firebase (FCM)
+func (ns *NotificationService) SendPushPing(userID primitive.ObjectID, title, message string) {
+	// 4-Step Process for Zero Ambiguity:
+	// 1. Get user's device token from Database
+	// 2. Initialize Firebase App (using service-account.json)
+	// 3. Create the FCM Message object
+	// 4. Send it!
+
+	user, err := ns.userRepo.FindUserByID(userID)
+	if err != nil || user.DeviceToken == "" {
+		return // No token, no ping
+	}
+
+	log.Printf("[FCM-PREP] Sending Ping to User %s: %s - %s", user.Email, title, message)
+	
+	// Real Firebase code will be plugged in here during mobile app phase:
+	// client.Send(ctx, &messaging.Message{ Token: user.DeviceToken, Notification: ... })
+}
+
 // CreateNotification creates a notification and optionally sends email
 func (ns *NotificationService) CreateNotification(userID primitive.ObjectID, title, message, notificationType string, sendEmail bool) error {
 	notification := models.Notification{
@@ -46,6 +65,9 @@ func (ns *NotificationService) CreateNotification(userID primitive.ObjectID, tit
 	if sendEmail {
 		go ns.sendEmailAsync(savedNotification.ID, userID, title, message)
 	}
+
+	// ALWAYS send a Push Ping for mobile readiness
+	go ns.SendPushPing(userID, title, message)
 
 	return nil
 }
@@ -146,6 +168,34 @@ func (ns *NotificationService) SendOrderStatusUpdate(order *models.Order, newSta
 	if err != nil {
 		log.Printf("Failed to send order status update: %v", err)
 	}
+}
+
+// SendPaymentReceipt - triggered when booking is completed and settlement processed
+func (ns *NotificationService) SendPaymentReceipt(booking *models.Booking, carwashName string) {
+	// Get customer details
+	user, err := ns.userRepo.FindUserByID(booking.UserID)
+	if err != nil {
+		log.Printf("[NotificationDebug] Failed to get user for receipt: %v", err)
+		return
+	}
+
+	// Extract primary service name from enriched details or fallback
+	serviceName := "Car Wash Service"
+	if len(booking.ServiceDetails) > 0 {
+		serviceName = booking.ServiceDetails[0].Name
+		if len(booking.ServiceDetails) > 1 {
+			serviceName = fmt.Sprintf("%s + %d more", serviceName, len(booking.ServiceDetails)-1)
+		}
+	}
+
+	err = utils.SendSettlementReceiptEmail(user.Email, user.Name, carwashName, serviceName, booking.TotalPrice, booking.ID.Hex())
+	if err != nil {
+		log.Printf("[NotificationDebug] Failed to send payment receipt to %s: %v", user.Email, err)
+		return
+	}
+
+	// Also create a database notification
+	_ = ns.CreateNotification(booking.UserID, "Payment Receipt", fmt.Sprintf("Your receipt for %s is ready.", serviceName), models.NotificationTypeOrder, false)
 }
 
 // BUSINESS NOTIFICATION TRIGGERS

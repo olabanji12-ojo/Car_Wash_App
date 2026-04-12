@@ -211,8 +211,8 @@ func (cws *CarWashService) SearchCarwashes(filter bson.M) ([]models.Carwash, err
 	return cws.carwashRepository.GetCarwashesByFilter(filter)
 }
 
-func (cws *CarWashService) UpdateQueueCount(carwashID string, count int) error {
-	return cws.carwashRepository.UpdateQueueCount(carwashID, count)
+func (cws *CarWashService) RefreshQueueCount(carwashID string) error {
+	return cws.carwashRepository.RefreshQueueCount(carwashID)
 }
 
 // GetNearbyCarwashesForUser finds car washes near the user's location

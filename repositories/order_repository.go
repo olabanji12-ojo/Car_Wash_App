@@ -130,3 +130,32 @@ func(or *OrderRepository) AssignWorker(orderID, workerID primitive.ObjectID) err
 	)
 	return err
 }
+
+// 7. GetActiveOrdersCount - count how many orders are currently "active" for a carwash
+func (or *OrderRepository) GetActiveOrdersCount(carwashID primitive.ObjectID) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	count, err := database.OrderCollection.CountDocuments(ctx, bson.M{
+		"carwash_id": carwashID,
+		"status":     "active",
+	})
+	if err != nil {
+		logrus.Errorf("Failed to count active orders for carwash %s: %v", carwashID.Hex(), err)
+		return 0, err
+	}
+	return count, nil
+}
+
+// 8. UpdateOrder - general update for an order
+func (or *OrderRepository) UpdateOrder(orderID primitive.ObjectID, updates primitive.M) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := database.OrderCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": orderID},
+		bson.M{"$set": updates},
+	)
+	return err
+}

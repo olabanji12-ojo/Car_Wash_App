@@ -12,11 +12,15 @@ import (
 )
 
 type ReviewService struct {
-	reviewRepository repositories.ReviewRepository
+	reviewRepository  repositories.ReviewRepository
+	carWashRepository repositories.CarWashRepository
 }
 
-func NewReviewService(reviewRepository repositories.ReviewRepository) *ReviewService {
-	return &ReviewService{reviewRepository: reviewRepository}
+func NewReviewService(reviewRepository repositories.ReviewRepository, carWashRepository repositories.CarWashRepository) *ReviewService {
+	return &ReviewService{
+		reviewRepository:  reviewRepository,
+		carWashRepository: carWashRepository,
+	}
 }
 
 // LeaveReview allows a user to review a carwash after a completed order
@@ -61,6 +65,14 @@ func (rs *ReviewService) CreateReview(userID string, input models.Review) (*mode
 		logrus.Error("Error creating review: ", err)
 		return nil, errors.New("failed to create review")
 	}
+
+	// 5. Sync Carwash Rating (Aggregator) - Async
+	go func() {
+		avg, err := rs.reviewRepository.GetAverageRatingForCarwash(newReview.CarwashID)
+		if err == nil {
+			rs.carWashRepository.UpdateCarwashRating(newReview.CarwashID, avg)
+		}
+	}()
 
 	return &newReview, nil
 }

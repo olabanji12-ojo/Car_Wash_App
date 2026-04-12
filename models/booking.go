@@ -13,6 +13,7 @@ type Booking struct {
 	UserID    primitive.ObjectID `bson:"user_id" json:"user_id"`
 	CarID     primitive.ObjectID `bson:"car_id" json:"car_id"`
 	CarwashID primitive.ObjectID `bson:"carwash_id" json:"carwash_id"`
+	Services  []primitive.ObjectID `bson:"services" json:"services"`
 
 	BookingTime      time.Time          `bson:"booking_time" json:"booking_time"`
 	BookingType      string             `bson:"booking_type" json:"booking_type"`                       // slot_booking / home_service
@@ -26,12 +27,16 @@ type Booking struct {
 	WorkerLocation   *GeoLocation       `bson:"worker_location,omitempty" json:"worker_location,omitempty"`
 	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
+	ExpiresAt        time.Time          `bson:"expires_at" json:"expires_at"` // 5-min auto-cancel timer
+	IsFree           bool               `bson:"is_free" json:"is_free"`       // Loyalty reward
+	TotalPrice       float64            `bson:"total_price" json:"total_price"`
 
 	// Enriched fields (not stored in DB, populated by service)
 	CustomerName  string `bson:"-" json:"customer_name,omitempty"`
 	CustomerPhoto string `bson:"-" json:"customer_photo,omitempty"`
 	WorkerName    string `bson:"-" json:"worker_name,omitempty"`
 	WorkerPhoto   string `bson:"-" json:"worker_photo,omitempty"`
+	ServiceDetails []Service `bson:"-" json:"service_details,omitempty"`
 }
 
 func (b Booking) Validate() error {
@@ -60,6 +65,11 @@ func (b *Booking) SetDefaults() {
 	b.CreatedAt = time.Now()
 	b.UpdatedAt = time.Now()
 	b.ID = primitive.NewObjectID()
+
+	// Default expiry is 5 minutes from now
+	if b.ExpiresAt.IsZero() {
+		b.ExpiresAt = time.Now().Add(5 * time.Minute)
+	}
 
 	// Set default status if empty
 	if b.Status == "" {

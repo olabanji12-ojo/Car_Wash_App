@@ -1,107 +1,77 @@
 package services
 
 import (
-	"context"
-	"errors"
 	"time"
 
+	"github.com/olabanji12-ojo/CarWashApp/database"
 	"github.com/olabanji12-ojo/CarWashApp/models"
 	"github.com/olabanji12-ojo/CarWashApp/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-//  CreatePayment
-func CreatePayment(ownerID string, input models.Payment) (*models.Payment, error) {
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	UserID, err := primitive.ObjectIDFromHex(ownerID)
-	if err != nil {
-		return nil, errors.New("invalid user ID format")
-	}
-
-
-	newPayment := models.Payment{
-	ID:         primitive.NewObjectID(),
-	OrderID:    input.OrderID,
-	UserID:     UserID,
-	CarwashID:  input.CarwashID,
-	Amount:     input.Amount,
-	Status:     "paid",
-	CreatedAt:  time.Now(),
-	UpdatedAt:  time.Now(),
+type TransactionService struct {
+	// No specific fields needed but good for consistency
 }
 
+func NewTransactionService() *TransactionService {
+	return &TransactionService{}
+}
 
-	if input.Status == "" {
-		input.Status = "paid"
-	}
-
-	err = repositories.CreatePayment(&newPayment)
-	
+// GetEarningsSummary returns the daily, weekly, and monthly earnings, plus totals for a shop
+func (ts *TransactionService) GetEarningsSummary(carwashID string) (map[string]interface{}, error) {
+	objID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &newPayment, nil
-}
+	summary := make(map[string]interface{})
 
+	// 1. Periods (Revenue)
+	today := time.Now().Truncate(24 * time.Hour)
+	daily, _ := repositories.GetEarningsByPeriod(objID, today)
+	summary["daily"] = daily
 
-//  GetPaymentByOrderID
-func GetPaymentByOrderID(orderID string) (*models.Payment, error) {
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	oneWeekAgo := time.Now().AddDate(0, 0, -7)
+	weekly, _ := repositories.GetEarningsByPeriod(objID, oneWeekAgo)
+	summary["weekly"] = weekly
 
-	objID, err := primitive.ObjectIDFromHex(orderID)
-	if err != nil {
-		return nil, errors.New("invalid order ID")
+	oneMonthAgo := time.Now().AddDate(0, -1, 0)
+	monthly, _ := repositories.GetEarningsByPeriod(objID, oneMonthAgo)
+	summary["monthly"] = monthly
+
+	// 2. Totals (Revenue)
+	totalRevenue, _ := repositories.CalculateEarningsByCarwash(objID)
+	summary["total_revenue"] = totalRevenue
+
+	// 3. Booking Metrics
+	// Use our static-style lookup for now to match project pattern
+	bookingRepo := repositories.NewBookingRepository(database.DB)
+	bookings, _ := bookingRepo.GetBookingsByCarwashID(objID)
+	
+	totalBookings := len(bookings)
+	pendingBookings := 0
+	for _, b := range bookings {
+		if b.Status == "pending" {
+			pendingBookings++
+		}
 	}
 
-	return repositories.GetPaymentByOrderID(objID)
+	summary["total_bookings"] = totalBookings
+	summary["pending_bookings"] = pendingBookings
+
+	return summary, nil
 }
 
-
-//  GetPaymentsByUserID
-func GetPaymentsByUserID(userID string) ([]models.Payment, error) {
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	objID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return nil, errors.New("invalid user ID")
-	}
-
-	return repositories.GetPaymentsByUserID(objID)
-}
-
-
-//  GetPaymentsByCarwashID
-func GetPaymentsByCarwashID(carwashID string) ([]models.Payment, error) {
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+// GetTransactionHistory returns the list of payments for a shop
+func (ts *TransactionService) GetTransactionHistory(carwashID string) ([]models.Payment, error) {
 	objID, err := primitive.ObjectIDFromHex(carwashID)
 	if err != nil {
-		return nil, errors.New("invalid carwash ID")
+		return nil, err
 	}
-
 	return repositories.GetPaymentsByCarwashID(objID)
 }
 
-
-
-//  CalculateEarningsByCarwash
-func CalculateEarningsByCarwash(carwashID string) (float64, error) {
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	objID, err := primitive.ObjectIDFromHex(carwashID)
-	if err != nil {
-		return 0, errors.New("invalid carwash ID")
-	}
-
-	return repositories.CalculateEarningsByCarwash(objID)
+// GetTransactionHistoryByUserID returns the list of payments for a user
+func (ts *TransactionService) GetTransactionHistoryByUserID(userID primitive.ObjectID) ([]models.Payment, error) {
+	return repositories.GetPaymentsByUserID(userID)
 }
-
-
-

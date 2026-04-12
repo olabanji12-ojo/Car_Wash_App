@@ -220,3 +220,32 @@ func (br *BookingRepository) GetBookingsByCarwashWithFilters(carwashID primitive
 
 	return bookings, nil
 }
+
+// 9. CancelExpiredBookings - automatically cancels pending bookings that have passed their expiry time
+func (br *BookingRepository) CancelExpiredBookings() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"status":     "pending",
+		"expires_at": bson.M{"$lt": time.Now()},
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"status":     "cancelled",
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := database.BookingCollection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		logrus.Errorf("Failed to auto-cancel expired bookings: %v", err)
+		return 0, err
+	}
+
+	if result.ModifiedCount > 0 {
+		logrus.Infof("Auto-cancelled %d expired pending bookings", result.ModifiedCount)
+	}
+
+	return result.ModifiedCount, nil
+}

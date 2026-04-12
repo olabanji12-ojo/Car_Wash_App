@@ -31,7 +31,7 @@ func (ur *UserRouter) UserRoutes(router *mux.Router) {
 	userRouter.HandleFunc("/{id}", ur.userController.UpdateUserProfile).Methods("PUT")              // tested
 	userRouter.HandleFunc("/{id}", ur.userController.DeleteUser).Methods("DELETE")                  // tested
 	userRouter.HandleFunc("/{id}/role", ur.userController.GetUserRole).Methods("GET")               // tested
-	userRouter.HandleFunc("/{id}/loyalty", ur.userController.GetLoyaltyPoints).Methods("GET")       // tested
+	userRouter.HandleFunc("/{id}/washes", ur.userController.GetCompletedWashesCount).Methods("GET")    // updated
 	userRouter.HandleFunc("/{id}/public", ur.userController.GetPublicUser).Methods("GET")           // tested
 
 	// Address management routes

@@ -1,0 +1,10 @@
+- Language: Go
+- Architecture: Controller → Service → Repository (layered)
+- Database: MongoDB (no global variables, injected via constructor)
+- Cache/Lock: Redis (injected via interface, not imported directly in services)
+- Auth: JWT
+- DI Pattern: Constructor injection — NewXService(repo XRepository, ...) XService
+- Workers: NOT self-registered. Admin-created only. Only assigned to home wash orders.
+- No business logic in controllers
+- No database imports in service layer
+- All external dependencies (MongoDB, Redis, Paystack, Google Maps) wrapped in interfaces

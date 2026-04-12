@@ -152,8 +152,8 @@ func (ws *WorkerService) AssignWorkerToOrder(workerID string, orderID string) er
 	}
 
 	// Check if already assigned (optional warning)
-	if len(worker.ActiveOrders) > 0 {
-		logrus.Warnf("⚠️ [WorkerService.AssignWorkerToOrder] Worker %s already has %d active orders", worker.Name, len(worker.ActiveOrders))
+	if worker.WorkerStatus == "busy" {
+		logrus.Warnf("⚠️ [WorkerService.AssignWorkerToOrder] Worker %s is already busy with another order", worker.Name)
 		// For MVP, we'll allow multiple assignments or at least skip the hard error if desired
 	}
 

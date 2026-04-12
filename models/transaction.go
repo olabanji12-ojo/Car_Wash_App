@@ -17,7 +17,9 @@ type Payment struct {
 	CarwashID       primitive.ObjectID `bson:"carwash_id" json:"carwash_id"`
 	OrderID         primitive.ObjectID `bson:"order_id" json:"order_id"`
 	Amount          float64            `bson:"amount" json:"amount"`
-	Method          string             `bson:"method" json:"method"` // card, cash, wallet, transfer
+	PlatformFee     float64            `bson:"platform_fee" json:"platform_fee"`           // 5% share
+	MerchantNet     float64            `bson:"merchant_net" json:"merchant_net"`           // 95% to boss
+	Method          string             `bson:"method" json:"method"`                       // card, cash, wallet, transfer
 	Status          string             `bson:"status" json:"status"` // paid, failed, pending, refunded
 	TransactionRef  string             `bson:"transaction_ref,omitempty" json:"transaction_ref,omitempty"`
 	PaidAt          time.Time          `bson:"paid_at" json:"paid_at"` // When payment was actually made

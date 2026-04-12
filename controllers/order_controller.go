@@ -101,7 +101,8 @@ func(oc *OrderController) UpdateOrderStatusHandler(w http.ResponseWriter, r *htt
 	orderID := mux.Vars(r)["order_id"]
 
 	var input struct {
-		Status string `json:"status"`
+		Status   string `json:"status"`
+		PhotoURL string `json:"photo_url"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Status == "" {
@@ -109,7 +110,7 @@ func(oc *OrderController) UpdateOrderStatusHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if err := oc.OrderService.UpdateOrderStatus(orderID, input.Status); err != nil {
+	if err := oc.OrderService.UpdateOrderStatus(orderID, input.Status, input.PhotoURL); err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
