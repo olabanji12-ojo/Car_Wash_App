@@ -212,6 +212,55 @@ func SendOrderUpdateEmail(userEmail, userName, status, details string) error {
 	return SendEmail(userEmail, subject, body)
 }
 
+// SendSettlementReceiptEmail sends an itemized receipt to the customer
+func SendSettlementReceiptEmail(userEmail, userName, carwashName, serviceName string, amount float64, bookingID string) error {
+	subject := "Receipt for Your Car Wash - " + carwashName
+	
+	// Format amount as currency
+	formattedAmount := fmt.Sprintf("₦%.2f", amount)
+	
+	body := fmt.Sprintf(`
+		<html>
+		<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+			<div style="background-color: #2563EB; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+				<h1 style="color: white; margin: 0;">Payment Receipt</h1>
+			</div>
+			<div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+				<p>Hi %s,</p>
+				<p>Thank you for choosing <strong>%s</strong>! Your service is complete and payment has been processed.</p>
+				
+				<div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+					<h3 style="margin-top: 0; color: #111827;">Service Summary</h3>
+					<table style="width: 100%%; border-collapse: collapse;">
+						<tr>
+							<td style="padding: 8px 0; color: #6b7280;">Service</td>
+							<td style="padding: 8px 0; text-align: right; font-weight: 600;">%s</td>
+						</tr>
+						<tr>
+							<td style="padding: 8px 0; color: #6b7280;">Booking ID</td>
+							<td style="padding: 8px 0; text-align: right; font-family: monospace;">%s</td>
+						</tr>
+						<tr style="border-top: 1px solid #e5e7eb;">
+							<td style="padding: 15px 0 0 0; font-size: 18px; font-weight: bold; color: #111827;">Total Paid</td>
+							<td style="padding: 15px 0 0 0; text-align: right; font-size: 18px; font-weight: bold; color: #2563EB;">%s</td>
+						</tr>
+					</table>
+				</div>
+				
+				<p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 30px;">
+					This is an automated receipt for your records. If you have any questions about this charge, please contact %s directly.
+				</p>
+			</div>
+			<div style="text-align: center; margin-top: 20px; font-size: 12px; color: #9ca3af;">
+				&copy; 2026 CarWash App. All rights reserved.
+			</div>
+		</body>
+		</html>
+	`, userName, carwashName, serviceName, bookingID, formattedAmount, carwashName)
+
+	return SendEmail(userEmail, subject, body)
+}
+
 // Helper function to get environment variable with default
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {

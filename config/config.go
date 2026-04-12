@@ -18,6 +18,7 @@ type Config struct {
 	SessionKey          string
 	PlatformFee         float64
 	BookingLockTime     int
+	PaystackSecretKey   string
 }
 
 var Cfg Config
@@ -57,7 +58,7 @@ func Init() {
 	// Platform Fee (Defaults to 0.05 if not set)
 	feeStr := os.Getenv("PLATFORM_FEE")
 	if feeStr == "" {
-		Cfg.PlatformFee = 0.05
+		Cfg.PlatformFee = 0.0
 	} else {
 		// Simple conversion, assuming valid float in env
 		fmt.Sscanf(feeStr, "%f", &Cfg.PlatformFee)
@@ -70,6 +71,9 @@ func Init() {
 	} else {
 		fmt.Sscanf(lockTimeStr, "%d", &Cfg.BookingLockTime)
 	}
+
+	// Paystack Key (optional for env, required to actually process payments)
+	Cfg.PaystackSecretKey = os.Getenv("PAYSTACK_SECRET_KEY")
 }
 
 func mustGet(key string) string {

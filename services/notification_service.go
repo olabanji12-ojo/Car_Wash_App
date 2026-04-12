@@ -170,6 +170,34 @@ func (ns *NotificationService) SendOrderStatusUpdate(order *models.Order, newSta
 	}
 }
 
+// SendPaymentReceipt - triggered when booking is completed and settlement processed
+func (ns *NotificationService) SendPaymentReceipt(booking *models.Booking, carwashName string) {
+	// Get customer details
+	user, err := ns.userRepo.FindUserByID(booking.UserID)
+	if err != nil {
+		log.Printf("[NotificationDebug] Failed to get user for receipt: %v", err)
+		return
+	}
+
+	// Extract primary service name from enriched details or fallback
+	serviceName := "Car Wash Service"
+	if len(booking.ServiceDetails) > 0 {
+		serviceName = booking.ServiceDetails[0].Name
+		if len(booking.ServiceDetails) > 1 {
+			serviceName = fmt.Sprintf("%s + %d more", serviceName, len(booking.ServiceDetails)-1)
+		}
+	}
+
+	err = utils.SendSettlementReceiptEmail(user.Email, user.Name, carwashName, serviceName, booking.TotalPrice, booking.ID.Hex())
+	if err != nil {
+		log.Printf("[NotificationDebug] Failed to send payment receipt to %s: %v", user.Email, err)
+		return
+	}
+
+	// Also create a database notification
+	_ = ns.CreateNotification(booking.UserID, "Payment Receipt", fmt.Sprintf("Your receipt for %s is ready.", serviceName), models.NotificationTypeOrder, false)
+}
+
 // BUSINESS NOTIFICATION TRIGGERS
 
 // SendNewBookingToBusiness - notify business of new booking

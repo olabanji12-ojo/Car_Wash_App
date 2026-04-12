@@ -29,12 +29,14 @@ type Booking struct {
 	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
 	ExpiresAt        time.Time          `bson:"expires_at" json:"expires_at"` // 5-min auto-cancel timer
 	IsFree           bool               `bson:"is_free" json:"is_free"`       // Loyalty reward
+	TotalPrice       float64            `bson:"total_price" json:"total_price"`
 
 	// Enriched fields (not stored in DB, populated by service)
 	CustomerName  string `bson:"-" json:"customer_name,omitempty"`
 	CustomerPhoto string `bson:"-" json:"customer_photo,omitempty"`
 	WorkerName    string `bson:"-" json:"worker_name,omitempty"`
 	WorkerPhoto   string `bson:"-" json:"worker_photo,omitempty"`
+	ServiceDetails []Service `bson:"-" json:"service_details,omitempty"`
 }
 
 func (b Booking) Validate() error {

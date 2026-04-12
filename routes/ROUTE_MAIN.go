@@ -59,6 +59,8 @@ func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 		services.NewDefaultMapService(),
 		services.NewLoyaltyService(*repositories.NewOrderRepository(db)),
 		services.NewRedisLockService(),
+		services.NewWalletService(repositories.NewWalletRepository(db), services.NewFinanceService()),
+		services.NewFinanceService(),
 	)
 
 	// Start Background Worker for Auto-Cancellation (Runs once every minute)
@@ -98,6 +100,13 @@ func InitReviewService(db *mongo.Database) *controllers.ReviewController {
 func InitTransactionService(db *mongo.Database) *controllers.TransactionController {
 	ts := services.NewTransactionService()
 	return controllers.NewTransactionController(ts)
+}
+
+func InitWalletService(db *mongo.Database) *controllers.WalletController {
+	financeService := services.NewFinanceService()
+	walletRepo := repositories.NewWalletRepository(db)
+	walletService := services.NewWalletService(walletRepo, financeService)
+	return controllers.NewWalletController(walletService)
 }
 
 func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geocoder) {
@@ -142,6 +151,11 @@ func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geoco
 	transactionController := InitTransactionService(db)
 	transactionRouter := NewTransactionRouter(*transactionController)
 	transactionRouter.TransactionRoutes(router)
+
+	// Initialize WalletRouter and set up wallet routes
+	walletController := InitWalletService(db)
+	walletRouter := NewWalletRouter(walletController)
+	walletRouter.RegisterWalletRoutes(router)
 
 	NotificationRoutes(router) // Notification system
 }

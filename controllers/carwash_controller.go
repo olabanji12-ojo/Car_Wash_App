@@ -32,13 +32,7 @@ func (cwc *CarWashController) CreateCarwashHandler(w http.ResponseWriter, r *htt
 	var input models.Carwash
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		utils.Error(w, http.StatusBadRequest, "Invalid JSON input")
-		return
-	}
-
-	// 📸 CUSTOM VALIDATION: Ensure the Car Wash has at least one photo
-	if len(input.PhotoGallery) == 0 {
-		utils.Error(w, http.StatusBadRequest, "At least one photo is required")
+		utils.Error(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
 		return
 	}
 
