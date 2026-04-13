@@ -401,7 +401,24 @@ func (bs *BookingService) CancelBooking(bookingID string) error {
 		return errors.New("cancellation not allowed within 24 hours of appointment")
 	}
 
-	return bs.bookingRepository.CancelBooking(objID)
+	if err := bs.bookingRepository.CancelBooking(objID); err != nil {
+		return err
+	}
+
+	// 4. AUTOMATED REFUND
+	// Trigger refund of escrowed funds (Fail-soft: we log error but don't block cancellation success)
+	if booking.TotalPrice > 0 && !booking.IsFree {
+		go func() {
+			err := bs.walletService.EscrowRefund(context.Background(), bookingID)
+			if err != nil {
+				logrus.Errorf("❌ Refund for cancelled booking %s failed: %v", bookingID, err)
+			} else {
+				logrus.Infof("💰 Automated refund processed for cancelled booking %s", bookingID)
+			}
+		}()
+	}
+
+	return nil
 }
 
 func (bs *BookingService) GetBookingsByDate(carwashID string, date time.Time) ([]models.Booking, error) {

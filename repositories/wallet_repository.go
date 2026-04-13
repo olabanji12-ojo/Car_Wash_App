@@ -77,3 +77,21 @@ func (wr *WalletRepository) UpdateTransactionStatus(ctx context.Context, txID pr
 	)
 	return err
 }
+
+func (wr *WalletRepository) FindTransactionByID(ctx context.Context, id primitive.ObjectID) (*models.WalletTransaction, error) {
+	var tx models.WalletTransaction
+	err := wr.db.Collection("wallet_transactions").FindOne(ctx, bson.M{"_id": id}).Decode(&tx)
+	if err != nil {
+		return nil, err
+	}
+	return &tx, nil
+}
+
+func (wr *WalletRepository) UpdateTransactionFull(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
+	_, err := wr.db.Collection("wallet_transactions").UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{"$set": updates},
+	)
+	return err
+}

@@ -9,6 +9,7 @@ import (
 	"github.com/olabanji12-ojo/CarWashApp/services"
 	"github.com/olabanji12-ojo/CarWashApp/services/geocoding"
 	"go.mongodb.org/mongo-driver/mongo"
+	"os"
 )
 
 func InitAuthService(db *mongo.Database) *controllers.AuthController {
@@ -51,6 +52,10 @@ func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 	userRepo := repositories.NewUserRepository(db)
 	notificationService := services.NewNotificationService(userRepo)
 
+	// Initialize Gateway
+	paystackKey := os.Getenv("PAYSTACK_SECRET_KEY")
+	gateway := services.NewPaystackGateway(paystackKey)
+
 	bookingService := services.NewBookingService(
 		*repositories.NewBookingRepository(db),
 		*repositories.NewCarWashRepository(db),
@@ -59,7 +64,7 @@ func InitBookingService(db *mongo.Database, geocoder geocoding.Geocoder) *contro
 		services.NewDefaultMapService(),
 		services.NewLoyaltyService(*repositories.NewOrderRepository(db)),
 		services.NewRedisLockService(),
-		services.NewWalletService(repositories.NewWalletRepository(db), services.NewFinanceService()),
+		services.NewWalletService(repositories.NewWalletRepository(db), services.NewFinanceService(), gateway),
 		services.NewFinanceService(),
 	)
 
@@ -105,7 +110,11 @@ func InitTransactionService(db *mongo.Database) *controllers.TransactionControll
 func InitWalletService(db *mongo.Database) *controllers.WalletController {
 	financeService := services.NewFinanceService()
 	walletRepo := repositories.NewWalletRepository(db)
-	walletService := services.NewWalletService(walletRepo, financeService)
+	
+	paystackKey := os.Getenv("PAYSTACK_SECRET_KEY")
+	gateway := services.NewPaystackGateway(paystackKey)
+
+	walletService := services.NewWalletService(walletRepo, financeService, gateway)
 	return controllers.NewWalletController(walletService)
 }
 
@@ -158,4 +167,10 @@ func InitRoutes(router *mux.Router, db *mongo.Database, geocoder geocoding.Geoco
 	walletRouter.RegisterWalletRoutes(router)
 
 	NotificationRoutes(router) // Notification system
+
+	// Admin Routes (Highly Protected)
+	adminController := controllers.NewAdminController(services.NewWalletService(repositories.NewWalletRepository(db), services.NewFinanceService(), services.NewPaystackGateway(os.Getenv("PAYSTACK_SECRET_KEY"))))
+	admin := router.PathPrefix("/api/admin").Subrouter()
+	// In production, add a specific AdminAuthMiddleware here
+	admin.HandleFunc("/payouts/approve", adminController.ApprovePayout).Methods("POST")
 }
